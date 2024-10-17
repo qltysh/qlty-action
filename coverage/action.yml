@@ -1,0 +1,50 @@
+name: 'QLTY Coverage Upload'
+description: 'Upload code coverage data to QLTY'
+author: 'Qlty'
+
+branding:
+  icon: 'heart'
+  color: 'red'
+
+inputs:
+  coverage-token:
+    description: 'The QLTY coverage token'
+    required: true
+
+  files:
+    description: 'The paths to the coverage reports files'
+    required: true
+
+  add-prefix:
+    description: 'Add a prefix to the coverage data'
+    required: false
+    default: ''
+
+  strip-prefix:
+    description: 'Strip a prefix to the coverage data'
+    required: false
+    default: ''
+
+  tag:
+    description: 'The tag to use when uploading coverage data'
+    required: false
+    default: ''
+
+  print-coverage:
+    description: 'Print the coverage data before uploading'
+    required: false
+    default: 'false'
+
+  print-json-coverage:
+    description: 'Print the coverage data before uploading as JSON'
+    required: false
+    default: 'false'
+
+  skip-errors:
+    description: 'Do not error the action if the upload fails'
+    required: false
+    default: 'false'
+
+runs:
+  using: node20
+  main: dist/index.js

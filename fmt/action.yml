@@ -1,0 +1,17 @@
+name: 'QLTY Fmt'
+description: 'Auto-format your code with QLTY'
+author: 'Qlty'
+
+branding:
+  icon: 'loader'
+  color: 'green'
+
+inputs:
+  commit:
+    description: 'Commit changes after fmt'
+    required: false
+    default: 'false'
+
+runs:
+  using: node20
+  main: dist/index.js
