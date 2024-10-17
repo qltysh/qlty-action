@@ -1,0 +1,58 @@
+name: coverage
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - coverage/**
+    branches:
+      - main
+  pull_request:
+    paths:
+      - coverage/**
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: coverage/.node-version
+          cache: npm
+          cache-dependency-path: coverage/package-lock.json
+
+      - name: Install Dependencies
+        id: install
+        working-directory: ./coverage
+        run: npm ci
+
+      - name: Build dist/ Directory
+        id: build
+        working-directory: ./coverage
+        run: npm run package
+
+      - name: Compare Directories
+        id: diff
+        working-directory: ./coverage
+        run: |
+          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build. See status below:"
+            git diff --ignore-space-at-eol --text dist/
+            exit 1
+          fi
+
+      # - name: Test
+      #   id: npm-ci-test
+      #   working-directory: ./coverage
+      #   run: npm run ci-test
