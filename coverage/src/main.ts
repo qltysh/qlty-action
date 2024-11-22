@@ -44,7 +44,9 @@ export async function runWithTracing(): Promise<void> {
           })
         })
         .catch(error => {
-          core.setFailed(`Action failed with error: ${error.message}`)
+          core.setFailed(
+            `Action failed with error: ${error.name}: ${error.message}`
+          )
           Sentry.addBreadcrumb({
             category: 'qlty-coverage.log',
             level: 'log',
@@ -86,11 +88,7 @@ async function run(): Promise<void> {
   const downloadedPath = await tc.downloadTool(downloadUrl)
   const extractedFolder = await tc.extractTar(downloadedPath, undefined, 'x')
 
-  const cachedPath = await tc.cacheDir(
-    extractedFolder,
-    'qlty',
-    'latest'
-  )
+  const cachedPath = await tc.cacheDir(extractedFolder, 'qlty', 'latest')
   const binPath = `${cachedPath}/qlty-${platformArch}`
   core.addPath(binPath)
 
