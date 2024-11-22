@@ -44,7 +44,7 @@ export async function runWithTracing(): Promise<void> {
           })
         })
         .catch(error => {
-          core.setFailed(`Action failed with error: ${error.name}`)
+          core.setFailed(`Action failed with error: ${error.message}`)
           Sentry.addBreadcrumb({
             category: 'qlty-coverage.log',
             level: 'log',
