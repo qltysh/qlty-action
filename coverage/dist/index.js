@@ -43380,7 +43380,9 @@ async function runWithTracing() {
           process.exit(0);
         });
       }).catch((error) => {
-        core.setFailed(`Action failed with error: ${error.name}`);
+        core.setFailed(
+          `Action failed with error: ${error.name}: ${error.message}`
+        );
         Sentry.addBreadcrumb({
           category: "qlty-coverage.log",
           level: "log",
@@ -43415,11 +43417,7 @@ async function run() {
   const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-${platformArch}.tar.xz`;
   const downloadedPath = await tc.downloadTool(downloadUrl);
   const extractedFolder = await tc.extractTar(downloadedPath, void 0, "x");
-  const cachedPath = await tc.cacheDir(
-    extractedFolder,
-    "qlty",
-    "latest"
-  );
+  const cachedPath = await tc.cacheDir(extractedFolder, "qlty", "latest");
   const binPath = `${cachedPath}/qlty-${platformArch}`;
   core.addPath(binPath);
   const files = core.getInput("files", { required: true }).split(" ");
