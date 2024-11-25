@@ -63,7 +63,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "@actions/tool-cache": "^2.0.1",
-    "@sentry/node": "^7.106.0",
+    "@sentry/node": "^8.40.0",
     "esbuild": "^0.20.1"
   },
   "devDependencies": {
