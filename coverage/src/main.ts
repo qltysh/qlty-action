@@ -95,7 +95,9 @@ async function run(): Promise<void> {
 
   const patterns = core
     .getInput('files', { required: true })
-    .split(' ')
+    .split(',')
+    .map(file => file.trim())
+    .filter(Boolean)
 
   const patternString = patterns.join('\n')
   const globber = await glob.create(patternString)

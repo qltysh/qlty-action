@@ -45377,7 +45377,7 @@ async function run() {
   const cachedPath = await tc.cacheDir(extractedFolder, "qlty", "latest");
   const binPath = `${cachedPath}/qlty-${platformArch}`;
   core.addPath(binPath);
-  const patterns = core.getInput("files", { required: true }).split(" ");
+  const patterns = core.getInput("files", { required: true }).split(",").map((file) => file.trim()).filter(Boolean);
   const patternString = patterns.join("\n");
   const globber = await glob.create(patternString);
   let expandedFiles = await globber.glob();
