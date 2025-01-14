@@ -8,6 +8,7 @@ Sentry.init({
 import * as core from '@actions/core'
 import * as tc from '@actions/tool-cache'
 import * as github from '@actions/github'
+import * as glob from '@actions/glob'
 import { exec } from '@actions/exec'
 import os from 'os'
 import fs from 'fs'
@@ -92,7 +93,15 @@ async function run(): Promise<void> {
   const binPath = `${cachedPath}/qlty-${platformArch}`
   core.addPath(binPath)
 
-  const files = core.getInput('files', { required: true }).split(' ')
+  const patterns = core
+    .getInput('files', { required: true })
+    .split(' ')
+
+  const patternString = patterns.join('\n')
+  const globber = await glob.create(patternString)
+  let expandedFiles = await globber.glob()
+  expandedFiles = Array.from(new Set(expandedFiles))
+
   const printCoverage = core.getBooleanInput('print-coverage')
   const printJsonCoverage = core.getBooleanInput('print-json-coverage')
   const addPrefix = core.getInput('add-prefix')
@@ -133,7 +142,7 @@ async function run(): Promise<void> {
     uploadArgs.push('--override-branch', context.payload.pull_request.head.ref)
   }
 
-  uploadArgs = uploadArgs.concat(files)
+  uploadArgs = uploadArgs.concat(expandedFiles)
 
   writeQltyConfig()
   let qlytOutput = ''

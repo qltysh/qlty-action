@@ -5,11 +5,19 @@ on:
   push:
     paths:
       - coverage/**
+      - '**.js'
+      - '**.ts'
+      - '**.test.js'
+      - '**.test.ts'
     branches:
       - main
   pull_request:
     paths:
       - coverage/**
+      - '**.js'
+      - '**.ts'
+      - '**.test.js'
+      - '**.test.ts'
 
 permissions:
   contents: read
@@ -52,7 +60,7 @@ jobs:
             exit 1
           fi
 
-      # - name: Test
-      #   id: npm-ci-test
-      #   working-directory: ./coverage
-      #   run: npm run ci-test
+      - name: Test
+        id: npm-test
+        working-directory: ./coverage
+        run: npm test
