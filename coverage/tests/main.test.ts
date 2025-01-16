@@ -56,14 +56,23 @@ vi.mock('@actions/tool-cache', () => ({
 }))
 
 vi.mock('@actions/glob', () => ({
-  create: vi.fn().mockImplementation(async pattern => ({
-    glob: async () => {
-      if (pattern === 'src/**/*.ts') {
-        return ['src/main.ts', 'src/utils.ts']
+  create: vi.fn().mockImplementation(async (patternString: string) => {
+    const patterns = patternString.split('\n').filter(Boolean)
+    return {
+      glob: async () => {
+        let files: string[] = []
+        for (const p of patterns) {
+          if (p === 'nonexistent/**/*.js') {
+          } else if (p === 'src/**/*.ts') {
+            files = files.concat(['src/main.ts', 'src/utils.ts'])
+          } else {
+            files = files.concat([p])
+          }
+        }
+        return files
       }
-      return [pattern]
     }
-  }))
+  })
 }))
 
 describe('Coverage Action - main.ts', () => {
@@ -76,7 +85,9 @@ describe('Coverage Action - main.ts', () => {
     getInputSpy = vi.fn()
     exitSpy = vi
       .spyOn(process, 'exit')
-      .mockImplementation((code?: number | undefined) => undefined as never) as unknown as ReturnType<typeof vi.spyOn>
+      .mockImplementation(
+        (code?: number | undefined) => undefined as never
+      ) as unknown as ReturnType<typeof vi.spyOn>
 
     vi.mocked(core.getInput).mockImplementation(getInputSpy)
 
@@ -118,5 +129,95 @@ describe('Coverage Action - main.ts', () => {
     expect(args).toEqual(
       expect.arrayContaining(['src/main.ts', 'src/utils.ts'])
     )
+  })
+
+  it('should handle multiple files separated by commas', async () => {
+    getInputSpy.mockImplementation((name: string) => {
+      if (name === 'coverage-token') return 'abc123'
+      if (name === 'files') return 'src/main.ts,src/utils.ts'
+      return ''
+    })
+    vi.mocked(core.getBooleanInput).mockReturnValue(false)
+
+    await runWithTracing()
+
+    expect(exec.exec).toHaveBeenCalled()
+    const [tool, args] = vi.mocked(exec.exec).mock.calls[0]
+    expect(tool).toBe('qlty')
+    expect(args).toContain('src/main.ts')
+    expect(args).toContain('src/utils.ts')
+  })
+
+  it('should handle multiple patterns, including a glob, separated by commas', async () => {
+    getInputSpy.mockImplementation((name: string) => {
+      if (name === 'coverage-token') return 'another-token'
+      if (name === 'files') return 'src/main.ts,src/**/*.ts'
+      return ''
+    })
+    vi.mocked(core.getBooleanInput).mockReturnValue(false)
+
+    await runWithTracing()
+
+    expect(exec.exec).toHaveBeenCalled()
+    const [tool, args] = vi.mocked(exec.exec).mock.calls[0]
+    expect(tool).toBe('qlty')
+    expect(args).toEqual(
+      expect.arrayContaining(['src/main.ts', 'src/utils.ts'])
+    )
+    expect(args).not.toContain('src/main.ts src/**/*.ts')
+  })
+
+  it('should handle a pattern that matches no files', async () => {
+    getInputSpy.mockImplementation((name: string) => {
+      if (name === 'coverage-token') return 'abc123'
+      if (name === 'files') return 'nonexistent/**/*.js'
+      return ''
+    })
+    vi.mocked(core.getBooleanInput).mockReturnValue(false)
+
+    await runWithTracing()
+
+    expect(exec.exec).toHaveBeenCalled()
+    const [tool, args] = vi.mocked(exec.exec).mock.calls[0]
+
+    expect(args).not.toContain('nonexistent/**/*.js')
+  })
+
+  it('should handle repeated patterns by removing duplicates', async () => {
+    getInputSpy.mockImplementation((name: string) => {
+      if (name === 'coverage-token') return 'abc123'
+      if (name === 'files') return 'src/main.ts,src/main.ts,src/**/*.ts'
+      return ''
+    })
+    vi.mocked(core.getBooleanInput).mockReturnValue(false)
+
+    await runWithTracing()
+
+    expect(exec.exec).toHaveBeenCalled()
+    const [tool, args] = vi.mocked(exec.exec).mock.calls[0]
+    expect(tool).toBe('qlty')
+    expect(args.filter(arg => arg === 'src/main.ts').length).toBe(1)
+    expect(args).toContain('src/utils.ts')
+  })
+
+  it('should handle space-separated patterns but log a deprecation warning', async () => {
+    getInputSpy.mockImplementation((name: string) => {
+      if (name === 'coverage-token') return 'abc123'
+      if (name === 'files') return 'src/main.ts src/**/*.ts'
+      return ''
+    })
+    vi.mocked(core.getBooleanInput).mockReturnValue(false)
+
+    await runWithTracing()
+
+    expect(core.warning).toHaveBeenCalledWith(
+      expect.stringContaining('deprecated')
+    )
+
+    expect(exec.exec).toHaveBeenCalled()
+    const [tool, args] = vi.mocked(exec.exec).mock.calls[0]
+    expect(tool).toBe('qlty')
+    expect(args).toContain('src/main.ts')
+    expect(args).toContain('src/utils.ts')
   })
 })
