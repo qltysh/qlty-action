@@ -177,7 +177,7 @@ async function run(): Promise<void> {
   } catch {
     if (skipErrors) {
       core.warning('Error uploading coverage, skipping due to skip-errors')
-      core.warning("Output:")
+      core.warning('Output:')
       core.warning(qlytOutput)
     } else {
       throw new CoverageUploadError(qlytOutput)
