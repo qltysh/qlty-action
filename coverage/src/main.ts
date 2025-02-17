@@ -75,6 +75,8 @@ async function run(): Promise<void> {
 
   if (platform === 'linux' && arch === 'x64') {
     platformArch = 'x86_64-unknown-linux-gnu'
+  } else if (platform === 'linux' && arch === 'arm64') {
+    platformArch = 'aarch64-unknown-linux-gnu'
   } else if (platform === 'darwin' && arch === 'x64') {
     platformArch = 'x86_64-apple-darwin'
   } else if (platform === 'darwin' && arch === 'arm64') {
