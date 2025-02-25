@@ -122,6 +122,7 @@ async function run(): Promise<void> {
   const addPrefix = core.getInput('add-prefix')
   const stripPrefix = core.getInput('strip-prefix')
   const skipErrors = core.getBooleanInput('skip-errors')
+  const skipMissingFiles = core.getBooleanInput('skip-missing-files')
   const tag = core.getInput('tag')
 
   let uploadArgs = ['coverage', 'publish']
@@ -155,6 +156,10 @@ async function run(): Promise<void> {
       context.payload.pull_request.head.sha
     )
     uploadArgs.push('--override-branch', context.payload.pull_request.head.ref)
+  }
+
+  if (skipMissingFiles) {
+    uploadArgs.push('--skip-missing-files')
   }
 
   uploadArgs = uploadArgs.concat(expandedFiles)

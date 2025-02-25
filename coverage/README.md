@@ -15,6 +15,7 @@ A GitHub Action for running code coverage analysis using the qlty tool.
 | `add-prefix` | Prefix to add to file paths | No | - |
 | `strip-prefix` | Prefix to remove from file paths | No | - |
 | `skip-errors` | Continue execution even if errors occur | No | `false` |
+| `skip-missing-files` | Files not in the directory are skipped | No | `false` |
 | `tag` | Tag to associate with the coverage data | No | - |
 
 ### Coverage Analysis

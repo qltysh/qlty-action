@@ -45398,6 +45398,7 @@ async function run() {
   const addPrefix = core.getInput("add-prefix");
   const stripPrefix = core.getInput("strip-prefix");
   const skipErrors = core.getBooleanInput("skip-errors");
+  const skipMissingFiles = core.getBooleanInput("skip-missing-files");
   const tag = core.getInput("tag");
   let uploadArgs = ["coverage", "publish"];
   if (printCoverage) {
@@ -45421,6 +45422,9 @@ async function run() {
       context2.payload.pull_request.head.sha
     );
     uploadArgs.push("--override-branch", context2.payload.pull_request.head.ref);
+  }
+  if (skipMissingFiles) {
+    uploadArgs.push("--skip-missing-files");
   }
   uploadArgs = uploadArgs.concat(expandedFiles);
   writeQltyConfig();
