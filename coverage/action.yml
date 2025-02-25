@@ -45,6 +45,11 @@ inputs:
     required: false
     default: 'false'
 
+  skip-missing-files:
+    description: 'Files not in the directory are skipped'
+    required: false
+    default: 'false'
+
 runs:
   using: node20
   main: dist/index.js
