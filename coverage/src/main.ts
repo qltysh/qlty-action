@@ -97,20 +97,10 @@ async function run(): Promise<void> {
 
   const rawFiles = core.getInput('files', { required: true }).trim()
 
-  let patterns: string[] = []
-
-  if (rawFiles.includes(' ')) {
-    core.warning(
-      'Space-separated file patterns for files input are deprecated and will be removed in a future version. ' +
-        'Please use commas, e.g., "fileA.js,fileB.js"'
-    )
-    patterns = rawFiles.split(' ')
-  } else {
-    patterns = rawFiles
-      .split(',')
-      .map(file => file.trim())
-      .filter(Boolean)
-  }
+  let patterns: string[] = rawFiles
+    .split(',')
+    .map(file => file.trim())
+    .filter(Boolean)
 
   const patternString = patterns.join('\n')
   const globber = await glob.create(patternString)

@@ -199,25 +199,4 @@ describe('Coverage Action - main.ts', () => {
     expect(args.filter(arg => arg === 'src/main.ts').length).toBe(1)
     expect(args).toContain('src/utils.ts')
   })
-
-  it('should handle space-separated patterns but log a deprecation warning', async () => {
-    getInputSpy.mockImplementation((name: string) => {
-      if (name === 'coverage-token') return 'abc123'
-      if (name === 'files') return 'src/main.ts src/**/*.ts'
-      return ''
-    })
-    vi.mocked(core.getBooleanInput).mockReturnValue(false)
-
-    await runWithTracing()
-
-    expect(core.warning).toHaveBeenCalledWith(
-      expect.stringContaining('deprecated')
-    )
-
-    expect(exec.exec).toHaveBeenCalled()
-    const [tool, args] = vi.mocked(exec.exec).mock.calls[0]
-    expect(tool).toBe('qlty')
-    expect(args).toContain('src/main.ts')
-    expect(args).toContain('src/utils.ts')
-  })
 })
