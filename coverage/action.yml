@@ -43,7 +43,7 @@ inputs:
   skip-errors:
     description: 'Do not error the action if the upload fails'
     required: false
-    default: 'false'
+    default: 'true'
 
   skip-missing-files:
     description: 'Files not in the directory are skipped'
