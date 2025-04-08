@@ -30,8 +30,8 @@ inputs:
     required: false
     default: ''
 
-  print-coverage:
-    description: 'Print the coverage data before uploading'
+  verbose:
+    description: 'Verbose output for debugging'
     required: false
     default: 'false'
 

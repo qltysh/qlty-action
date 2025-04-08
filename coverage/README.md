@@ -10,7 +10,7 @@ A GitHub Action for running code coverage analysis using the qlty tool.
 |-------|-------------|----------|---------|
 | `coverage-token` | Authentication token for coverage submission | Yes | - |
 | `files` | Files to process (supports glob patterns and comma-separated paths) | Yes | - |
-| `print-coverage` | Display coverage information in the logs | No | `false` |
+| `verbose` | Display debug logs along with coverage data | No | `false` |
 | `print-json-coverage` | Output coverage data in JSON format | No | `false` |
 | `add-prefix` | Prefix to add to file paths | No | - |
 | `strip-prefix` | Prefix to remove from file paths | No | - |
