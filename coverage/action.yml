@@ -35,11 +35,6 @@ inputs:
     required: false
     default: 'false'
 
-  print-json-coverage:
-    description: 'Print the coverage data before uploading as JSON'
-    required: false
-    default: 'false'
-
   skip-errors:
     description: 'Do not error the action if the upload fails'
     required: false

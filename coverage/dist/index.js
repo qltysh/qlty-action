@@ -45386,7 +45386,6 @@ async function run() {
   let expandedFiles = await globber.glob();
   expandedFiles = Array.from(new Set(expandedFiles));
   const verbose = core.getBooleanInput("verbose");
-  const printJsonCoverage = core.getBooleanInput("print-json-coverage");
   const addPrefix = core.getInput("add-prefix");
   const stripPrefix = core.getInput("strip-prefix");
   const skipErrors = core.getBooleanInput("skip-errors");
@@ -45395,9 +45394,6 @@ async function run() {
   let uploadArgs = ["coverage", "publish"];
   if (verbose) {
     uploadArgs.push("--print");
-  }
-  if (printJsonCoverage) {
-    uploadArgs.push("--json");
   }
   if (addPrefix) {
     uploadArgs.push("--transform-add-prefix", addPrefix);

@@ -108,7 +108,6 @@ async function run(): Promise<void> {
   expandedFiles = Array.from(new Set(expandedFiles))
 
   const verbose = core.getBooleanInput('verbose')
-  const printJsonCoverage = core.getBooleanInput('print-json-coverage')
   const addPrefix = core.getInput('add-prefix')
   const stripPrefix = core.getInput('strip-prefix')
   const skipErrors = core.getBooleanInput('skip-errors')
@@ -119,10 +118,6 @@ async function run(): Promise<void> {
 
   if (verbose) {
     uploadArgs.push('--print')
-  }
-
-  if (printJsonCoverage) {
-    uploadArgs.push('--json')
   }
 
   if (addPrefix) {
