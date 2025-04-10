@@ -30,20 +30,15 @@ inputs:
     required: false
     default: ''
 
-  print-coverage:
-    description: 'Print the coverage data before uploading'
-    required: false
-    default: 'false'
-
-  print-json-coverage:
-    description: 'Print the coverage data before uploading as JSON'
+  verbose:
+    description: 'Verbose output for debugging'
     required: false
     default: 'false'
 
   skip-errors:
     description: 'Do not error the action if the upload fails'
     required: false
-    default: 'false'
+    default: 'true'
 
   skip-missing-files:
     description: 'Files not in the directory are skipped'

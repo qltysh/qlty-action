@@ -97,28 +97,17 @@ async function run(): Promise<void> {
 
   const rawFiles = core.getInput('files', { required: true }).trim()
 
-  let patterns: string[] = []
-
-  if (rawFiles.includes(' ')) {
-    core.warning(
-      'Space-separated file patterns for files input are deprecated and will be removed in a future version. ' +
-        'Please use commas, e.g., "fileA.js,fileB.js"'
-    )
-    patterns = rawFiles.split(' ')
-  } else {
-    patterns = rawFiles
-      .split(',')
-      .map(file => file.trim())
-      .filter(Boolean)
-  }
+  let patterns: string[] = rawFiles
+    .split(',')
+    .map(file => file.trim())
+    .filter(Boolean)
 
   const patternString = patterns.join('\n')
   const globber = await glob.create(patternString)
   let expandedFiles = await globber.glob()
   expandedFiles = Array.from(new Set(expandedFiles))
 
-  const printCoverage = core.getBooleanInput('print-coverage')
-  const printJsonCoverage = core.getBooleanInput('print-json-coverage')
+  const verbose = core.getBooleanInput('verbose')
   const addPrefix = core.getInput('add-prefix')
   const stripPrefix = core.getInput('strip-prefix')
   const skipErrors = core.getBooleanInput('skip-errors')
@@ -127,12 +116,8 @@ async function run(): Promise<void> {
 
   let uploadArgs = ['coverage', 'publish']
 
-  if (printCoverage) {
+  if (verbose) {
     uploadArgs.push('--print')
-  }
-
-  if (printJsonCoverage) {
-    uploadArgs.push('--json')
   }
 
   if (addPrefix) {
