@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
-    "make-coverage-badge": "^1.2.0",
     "typescript": "^5.3.3",
     "vitest": "^2.1.8"
   }
