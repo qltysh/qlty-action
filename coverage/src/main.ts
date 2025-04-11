@@ -14,6 +14,8 @@ import os from 'os'
 import fs from 'fs'
 import path from 'path'
 
+const OIDC_AUDIENCE = 'https://qlty.sh'
+
 class CoverageUploadError extends Error {
   constructor(message: string) {
     super(message)
@@ -64,9 +66,6 @@ export async function runWithTracing(): Promise<void> {
 }
 
 async function run(): Promise<void> {
-  const coverageToken = core.getInput('coverage-token', { required: true })
-  core.setSecret(coverageToken)
-
   const platform = os.platform()
   const arch = os.arch()
   const context = github.context
@@ -151,6 +150,17 @@ async function run(): Promise<void> {
   }
 
   uploadArgs = uploadArgs.concat(expandedFiles)
+
+  const oidc = core.getBooleanInput('oidc')
+  let coverageToken = null
+
+  if (oidc) {
+    coverageToken = await core.getIDToken(OIDC_AUDIENCE)
+  } else {
+    coverageToken = core.getInput('coverage-token')
+  }
+
+  core.setSecret(coverageToken)
 
   writeQltyConfig()
   let qlytOutput = ''

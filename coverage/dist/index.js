@@ -49731,12 +49731,12 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       return process.env[`STATE_${name}`] || "";
     }
     exports2.getState = getState;
-    function getIDToken(aud) {
+    function getIDToken2(aud) {
       return __awaiter(this, void 0, void 0, function* () {
         return yield oidc_utils_1.OidcClient.getIDToken(aud);
       });
     }
-    exports2.getIDToken = getIDToken;
+    exports2.getIDToken = getIDToken2;
     var summary_1 = require_summary();
     Object.defineProperty(exports2, "summary", { enumerable: true, get: function() {
       return summary_1.summary;
@@ -69113,6 +69113,7 @@ init({
   dsn: "https://76f58a921c9d8561646a586e7d9df772@o4506826106929152.ingest.us.sentry.io/4506826142646272",
   tracesSampleRate: 1
 });
+var OIDC_AUDIENCE = "https://qlty.sh";
 var CoverageUploadError = class extends Error {
   constructor(message) {
     super(message);
@@ -69158,8 +69159,6 @@ async function runWithTracing() {
   );
 }
 async function run() {
-  const coverageToken = core.getInput("coverage-token", { required: true });
-  core.setSecret(coverageToken);
   const platform2 = import_os.default.platform();
   const arch2 = import_os.default.arch();
   const context3 = github.context;
@@ -69221,6 +69220,14 @@ async function run() {
     uploadArgs.push("--skip-missing-files");
   }
   uploadArgs = uploadArgs.concat(expandedFiles);
+  const oidc = core.getBooleanInput("oidc");
+  let coverageToken = null;
+  if (oidc) {
+    coverageToken = await core.getIDToken(OIDC_AUDIENCE);
+  } else {
+    coverageToken = core.getInput("coverage-token");
+  }
+  core.setSecret(coverageToken);
   writeQltyConfig();
   let qlytOutput = "";
   try {
