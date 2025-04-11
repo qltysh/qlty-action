@@ -6,9 +6,9 @@ A GitHub Action for running automated formatting using the qlty tool.
 
 ### Fmt Action Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `commit` | Commit changes after fmt | false | false |
+| Input    | Description              | Required | Default |
+| -------- | ------------------------ | -------- | ------- |
+| `commit` | Commit changes after fmt | false    | false   |
 
 ### Code Formatting
 

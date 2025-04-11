@@ -1,5 +1,5 @@
-name: 'QLTY Fmt'
-description: 'Auto-format your code with QLTY'
+name: 'Qlty Fmt'
+description: 'Auto-format your code with Qlty CLI'
 author: 'Qlty'
 
 branding:
