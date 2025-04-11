@@ -9,7 +9,13 @@ branding:
 inputs:
   coverage-token:
     description: 'The Qlty Cloud coverage token'
-    required: true
+    required: false
+    default: ''
+
+  oidc:
+    description: 'Use OIDC instead of a coverage token'
+    required: false
+    default: false
 
   files:
     description: 'The paths to the coverage reports files'
@@ -33,17 +39,17 @@ inputs:
   verbose:
     description: 'Verbose output for debugging'
     required: false
-    default: 'false'
+    default: false
 
   skip-errors:
     description: 'Do not error the action if the upload fails'
     required: false
-    default: 'true'
+    default: true
 
   skip-missing-files:
     description: 'Files not in the directory are skipped'
     required: false
-    default: 'false'
+    default: false
 
 runs:
   using: node20
