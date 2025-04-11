@@ -1,6 +1,7 @@
 # qlty-action
 
-A GitHub Action for running code coverage analysis and automated formatting using the qlty tool.
+A GitHub Action for running code coverage analysis and automated formatting
+using the qlty tool.
 
 ## Features
 

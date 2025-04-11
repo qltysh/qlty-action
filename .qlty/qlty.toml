@@ -83,6 +83,10 @@ name = "trufflehog"
 [[plugin]]
 name = "yamllint"
 
+[[plugin]]
+name = "eslint"
+package_file = ".qlty/configs/package.json"
+
 [[ignore]]
 file_patterns = ["**/LICENSE.md"]
 rules = ["markdownlint:MD041"]
