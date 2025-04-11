@@ -17,3 +17,7 @@ jobs:
 
       - name: Install Qlty CLI
         uses: qltysh/qlty-action/install@main
+      
+      - name: Check Qlty CLI version
+        shell: bash
+        run: qlty --version

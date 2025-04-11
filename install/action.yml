@@ -7,5 +7,8 @@ branding:
   color: 'green'
 
 runs:
-  using: node22
-  main: dist/index.js
+  using: composite
+  steps:
+    - name: Install Qlty CLI
+      shell: bash
+      run: ${GITHUB_ACTION_PATH}/install_qlty.sh
