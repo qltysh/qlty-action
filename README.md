@@ -7,10 +7,12 @@ A GitHub Action for running code coverage analysis and automated formatting usin
 This action provides two main functionalities:
 
 ### Coverage Analysis
+
 - Processes code coverage data and generates reports
 - Supports multiple file inputs including glob patterns
 - Configurable coverage reporting options
 - Token-based authentication for secure coverage submission
 
 ### Code Formatting
+
 - Automated code formatting and style enforcement
