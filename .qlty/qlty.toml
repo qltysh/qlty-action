@@ -63,9 +63,6 @@ default = true
 name = "actionlint"
 
 [[plugin]]
-name = "checkov"
-
-[[plugin]]
 name = "markdownlint"
 mode = "comment"
 
@@ -81,14 +78,11 @@ name = "ripgrep"
 mode = "comment"
 
 [[plugin]]
-name = "trivy"
-drivers = [
-  "config",
-  "fs-vuln",
-]
-
-[[plugin]]
 name = "trufflehog"
 
 [[plugin]]
 name = "yamllint"
+
+[[ignore]]
+file_patterns = ["**/LICENSE.md"]
+rules = ["markdownlint:MD041"]

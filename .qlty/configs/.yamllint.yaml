@@ -1,0 +1,10 @@
+extends: default
+
+rules:
+  line-length:
+    max: 90
+    level: warning
+
+  document-start: disable
+  new-line-at-end-of-file: disable
+  truthy: disable
