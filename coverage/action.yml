@@ -1,5 +1,5 @@
-name: 'QLTY Coverage Upload'
-description: 'Upload code coverage data to QLTY'
+name: 'Qlty Coverage Upload'
+description: 'Upload code coverage data to Qlty Cloud'
 author: 'Qlty'
 
 branding:
@@ -8,7 +8,7 @@ branding:
 
 inputs:
   coverage-token:
-    description: 'The QLTY coverage token'
+    description: 'The Qlty Cloud coverage token'
     required: true
 
   files:

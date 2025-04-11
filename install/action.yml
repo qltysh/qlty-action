@@ -1,0 +1,11 @@
+name: 'Qlty Install'
+description: 'Install the Qlty CLI'
+author: 'Qlty'
+
+branding:
+  icon: 'package'
+  color: 'green'
+
+runs:
+  using: node22
+  main: dist/index.js
