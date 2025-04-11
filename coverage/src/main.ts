@@ -151,7 +151,16 @@ async function run(): Promise<void> {
 
   uploadArgs = uploadArgs.concat(expandedFiles)
 
-  const coverageToken = await getCoverageToken()
+  const oidc = core.getBooleanInput('oidc')
+  let coverageToken = null
+
+  if (oidc) {
+    coverageToken = await core.getIDToken(OIDC_AUDIENCE)
+  } else {
+    coverageToken = core.getInput('coverage-token')
+  }
+
+  core.setSecret(coverageToken)
 
   writeQltyConfig()
   let qlytOutput = ''
@@ -179,20 +188,6 @@ async function run(): Promise<void> {
       throw new CoverageUploadError(qlytOutput)
     }
   }
-}
-
-async function getCoverageToken(): Promise<string> {
-  const oidc = core.getBooleanInput('oidc')
-  let coverageToken = null
-
-  if (oidc) {
-    coverageToken = await core.getIDToken(OIDC_AUDIENCE)
-  } else {
-    coverageToken = core.getInput('coverage-token')
-  }
-
-  core.setSecret(coverageToken)
-  return coverageToken
 }
 
 function writeQltyConfig() {
