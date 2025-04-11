@@ -69220,7 +69220,14 @@ async function run() {
     uploadArgs.push("--skip-missing-files");
   }
   uploadArgs = uploadArgs.concat(expandedFiles);
-  const coverageToken = await getCoverageToken();
+  const oidc = core.getBooleanInput("oidc");
+  let coverageToken = null;
+  if (oidc) {
+    coverageToken = await core.getIDToken(OIDC_AUDIENCE);
+  } else {
+    coverageToken = core.getInput("coverage-token");
+  }
+  core.setSecret(coverageToken);
   writeQltyConfig();
   let qlytOutput = "";
   try {
@@ -69247,17 +69254,6 @@ async function run() {
       throw new CoverageUploadError(qlytOutput);
     }
   }
-}
-async function getCoverageToken() {
-  const oidc = core.getBooleanInput("oidc");
-  let coverageToken = null;
-  if (oidc) {
-    coverageToken = await core.getIDToken(OIDC_AUDIENCE);
-  } else {
-    coverageToken = core.getInput("coverage-token");
-  }
-  core.setSecret(coverageToken);
-  return coverageToken;
 }
 function writeQltyConfig() {
   if (!import_fs.default.existsSync(".qlty")) {
