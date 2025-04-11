@@ -27,11 +27,11 @@ export async function runWithTracing(): Promise<void> {
       Sentry.setTag('provider', 'github')
       Sentry.setTag(
         'repository.full_name',
-        process.env.GITHUB_REPOSITORY || 'unknown'
+        process.env['GITHUB_REPOSITORY'] || 'unknown'
       )
       Sentry.setContext('CI', {
-        run_id: process.env.GITHUB_RUN_ID,
-        run_url: `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+        run_id: process.env['GITHUB_RUN_ID'],
+        run_url: `${process.env['GITHUB_SERVER_URL']}/${process.env['GITHUB_REPOSITORY']}/actions/runs/${process.env['GITHUB_RUN_ID']}`
       })
 
       run()

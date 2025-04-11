@@ -24,24 +24,24 @@
     "node": ">=20"
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "package": "esbuild src/index.ts --bundle --platform=node --target=es2020 --outfile=dist/index.js",
     "test": "vitest",
     "all": "npm run test && npm run package"
   },
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.10.1",
+    "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
-    "@actions/glob": "0.5.0",
+    "@actions/glob": "^0.5.0",
     "@actions/github": "^6.0.0",
-    "@actions/tool-cache": "^2.0.1",
-    "@sentry/node": "^7.106.0",
-    "esbuild": "^0.20.1"
+    "@actions/tool-cache": "^2.0.2",
+    "@sentry/node": "^9.12.0",
+    "esbuild": "^0.25.2"
   },
   "devDependencies": {
-    "@types/node": "^20.11.16",
-    "make-coverage-badge": "^1.2.0",
-    "typescript": "^5.3.3",
-    "vitest": "^2.1.8"
+    "@types/node": "^22.14.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
   }
 }
