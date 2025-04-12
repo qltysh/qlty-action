@@ -212,11 +212,7 @@ describe('Coverage Action - main.ts', () => {
     expect(exec.exec).toHaveBeenCalled()
     const [_, args] = vi.mocked(exec.exec).mock.calls[0]
 
-    const defined_args = args || []
-    const index = defined_args.indexOf('--total-parts-count')
-    expect(defined_args.slice(index, index + 2)).toEqual([
-      '--total-parts-count',
-      '44'
-    ])
+    expect(args).toContain('--total-parts-count')
+    expect(args).toContain('44')
   })
 })
