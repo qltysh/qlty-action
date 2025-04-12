@@ -96,7 +96,7 @@ describe('Coverage Action - main.ts', () => {
     vi.mocked(tc.cacheDir).mockResolvedValue('/tmp/cached-qlty')
   })
 
-  it('should succeedwith a non-glob path', async () => {
+  it('should succeed with a non-glob path', async () => {
     getInputSpy.mockImplementation((name: string) => {
       if (name === 'coverage-token') return 'abc123'
       if (name === 'files') return 'src/main.ts'
@@ -198,5 +198,25 @@ describe('Coverage Action - main.ts', () => {
     expect(tool).toBe('qlty')
     expect(args.filter(arg => arg === 'src/main.ts').length).toBe(1)
     expect(args).toContain('src/utils.ts')
+  })
+
+  it('should pass along total-parts-count', async () => {
+    getInputSpy.mockImplementation((name: string) => {
+      if (name === 'total-parts-count') return '44'
+
+      return ''
+    })
+
+    await runWithTracing()
+
+    expect(exec.exec).toHaveBeenCalled()
+    const [_, args] = vi.mocked(exec.exec).mock.calls[0]
+
+    const defined_args = args || []
+    const index = defined_args.indexOf('--total-parts-count')
+    expect(defined_args.slice(index, index + 2)).toEqual([
+      '--total-parts-count',
+      '44'
+    ])
   })
 })
