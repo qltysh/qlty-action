@@ -210,7 +210,7 @@ describe('Coverage Action - main.ts', () => {
     await runWithTracing()
 
     expect(exec.exec).toHaveBeenCalled()
-    const [_, args] = vi.mocked(exec.exec).mock.calls[0]
+    const [, args] = vi.mocked(exec.exec).mock.calls[0]
 
     expect(args).toContain('--total-parts-count')
     expect(args).toContain('44')
