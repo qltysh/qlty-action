@@ -215,4 +215,19 @@ describe('Coverage Action - main.ts', () => {
     expect(args).toContain('--total-parts-count')
     expect(args).toContain('44')
   })
+
+  it('should pass not define total-parts-count if input is not provided', async () => {
+    getInputSpy.mockImplementation((name: string) => {
+      if (name === 'total-parts-count') return ''
+
+      return ''
+    })
+
+    await runWithTracing()
+
+    expect(exec.exec).toHaveBeenCalled()
+    const [_, args] = vi.mocked(exec.exec).mock.calls[0]
+
+    expect(args).not.toContain('--total-parts-count')
+  })
 })
