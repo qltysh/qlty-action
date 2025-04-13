@@ -51,6 +51,11 @@ inputs:
     required: false
     default: false
 
+  total-parts-count:
+    description:
+      'The total number of coverage uploads that qlty cloud should expect'
+    required: false
+
 runs:
   using: node20
   main: dist/index.js

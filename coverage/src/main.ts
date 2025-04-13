@@ -112,6 +112,7 @@ async function run(): Promise<void> {
   const skipErrors = core.getBooleanInput('skip-errors')
   const skipMissingFiles = core.getBooleanInput('skip-missing-files')
   const tag = core.getInput('tag')
+  const totalPartsCount = core.getInput('total-parts-count')
 
   let uploadArgs = ['coverage', 'publish']
 
@@ -129,6 +130,10 @@ async function run(): Promise<void> {
 
   if (tag) {
     uploadArgs.push('--tag', tag)
+  }
+
+  if (totalPartsCount) {
+    uploadArgs.push('--total-parts-count', totalPartsCount)
   }
 
   // Github doesn't provide the head's sha for PRs, so we need to extract it from the event's payload

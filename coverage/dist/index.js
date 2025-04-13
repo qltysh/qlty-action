@@ -69193,6 +69193,7 @@ async function run() {
   const skipErrors = core.getBooleanInput("skip-errors");
   const skipMissingFiles = core.getBooleanInput("skip-missing-files");
   const tag = core.getInput("tag");
+  const totalPartsCount = core.getInput("total-parts-count");
   let uploadArgs = ["coverage", "publish"];
   if (verbose) {
     uploadArgs.push("--print");
@@ -69205,6 +69206,9 @@ async function run() {
   }
   if (tag) {
     uploadArgs.push("--tag", tag);
+  }
+  if (totalPartsCount) {
+    uploadArgs.push("--total-parts-count", totalPartsCount);
   }
   if (context3.payload.pull_request) {
     uploadArgs.push(
