@@ -1,10 +1,10 @@
-name: 'Qlty Install'
-description: 'Install the Qlty CLI'
-author: 'Qlty'
+name: "Qlty Install"
+description: "Install the Qlty CLI"
+author: "Qlty"
 
 branding:
-  icon: 'package'
-  color: 'green'
+  icon: "package"
+  color: "green"
 
 runs:
   using: composite
