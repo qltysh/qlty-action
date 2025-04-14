@@ -1,19 +1,24 @@
 # qlty-action
 
-A GitHub Action for running code coverage analysis and automated formatting
-using the qlty tool.
+## Integrate Qlty into your GitHub Actions workflows
 
-## Features
+TODO -- 1-2 sentences intro what is Qlty and why would I want it in my workflows
 
-This action provides two main functionalities:
+## Actions
 
-### Coverage Analysis
+| Action | Description | More |
+|-|-|-|
+| qlty-action/coverage | TODO | Link |
+| qlty-action/fmt | TODO | Link |
 
-- Processes code coverage data and generates reports
-- Supports multiple file inputs including glob patterns
-- Configurable coverage reporting options
-- Token-based authentication for secure coverage submission
+## Resources
 
-### Code Formatting
+- [Get Started] with Qlty Cloud(LINK)
+- [Documentation](https://docs.qlty.sh/what-is-qlty)
+- [Join us on Discord](https://discord.gg/HeqCgap6)
 
-- Automated code formatting and style enforcement
+## License
+
+This repository is provided under the [MIT License](LINK).
+
+See the [LICENSE.md](https://github.com/qltysh/qlty-action/blob/main/LICENSE.md) file for more details.
