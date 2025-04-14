@@ -11,8 +11,6 @@ import * as github from "@actions/github";
 import * as glob from "@actions/glob";
 import { exec } from "@actions/exec";
 import os from "os";
-import fs from "fs";
-import path from "path";
 
 const OIDC_AUDIENCE = "https://qlty.sh";
 
@@ -167,7 +165,6 @@ async function run(): Promise<void> {
 
   core.setSecret(coverageToken);
 
-  writeQltyConfig();
   let qlytOutput = "";
   try {
     await exec("qlty", uploadArgs, {
@@ -193,12 +190,4 @@ async function run(): Promise<void> {
       throw new CoverageUploadError(qlytOutput);
     }
   }
-}
-
-function writeQltyConfig() {
-  if (!fs.existsSync(".qlty")) {
-    fs.mkdirSync(".qlty");
-  }
-
-  fs.writeFileSync(path.join(".qlty", "qlty.toml"), 'config_version = "0"');
 }
