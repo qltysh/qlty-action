@@ -31,7 +31,7 @@ export async function runWithTracing(): Promise<void> {
       Sentry.setTag("provider", "github");
       Sentry.setTag(
         "repository.full_name",
-        process.env["GITHUB_REPOSITORY"] || "unknown"
+        process.env["GITHUB_REPOSITORY"] || "unknown",
       );
       Sentry.setContext("CI", {
         run_id: process.env["GITHUB_RUN_ID"],
@@ -46,7 +46,7 @@ export async function runWithTracing(): Promise<void> {
         })
         .catch((error) => {
           core.setFailed(
-            `Action failed with error: ${error.name}: ${error.message}`
+            `Action failed with error: ${error.name}: ${error.message}`,
           );
           Sentry.addBreadcrumb({
             category: "qlty-coverage.log",
@@ -59,7 +59,7 @@ export async function runWithTracing(): Promise<void> {
             process.exit(1);
           });
         });
-    }
+    },
   );
 }
 
@@ -140,11 +140,11 @@ async function run(): Promise<void> {
   if (context.payload.pull_request) {
     uploadArgs.push(
       "--override-commit-sha",
-      context.payload.pull_request["head"].sha
+      context.payload.pull_request["head"].sha,
     );
     uploadArgs.push(
       "--override-branch",
-      context.payload.pull_request["head"].ref
+      context.payload.pull_request["head"].ref,
     );
   }
 
