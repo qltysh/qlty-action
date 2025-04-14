@@ -13,7 +13,7 @@ TODO -- 1-2 sentences intro what is Qlty and why would I want it in my workflows
 
 ## Resources
 
-- [Get Started] with Qlty Cloud(LINK)
+- [Get Started](https://qlty.sh/) with Qlty Cloud
 - [Documentation](https://docs.qlty.sh/what-is-qlty)
 - [Join us on Discord](https://discord.gg/HeqCgap6)
 
