@@ -1,59 +1,58 @@
-name: 'Qlty Coverage Upload'
-description: 'Upload code coverage data to Qlty Cloud'
-author: 'Qlty'
+name: "Qlty Coverage Upload"
+description: "Upload code coverage data to Qlty Cloud"
+author: "Qlty"
 
 branding:
-  icon: 'heart'
-  color: 'red'
+  icon: "heart"
+  color: "red"
 
 inputs:
   coverage-token:
-    description: 'The Qlty Cloud coverage token'
+    description: "The Qlty Cloud coverage token"
     required: false
-    default: ''
+    default: ""
 
   oidc:
-    description: 'Use OIDC instead of a coverage token'
+    description: "Use OIDC instead of a coverage token"
     required: false
     default: false
 
   files:
-    description: 'The paths to the coverage reports files'
+    description: "The paths to the coverage reports files"
     required: true
 
   add-prefix:
-    description: 'Add a prefix to the coverage data'
+    description: "Add a prefix to the coverage data"
     required: false
-    default: ''
+    default: ""
 
   strip-prefix:
-    description: 'Strip a prefix to the coverage data'
+    description: "Strip a prefix to the coverage data"
     required: false
-    default: ''
+    default: ""
 
   tag:
-    description: 'The tag to use when uploading coverage data'
+    description: "The tag to use when uploading coverage data"
     required: false
-    default: ''
+    default: ""
 
   verbose:
-    description: 'Verbose output for debugging'
+    description: "Verbose output for debugging"
     required: false
     default: false
 
   skip-errors:
-    description: 'Do not error the action if the upload fails'
+    description: "Do not error the action if the upload fails"
     required: false
     default: true
 
   skip-missing-files:
-    description: 'Files not in the directory are skipped'
+    description: "Files not in the directory are skipped"
     required: false
     default: false
 
   total-parts-count:
-    description:
-      'The total number of coverage uploads that qlty cloud should expect'
+    description: "The total number of coverage uploads that qlty cloud should expect"
     required: false
 
 runs:
