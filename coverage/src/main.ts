@@ -11,8 +11,6 @@ import * as github from "@actions/github";
 import * as glob from "@actions/glob";
 import { exec } from "@actions/exec";
 import os from "os";
-import fs from "fs";
-import path from "path";
 
 const OIDC_AUDIENCE = "https://qlty.sh";
 
@@ -33,7 +31,7 @@ export async function runWithTracing(): Promise<void> {
       Sentry.setTag("provider", "github");
       Sentry.setTag(
         "repository.full_name",
-        process.env["GITHUB_REPOSITORY"] || "unknown",
+        process.env["GITHUB_REPOSITORY"] || "unknown"
       );
       Sentry.setContext("CI", {
         run_id: process.env["GITHUB_RUN_ID"],
@@ -48,7 +46,7 @@ export async function runWithTracing(): Promise<void> {
         })
         .catch((error) => {
           core.setFailed(
-            `Action failed with error: ${error.name}: ${error.message}`,
+            `Action failed with error: ${error.name}: ${error.message}`
           );
           Sentry.addBreadcrumb({
             category: "qlty-coverage.log",
@@ -61,7 +59,7 @@ export async function runWithTracing(): Promise<void> {
             process.exit(1);
           });
         });
-    },
+    }
   );
 }
 
@@ -142,11 +140,11 @@ async function run(): Promise<void> {
   if (context.payload.pull_request) {
     uploadArgs.push(
       "--override-commit-sha",
-      context.payload.pull_request["head"].sha,
+      context.payload.pull_request["head"].sha
     );
     uploadArgs.push(
       "--override-branch",
-      context.payload.pull_request["head"].ref,
+      context.payload.pull_request["head"].ref
     );
   }
 
@@ -167,7 +165,6 @@ async function run(): Promise<void> {
 
   core.setSecret(coverageToken);
 
-  writeQltyConfig();
   let qlytOutput = "";
   try {
     await exec("qlty", uploadArgs, {
@@ -193,12 +190,4 @@ async function run(): Promise<void> {
       throw new CoverageUploadError(qlytOutput);
     }
   }
-}
-
-function writeQltyConfig() {
-  if (!fs.existsSync(".qlty")) {
-    fs.mkdirSync(".qlty");
-  }
-
-  fs.writeFileSync(path.join(".qlty", "qlty.toml"), 'config_version = "0"');
 }
