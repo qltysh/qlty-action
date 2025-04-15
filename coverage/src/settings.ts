@@ -70,11 +70,7 @@ export class Settings {
   }
 
   static createNull(input: Partial<ActionInputKeys> = {}): Settings {
-    const fs = FileSystem.createNull();
-    console.log("Settings.createNull: fs = ", fs);
-    const settings = Settings.create(new StubbedInput(input), fs);
-    console.log("Settings.createNull: settings = ", settings);
-    return settings;
+    return Settings.create(new StubbedInput(input), FileSystem.createNull());
   }
 
   static parse(input: SettingsInput, fs: FileSystem) {
@@ -83,7 +79,6 @@ export class Settings {
   }
 
   constructor(data: SettingsOutput, fs: FileSystem) {
-    console.log("Settings.constructor: fs = ", fs);
     this._data = data;
     this._fs = fs;
   }
@@ -136,7 +131,6 @@ export class FileSystem {
   }
 
   async globPatterns(patterns: string): Promise<string[]> {
-    console.log(`REAL globPatterns`);
     const globber = await glob.create(patterns);
     return await globber.glob();
   }
@@ -144,7 +138,6 @@ export class FileSystem {
 
 export class StubbedFileSystem implements FileSystem {
   async globPatterns(patterns: string): Promise<string[]> {
-    console.log(`FAKE globPatterns`);
     return patterns
       .split("\n")
       .map((pattern) => pattern.trim())

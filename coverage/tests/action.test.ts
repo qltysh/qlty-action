@@ -16,7 +16,6 @@ describe("CoverageAction", () => {
   });
 
   function createTrackedAction({ settings = Settings.createNull() } = {}) {
-    console.log(JSON.stringify(settings, null, 2));
     const action = CoverageAction.createNull({ settings });
     const commands = action.trackOutput();
     return { commands, action };

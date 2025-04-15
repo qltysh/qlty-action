@@ -73330,7 +73330,6 @@ var Settings = class _Settings {
   constructor(data, fs) {
     __publicField(this, "_data");
     __publicField(this, "_fs");
-    console.log("Settings.constructor: fs = ", fs);
     this._data = data;
     this._fs = fs;
   }
@@ -73352,11 +73351,7 @@ var Settings = class _Settings {
     );
   }
   static createNull(input = {}) {
-    const fs = FileSystem.createNull();
-    console.log("Settings.createNull: fs = ", fs);
-    const settings = _Settings.create(new StubbedInput(input), fs);
-    console.log("Settings.createNull: settings = ", settings);
-    return settings;
+    return _Settings.create(new StubbedInput(input), FileSystem.createNull());
   }
   static parse(input, fs) {
     const data = stettingsParser.parse(input);
@@ -73400,14 +73395,12 @@ var FileSystem = class _FileSystem {
     return new StubbedFileSystem();
   }
   async globPatterns(patterns) {
-    console.log(`REAL globPatterns`);
     const globber = await glob.create(patterns);
     return await globber.glob();
   }
 };
 var StubbedFileSystem = class {
   async globPatterns(patterns) {
-    console.log(`FAKE globPatterns`);
     return patterns.split("\n").map((pattern) => pattern.trim()).filter(Boolean);
   }
 };
@@ -73481,7 +73474,6 @@ var CoverageAction = class _CoverageAction {
     installer = Installer.createNull(),
     settings = Settings.createNull()
   } = {}) {
-    console.log("CoverageAction.createNull", settings);
     return new _CoverageAction({
       output,
       context: context3,

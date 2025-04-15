@@ -32,7 +32,6 @@ export class CoverageAction {
     installer?: Installer;
     settings?: Settings;
   } = {}): CoverageAction {
-    console.log("CoverageAction.createNull", settings);
     return new CoverageAction({
       output,
       context,
