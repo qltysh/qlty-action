@@ -13,7 +13,6 @@
 
     // Type checking
     "strict": true,
-    "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,

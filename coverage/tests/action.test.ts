@@ -8,6 +8,7 @@ describe("CoverageAction", () => {
       files: "**/coverage/**",
     });
     const action = CoverageAction.createNull({ settings });
+    const commands = action.trackOutput();
     await action.run();
     // const { downloads, installer } = createTrackedInstaller({
     //   os: new StubbedOperatingSystem("linux", "x64"),

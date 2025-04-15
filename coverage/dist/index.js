@@ -31315,7 +31315,7 @@ var require_timers = __commonJS({
 var require_sbmh = __commonJS({
   "node_modules/@fastify/busboy/deps/streamsearch/sbmh.js"(exports2, module2) {
     "use strict";
-    var EventEmitter2 = require("node:events").EventEmitter;
+    var EventEmitter3 = require("node:events").EventEmitter;
     var inherits = require("node:util").inherits;
     function SBMH(needle) {
       if (typeof needle === "string") {
@@ -31342,7 +31342,7 @@ var require_sbmh = __commonJS({
         this._occ[needle[i]] = needleLength - 1 - i;
       }
     }
-    inherits(SBMH, EventEmitter2);
+    inherits(SBMH, EventEmitter3);
     SBMH.prototype.reset = function() {
       this._lookbehind_size = 0;
       this.matches = 0;
@@ -31484,7 +31484,7 @@ var require_getLimit = __commonJS({
 var require_HeaderParser = __commonJS({
   "node_modules/@fastify/busboy/deps/dicer/lib/HeaderParser.js"(exports2, module2) {
     "use strict";
-    var EventEmitter2 = require("node:events").EventEmitter;
+    var EventEmitter3 = require("node:events").EventEmitter;
     var inherits = require("node:util").inherits;
     var getLimit = require_getLimit();
     var StreamSearch = require_sbmh();
@@ -31492,7 +31492,7 @@ var require_HeaderParser = __commonJS({
     var RE_CRLF = /\r\n/g;
     var RE_HDR = /^([^:]+):[ \t]?([\x00-\xFF]+)?$/;
     function HeaderParser(cfg) {
-      EventEmitter2.call(this);
+      EventEmitter3.call(this);
       cfg = cfg || {};
       const self = this;
       this.nread = 0;
@@ -31520,7 +31520,7 @@ var require_HeaderParser = __commonJS({
         }
       });
     }
-    inherits(HeaderParser, EventEmitter2);
+    inherits(HeaderParser, EventEmitter3);
     HeaderParser.prototype.push = function(data) {
       const r = this.ss.push(data);
       if (this.finished) {
@@ -35915,8 +35915,8 @@ var require_request = __commonJS({
 var require_dispatcher = __commonJS({
   "node_modules/undici/lib/dispatcher.js"(exports2, module2) {
     "use strict";
-    var EventEmitter2 = require("events");
-    var Dispatcher = class extends EventEmitter2 {
+    var EventEmitter3 = require("events");
+    var Dispatcher = class extends EventEmitter3 {
       dispatch() {
         throw new Error("not implemented");
       }
@@ -69167,11 +69167,10 @@ var Installer = class _Installer {
     __publicField(this, "_os");
     __publicField(this, "_output");
     __publicField(this, "_tc");
-    __publicField(this, "_emitter");
+    __publicField(this, "_emitter", new import_node_events.default());
     this._os = os4;
     this._output = output;
     this._tc = toolCache;
-    this._emitter = new import_node_events.default();
   }
   static create() {
     return new _Installer(import_os.default, core, tc);
@@ -73424,6 +73423,8 @@ var StubbedCommandExecutor = class {
 };
 
 // src/action.ts
+var import_node_events2 = __toESM(require("node:events"));
+var EXEC_EVENT = "exec";
 var CoverageAction = class _CoverageAction {
   constructor({
     output = actionsCore,
@@ -73437,6 +73438,7 @@ var CoverageAction = class _CoverageAction {
     __publicField(this, "_executor");
     __publicField(this, "_installer");
     __publicField(this, "_settings");
+    __publicField(this, "_emitter", new import_node_events2.default());
     this._output = output;
     this._context = context3;
     this._executor = executor;
@@ -73529,6 +73531,9 @@ var CoverageAction = class _CoverageAction {
       uploadArgs.push("--skip-missing-files");
     }
     return uploadArgs.concat(await this._settings.getFiles());
+  }
+  trackOutput() {
+    return OutputTracker.create(this._emitter, EXEC_EVENT);
   }
 };
 var CoverageUploadError = class extends Error {

@@ -6,6 +6,10 @@ import * as actionsGithub from "@actions/github";
 import { WebhookPayload } from "@actions/github/lib/interfaces";
 import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
+import OutputTracker from "./util/output_tracker";
+import EventEmitter from "node:events";
+
+const EXEC_EVENT = "exec";
 
 export class CoverageAction {
   private _output: ActionOutput;
@@ -13,6 +17,7 @@ export class CoverageAction {
   private _executor: CommandExecutor;
   private _installer: Installer;
   private _settings: Settings;
+  private _emitter: EventEmitter = new EventEmitter();
 
   static createNull({
     output = new StubbedOutput(),
@@ -143,6 +148,10 @@ export class CoverageAction {
     }
 
     return uploadArgs.concat(await this._settings.getFiles());
+  }
+
+  trackOutput() {
+    return OutputTracker.create<string[]>(this._emitter, EXEC_EVENT);
   }
 }
 

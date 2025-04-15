@@ -11,7 +11,7 @@ export class Installer {
   private _os: OperatingSystem;
   private _output: ActionOutput;
   private _tc: ToolCache;
-  private _emitter: EventEmitter;
+  private _emitter: EventEmitter = new EventEmitter();
 
   static create(): Installer {
     return new Installer(os, core, tc);
@@ -29,7 +29,6 @@ export class Installer {
     this._os = os;
     this._output = output;
     this._tc = toolCache;
-    this._emitter = new EventEmitter();
   }
 
   trackOutput() {
