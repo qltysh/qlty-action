@@ -24,7 +24,7 @@ async function runWithTracing(main: () => Promise<void>): Promise<void> {
       Sentry.setTag("provider", "github");
       Sentry.setTag(
         "repository.full_name",
-        process.env["GITHUB_REPOSITORY"] || "unknown"
+        process.env["GITHUB_REPOSITORY"] || "unknown",
       );
       Sentry.setContext("CI", {
         run_id: process.env["GITHUB_RUN_ID"],
@@ -39,7 +39,7 @@ async function runWithTracing(main: () => Promise<void>): Promise<void> {
         })
         .catch((error) => {
           core.setFailed(
-            `Action failed with error: ${error.name}: ${error.message}`
+            `Action failed with error: ${error.name}: ${error.message}`,
           );
           Sentry.addBreadcrumb({
             category: "qlty-coverage.log",
@@ -52,6 +52,6 @@ async function runWithTracing(main: () => Promise<void>): Promise<void> {
             process.exit(1);
           });
         });
-    }
+    },
   );
 }

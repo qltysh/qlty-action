@@ -21,7 +21,7 @@ export class Installer {
     return new Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
-      new StubbedToolCache()
+      new StubbedToolCache(),
     );
   }
 
@@ -52,7 +52,7 @@ export class Installer {
       platformArch = "aarch64-apple-darwin";
     } else {
       this._output.setFailed(
-        `Unsupported platform/architecture: ${platform}/${arch}`
+        `Unsupported platform/architecture: ${platform}/${arch}`,
       );
       return;
     }
@@ -63,7 +63,7 @@ export class Installer {
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
-      "latest"
+      "latest",
     );
     this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
     const binPath = `${cachedPath}/qlty-${platformArch}`;
@@ -111,7 +111,7 @@ export class StubbedToolCache implements ToolCache {
   async extractTar(
     file: string,
     _dest?: string,
-    _options?: string
+    _options?: string,
   ): Promise<string> {
     return `extracted[${file} dest=${_dest} options=${_options}]`;
   }
@@ -119,7 +119,7 @@ export class StubbedToolCache implements ToolCache {
   async cacheDir(
     folder: string,
     _tool: string,
-    _version: string
+    _version: string,
   ): Promise<string> {
     return `cached[${folder}]`;
   }
