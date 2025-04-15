@@ -7,9 +7,9 @@ TODO -- 1-2 sentences intro what is Qlty and why would I want it in my workflows
 ## Actions
 
 | Action | Description | More |
-|-|-|-|
+|--------|-------------|------|
 | qlty-action/coverage | TODO | Link |
-| qlty-action/fmt | TODO | Link |
+| qlty-action/fmt      | TODO | Link |
 
 ## Resources
 
