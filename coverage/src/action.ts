@@ -172,14 +172,14 @@ class StubbedActionContext implements ActionContext {
   get payload(): WebhookPayload {
     return {
       action: "",
-      installation: {
-        id: 0,
-        account: {
-          login: "",
-          id: 0,
-        },
-        repositories: [],
-      },
+      // installation: {
+      //   id: 0,
+      //   account: {
+      //     login: "",
+      //     id: 0,
+      //   },
+      //   repositories: [],
+      // },
       // sender: {
       //   type: "",
       //   login: "",

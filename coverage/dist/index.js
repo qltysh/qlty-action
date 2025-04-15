@@ -73571,15 +73571,15 @@ var CoverageUploadError = class extends Error {
 var StubbedActionContext = class {
   get payload() {
     return {
-      action: "",
-      installation: {
-        id: 0,
-        account: {
-          login: "",
-          id: 0
-        },
-        repositories: []
-      }
+      action: ""
+      // installation: {
+      //   id: 0,
+      //   account: {
+      //     login: "",
+      //     id: 0,
+      //   },
+      //   repositories: [],
+      // },
       // sender: {
       //   type: "",
       //   login: "",
