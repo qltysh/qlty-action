@@ -73571,7 +73571,7 @@ var CoverageUploadError = class extends Error {
 var StubbedActionContext = class {
   get payload() {
     return {
-      action: ""
+      // action: "",
       // installation: {
       //   id: 0,
       //   account: {

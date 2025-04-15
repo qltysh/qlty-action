@@ -171,7 +171,7 @@ interface ActionContext {
 class StubbedActionContext implements ActionContext {
   get payload(): WebhookPayload {
     return {
-      action: "",
+      // action: "",
       // installation: {
       //   id: 0,
       //   account: {
