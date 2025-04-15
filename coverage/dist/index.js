@@ -73470,6 +73470,7 @@ var CoverageAction = class _CoverageAction {
     this._output.setSecret(token);
     let qlytOutput = "";
     try {
+      this._emitter.emit(EXEC_EVENT, ["qlty", ...uploadArgs]);
       await this._executor.exec("qlty", uploadArgs, {
         env: {
           ...process.env,

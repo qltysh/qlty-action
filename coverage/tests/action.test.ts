@@ -17,5 +17,8 @@ describe("CoverageAction", () => {
     // expect(downloads.clear()).toEqual([
     //   "https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz",
     // ]);
+    expect(commands.clear()).toEqual([
+      ["qlty", "coverage", "publish", "**/coverage/**"],
+    ]);
   });
 });
