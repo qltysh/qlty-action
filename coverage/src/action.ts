@@ -1,53 +1,11 @@
 import { Installer } from "./installer";
 import { Settings } from "./settings";
-import * as actionsCore from "@actions/core";
 import * as actionsExec from "@actions/exec";
+import * as actionsCore from "@actions/core";
 import * as actionsGithub from "@actions/github";
 import { WebhookPayload } from "@actions/github/lib/interfaces";
-import { ActionOutput, StubbedOutput } from "./output";
-
-interface ActionContext {
-  payload: WebhookPayload;
-}
-
-interface CommandExecutor {
-  exec(
-    command: string,
-    args?: string[],
-    options?: actionsExec.ExecOptions,
-  ): Promise<number>;
-}
-
-class StubbedCommandExecutor implements CommandExecutor {
-  async exec(
-    command: string,
-    args?: string[],
-    options?: actionsExec.ExecOptions,
-  ): Promise<number> {
-    return 0;
-  }
-}
-
-class StubbedActionContext implements ActionContext {
-  get payload(): WebhookPayload {
-    return {
-      action: "",
-      installation: {
-        id: 0,
-        account: {
-          login: "",
-          id: 0,
-        },
-        repositories: [],
-      },
-      sender: {
-        type: "",
-        login: "",
-        id: 0,
-      },
-    };
-  }
-}
+import { ActionOutput, StubbedOutput } from "./util/output";
+import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 
 export class CoverageAction {
   private _output: ActionOutput;
@@ -128,7 +86,7 @@ export class CoverageAction {
     } catch {
       if (this._settings.input.skipErrors) {
         this._output.warning(
-          "Error uploading coverage, skipping due to skip-errors",
+          "Error uploading coverage, skipping due to skip-errors"
         );
         this._output.warning("Output:");
         this._output.warning(qlytOutput);
@@ -152,7 +110,7 @@ export class CoverageAction {
     if (this._settings.input.stripPrefix) {
       uploadArgs.push(
         "--transform-strip-prefix",
-        this._settings.input.stripPrefix,
+        this._settings.input.stripPrefix
       );
     }
 
@@ -163,7 +121,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString(),
+        this._settings.input.totalPartsCount.toString()
       );
     }
 
@@ -175,7 +133,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha,
+        payload.pull_request["head"].sha
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
@@ -192,5 +150,30 @@ export class CoverageUploadError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "CoverageUploadError";
+  }
+}
+
+interface ActionContext {
+  payload: WebhookPayload;
+}
+
+class StubbedActionContext implements ActionContext {
+  get payload(): WebhookPayload {
+    return {
+      action: "",
+      installation: {
+        id: 0,
+        account: {
+          login: "",
+          id: 0,
+        },
+        repositories: [],
+      },
+      sender: {
+        type: "",
+        login: "",
+        id: 0,
+      },
+    };
   }
 }

@@ -69138,7 +69138,7 @@ var OutputTracker = class _OutputTracker {
   }
 };
 
-// src/output.ts
+// src/util/output.ts
 var StubbedOutput = class {
   constructor() {
     __publicField(this, "secrets", []);
@@ -73412,34 +73412,18 @@ var StubbedFileSystem = class {
 };
 
 // src/action.ts
-var actionsCore = __toESM(require_core4());
 var actionsExec = __toESM(require_exec());
+var actionsCore = __toESM(require_core4());
 var actionsGithub = __toESM(require_github());
+
+// src/util/exec.ts
 var StubbedCommandExecutor = class {
   async exec(command, args, options) {
     return 0;
   }
 };
-var StubbedActionContext = class {
-  get payload() {
-    return {
-      action: "",
-      installation: {
-        id: 0,
-        account: {
-          login: "",
-          id: 0
-        },
-        repositories: []
-      },
-      sender: {
-        type: "",
-        login: "",
-        id: 0
-      }
-    };
-  }
-};
+
+// src/action.ts
 var CoverageAction = class _CoverageAction {
   constructor({
     output = actionsCore,
@@ -73551,6 +73535,26 @@ var CoverageUploadError = class extends Error {
   constructor(message) {
     super(message);
     this.name = "CoverageUploadError";
+  }
+};
+var StubbedActionContext = class {
+  get payload() {
+    return {
+      action: "",
+      installation: {
+        id: 0,
+        account: {
+          login: "",
+          id: 0
+        },
+        repositories: []
+      },
+      sender: {
+        type: "",
+        login: "",
+        id: 0
+      }
+    };
   }
 };
 

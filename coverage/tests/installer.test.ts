@@ -3,7 +3,7 @@ import {
   StubbedOperatingSystem,
   StubbedToolCache,
 } from "src/installer";
-import { StubbedOutput } from "src/output";
+import { StubbedOutput } from "src/util/output";
 
 describe("Installer", () => {
   test("installs linux x86", async () => {
