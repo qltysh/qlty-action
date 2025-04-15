@@ -73398,12 +73398,14 @@ var FileSystem = class _FileSystem {
     return new StubbedFileSystem();
   }
   async globPatterns(patterns) {
+    console.log(`Glob patterns called with: ${patterns}`);
     const globber = await glob.create(patterns);
     return await globber.glob();
   }
 };
 var StubbedFileSystem = class {
   async globPatterns(patterns) {
+    console.log(`Stubbed globPatterns called with: ${patterns}`);
     return patterns.split("\n").map((pattern) => pattern.trim()).filter(Boolean);
   }
 };

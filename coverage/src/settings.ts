@@ -42,7 +42,6 @@ const settingsParser = z.object({
   verbose: z.boolean(),
 });
 
-type SettingsInput = z.input<typeof settingsParser>;
 export type SettingsOutput = z.output<typeof settingsParser>;
 
 const OIDC_AUDIENCE = "https://qlty.sh";
@@ -114,12 +113,15 @@ export class Settings {
   }
 
   async getFiles() {
+    // throw new Error("getFiles is not implemented");
+    // console.log(`getFiles called with: ${this._data.files}`);
     let patterns: string[] = this._data.files
       .split(",")
       .map((file) => file.trim())
       .filter(Boolean);
     let expandedFiles = await this._fs.globPatterns(patterns.join("\n"));
     return this.sortedUnique(expandedFiles);
+    // return [];
   }
 
   get input() {
@@ -141,6 +143,7 @@ export class FileSystem {
   }
 
   async globPatterns(patterns: string): Promise<string[]> {
+    console.log(`Glob patterns called with: ${patterns}`);
     const globber = await glob.create(patterns);
     return await globber.glob();
   }
@@ -148,6 +151,7 @@ export class FileSystem {
 
 export class StubbedFileSystem implements FileSystem {
   async globPatterns(patterns: string): Promise<string[]> {
+    console.log(`Stubbed globPatterns called with: ${patterns}`);
     return patterns
       .split("\n")
       .map((pattern) => pattern.trim())

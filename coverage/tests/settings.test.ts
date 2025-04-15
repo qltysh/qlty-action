@@ -74,7 +74,17 @@ describe("Settings", () => {
   });
 
   describe("getFiles", () => {
-    test("accepts comma separated patterns", () => {});
+    test("accepts comma separated patterns", async () => {
+      // TODO
+      const settings = Settings.createNull({
+        // "coverage-token": "test-token",
+        // oidc: false,
+        files: "foo, bar",
+      });
+      console.log(settings);
+      expect(await settings.getFiles()).toEqual(["bar", "foo"]);
+    });
+
     test("accepts newline separated patterns", () => {});
     test("returns sorted, unique paths", () => {});
   });
