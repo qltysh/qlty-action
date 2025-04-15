@@ -73379,8 +73379,8 @@ var Settings = class _Settings {
     }
   }
   async getFiles() {
-    let patterns = this._data.files.split(",").map((file) => file.trim()).filter(Boolean);
-    let expandedFiles = await this._fs.globPatterns(patterns.join("\n"));
+    const patterns = this._data.files.split(",").map((file) => file.trim()).filter(Boolean);
+    const expandedFiles = await this._fs.globPatterns(patterns.join("\n"));
     return this.sortedUnique(expandedFiles);
   }
   get input() {
@@ -73441,7 +73441,7 @@ var actionsGithub = __toESM(require_github());
 
 // src/util/exec.ts
 var StubbedCommandExecutor = class {
-  async exec(command, args, options) {
+  async exec(_command, _args, _options) {
     return 0;
   }
 };
@@ -73522,7 +73522,7 @@ var CoverageAction = class _CoverageAction {
     }
   }
   async buildArgs() {
-    let uploadArgs = ["coverage", "publish"];
+    const uploadArgs = ["coverage", "publish"];
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");
     }
