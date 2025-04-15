@@ -1,51 +1,6 @@
 import { CoverageAction, StubbedActionContext } from "src/action";
 import { Settings } from "src/settings";
 
-//     try {
-//       this._emitter.emit(EXEC_EVENT, ["qlty", ...uploadArgs]);
-//       await this._executor.exec("qlty", uploadArgs, {
-//         env: {
-//           ...process.env,
-//           QLTY_COVERAGE_TOKEN: token,
-//         },
-//         listeners: {
-//           stdout: (data: Buffer) => {
-//             qlytOutput += data.toString();
-//           },
-//           stderr: (data: Buffer) => {
-//             qlytOutput += data.toString();
-//           },
-//         },
-//       });
-//     } catch {
-//       if (this._settings.input.skipErrors) {
-//         this._output.warning(
-//           "Error uploading coverage, skipping due to skip-errors"
-//         );
-//         this._output.warning("Output:");
-//         this._output.warning(qlytOutput);
-//       } else {
-//         throw new CoverageUploadError(qlytOutput);
-//       }
-//     }
-//   }
-
-//     const payload = this._context.payload;
-
-//     // Github doesn't provide the head's sha for PRs, so we need to extract it from the event's payload
-//     // https://github.com/orgs/community/discussions/26325
-//     // https://www.kenmuse.com/blog/the-many-shas-of-a-github-pull-request/
-//     if (payload.pull_request) {
-//       uploadArgs.push(
-//         "--override-commit-sha",
-//         payload.pull_request["head"].sha
-//       );
-//       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
-//     }
-
-//     const files = await this._settings.getFiles();
-//     return uploadArgs.concat(files);
-
 describe("CoverageAction", () => {
   test("runs qlty coverage publish", async () => {
     const { action, commands } = createTrackedAction({
