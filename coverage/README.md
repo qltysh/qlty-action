@@ -1,16 +1,17 @@
-# qlty-action/covergage
+# qlty-action/coverage
 
 ## Upload code coverage to Qlty from GitHub Actions in five minutes
 
-This is a reusable action GitHub Action to upload code coverage data to Qlty Cloud. Qlty Cloud provides code coverage analytics with commit status gates and trends.
+This is a reusable GitHub Action to upload code coverage data to Qlty Cloud.  
+Qlty Cloud provides code coverage analytics with commit status gates and trends.
 
 ## Usage
 
 To upload code coverage to Qlty Cloud, follow these steps:
 
-1. Obtain a code coverage upload token
+1. Obtain a code coverage upload token.
 
-2. Generate code coverage data from your automated test builds in a supported format
+2. Generate code coverage data from your automated test builds in a supported format.
 
 3. Add this `qlty-action/coverage` step to your GitHub Actions test workflow. Here is a simple example:
 
@@ -21,8 +22,8 @@ To upload code coverage to Qlty Cloud, follow these steps:
     coverage-token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
     files: ./coverage1.xml,./coverage2.xml
     flags: unit                                         # Optional
-    verbose: true                                       # Optional, default to false
-    skip-errors: false                                  # Optional, defaults to true
+    verbose: true                                       # Optional, default is false
+    skip-errors: false                                  # Optional, default is true
 ```
 
 4. Optionally enable commit statuses to pass or fail based on code coverage standards
@@ -32,7 +33,7 @@ To upload code coverage to Qlty Cloud, follow these steps:
 | Parameter | Description | Required | Default |
 |-|-|-|-|
 | `coverage-token` | A Workspace or Project coverage upload token from Qlty Cloud | Yes | |
-| ... | ... | Y/N | |
+| `...` | ... | Y/N | |
 
 ## Full Example
 
