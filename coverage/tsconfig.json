@@ -7,8 +7,9 @@
 
     // Modules
     "module": "NodeNext",
-    "rootDir": "./src",
+    "rootDir": "./",
     "baseUrl": "./",
+    "types": ["vitest/globals"],
 
     // Type checking
     "strict": true,
@@ -31,8 +32,11 @@
 
     // Emit
     "outDir": "./dist",
-    "sourceMap": true
+    "sourceMap": true,
+
+    // Completeness
+    "skipLibCheck": true
   },
-  "include": ["src"],
+  "include": ["src", "tests"],
   "exclude": ["./dist", "./node_modules", "./__tests__", "./coverage"]
 }
