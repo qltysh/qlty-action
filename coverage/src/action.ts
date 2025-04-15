@@ -168,23 +168,16 @@ interface ActionContext {
   payload: WebhookPayload;
 }
 
-class StubbedActionContext implements ActionContext {
+export class StubbedActionContext implements ActionContext {
   get payload(): WebhookPayload {
     return {
-      // action: "",
-      // installation: {
-      //   id: 0,
-      //   account: {
-      //     login: "",
-      //     id: 0,
-      //   },
-      //   repositories: [],
-      // },
-      // sender: {
-      //   type: "",
-      //   login: "",
-      //   id: 0,
-      // },
+      pull_request: {
+        number: 1,
+        head: {
+          sha: "test-sha",
+          ref: "test-ref",
+        },
+      },
     };
   }
 }

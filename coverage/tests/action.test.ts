@@ -1,4 +1,4 @@
-import { CoverageAction } from "src/action";
+import { CoverageAction, StubbedActionContext } from "src/action";
 import { Settings } from "src/settings";
 
 //     try {
@@ -53,6 +53,7 @@ describe("CoverageAction", () => {
         "coverage-token": "test-token",
         files: "info.lcov",
       }),
+      context: { payload: {} },
     });
     await action.run();
     expect(commands.clear()).toEqual([
@@ -72,6 +73,7 @@ describe("CoverageAction", () => {
         "strip-prefix": "strip",
         verbose: true,
       }),
+      context: { payload: {} },
     });
     await action.run();
     expect(commands.clear()).toEqual([
@@ -103,12 +105,24 @@ describe("CoverageAction", () => {
     });
     await action.run();
     expect(commands.clear()).toEqual([
-      ["qlty", "coverage", "publish", "info.lcov"],
+      [
+        "qlty",
+        "coverage",
+        "publish",
+        "--override-commit-sha",
+        "test-sha",
+        "--override-branch",
+        "test-ref",
+        "info.lcov",
+      ],
     ]);
   });
 
-  function createTrackedAction({ settings = Settings.createNull() } = {}) {
-    const action = CoverageAction.createNull({ settings });
+  function createTrackedAction({
+    settings = Settings.createNull(),
+    context = new StubbedActionContext(),
+  } = {}) {
+    const action = CoverageAction.createNull({ settings, context });
     const commands = action.trackOutput();
     return { commands, action };
   }
