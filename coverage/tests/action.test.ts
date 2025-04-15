@@ -5,7 +5,7 @@ describe("CoverageAction", () => {
   test("runs qlty coverage publish", async () => {
     const { action, commands } = createTrackedAction({
       settings: Settings.createNull({
-        coverageToken: "test-token",
+        "coverage-token": "test-token",
         files: "**/coverage/**",
       }),
     });
@@ -16,6 +16,7 @@ describe("CoverageAction", () => {
   });
 
   function createTrackedAction({ settings = Settings.createNull() } = {}) {
+    console.log(JSON.stringify(settings, null, 2));
     const action = CoverageAction.createNull({ settings });
     const commands = action.trackOutput();
     return { commands, action };

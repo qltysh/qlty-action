@@ -73309,7 +73309,7 @@ var z = /* @__PURE__ */ Object.freeze({
 // src/settings.ts
 var core2 = __toESM(require_core4());
 var glob = __toESM(require_glob());
-var settingsSchema = z.object({
+var stettingsParser = z.object({
   files: z.string().trim(),
   addPrefix: z.string().transform((val) => val === "" ? void 0 : val),
   stripPrefix: z.string().transform((val) => val === "" ? void 0 : val),
@@ -73327,40 +73327,40 @@ var settingsSchema = z.object({
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var Settings = class _Settings {
-  constructor(data, fs = FileSystem.create()) {
+  constructor(data, fs) {
     __publicField(this, "_data");
     __publicField(this, "_fs");
-    this._data = settingsSchema.parse(data);
+    console.log("Settings.constructor: fs = ", fs);
+    this._data = data;
     this._fs = fs;
   }
   static create(input = core2, fs = FileSystem.create()) {
-    return new _Settings({
-      files: input.getInput("files", { required: true }).trim(),
-      addPrefix: input.getInput("add-prefix"),
-      stripPrefix: input.getInput("strip-prefix"),
-      skipErrors: input.getBooleanInput("skip-errors"),
-      skipMissingFiles: input.getBooleanInput("skip-missing-files"),
-      tag: input.getInput("tag"),
-      totalPartsCount: input.getInput("total-parts-count"),
-      oidc: input.getBooleanInput("oidc"),
-      coverageToken: input.getInput("coverage-token"),
-      verbose: input.getBooleanInput("verbose")
-    });
+    return _Settings.parse(
+      {
+        files: input.getInput("files", { required: true }).trim(),
+        addPrefix: input.getInput("add-prefix"),
+        stripPrefix: input.getInput("strip-prefix"),
+        skipErrors: input.getBooleanInput("skip-errors"),
+        skipMissingFiles: input.getBooleanInput("skip-missing-files"),
+        tag: input.getInput("tag"),
+        totalPartsCount: input.getInput("total-parts-count"),
+        oidc: input.getBooleanInput("oidc"),
+        coverageToken: input.getInput("coverage-token"),
+        verbose: input.getBooleanInput("verbose")
+      },
+      fs
+    );
   }
   static createNull(input = {}) {
-    const fullInput = {
-      files: input.files || "**/coverage/**",
-      addPrefix: input.addPrefix || "",
-      stripPrefix: input.stripPrefix || "",
-      skipErrors: input.skipErrors || false,
-      skipMissingFiles: input.skipMissingFiles || false,
-      tag: input.tag || "",
-      totalPartsCount: input.totalPartsCount || "",
-      oidc: input.oidc || false,
-      coverageToken: input.coverageToken || "",
-      verbose: input.verbose || false
-    };
-    return new _Settings(fullInput, FileSystem.createNull());
+    const fs = FileSystem.createNull();
+    console.log("Settings.createNull: fs = ", fs);
+    const settings = _Settings.create(new StubbedInput(input), fs);
+    console.log("Settings.createNull: settings = ", settings);
+    return settings;
+  }
+  static parse(input, fs) {
+    const data = stettingsParser.parse(input);
+    return new _Settings(data, fs);
   }
   validate() {
     if (!this._data.oidc && !this._data.coverageToken) {
@@ -73400,13 +73400,41 @@ var FileSystem = class _FileSystem {
     return new StubbedFileSystem();
   }
   async globPatterns(patterns) {
+    console.log(`REAL globPatterns`);
     const globber = await glob.create(patterns);
     return await globber.glob();
   }
 };
 var StubbedFileSystem = class {
   async globPatterns(patterns) {
+    console.log(`FAKE globPatterns`);
     return patterns.split("\n").map((pattern) => pattern.trim()).filter(Boolean);
+  }
+};
+var StubbedInput = class {
+  constructor(data) {
+    __publicField(this, "_data");
+    this._data = {
+      files: data.files || "",
+      "add-prefix": data["add-prefix"] || "",
+      "strip-prefix": data["strip-prefix"] || "",
+      "skip-errors": data["skip-errors"] || false,
+      "skip-missing-files": data["skip-missing-files"] || false,
+      tag: data.tag || "",
+      "total-parts-count": data["total-parts-count"] || "",
+      oidc: data.oidc || false,
+      "coverage-token": data["coverage-token"] || "",
+      verbose: data.verbose || false
+    };
+  }
+  getInput(name, _options) {
+    return (this._data[name] || "").toString();
+  }
+  getBooleanInput(name, _options) {
+    return this._data[name] === true;
+  }
+  async getIDToken(audience) {
+    return "fake-oidc-token";
   }
 };
 
@@ -73444,6 +73472,7 @@ var CoverageAction = class _CoverageAction {
     this._executor = executor;
     this._installer = installer;
     this._settings = settings;
+    console.log("Settings", this._settings);
   }
   static createNull({
     output = new StubbedOutput(),
@@ -73452,6 +73481,7 @@ var CoverageAction = class _CoverageAction {
     installer = Installer.createNull(),
     settings = Settings.createNull()
   } = {}) {
+    console.log("CoverageAction.createNull", settings);
     return new _CoverageAction({
       output,
       context: context3,
@@ -73531,7 +73561,9 @@ var CoverageAction = class _CoverageAction {
     if (this._settings.input.skipMissingFiles) {
       uploadArgs.push("--skip-missing-files");
     }
-    return uploadArgs.concat(await this._settings.getFiles());
+    const files = await this._settings.getFiles();
+    console.log(files);
+    return uploadArgs.concat(files);
   }
   trackOutput() {
     return OutputTracker.create(this._emitter, EXEC_EVENT);
