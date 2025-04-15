@@ -50,8 +50,27 @@ describe("Settings", () => {
   });
 
   describe("validation", () => {
-    test("fails when OIDC and coverage token are both missing", () => {});
-    test("fails when OIDC and coverage token are both present", () => {});
+    test("fails when OIDC and coverage token are both missing", () => {
+      const settings = Settings.createNull({
+        "coverage-token": "",
+        oidc: false,
+      });
+
+      expect(() => settings.validate()).toThrow(
+        "Either 'oidc' or 'coverage-token' must be provided."
+      );
+    });
+
+    test("fails when OIDC and coverage token are both present", () => {
+      const settings = Settings.createNull({
+        "coverage-token": "test-token",
+        oidc: true,
+      });
+
+      expect(() => settings.validate()).toThrow(
+        "Both 'oidc' and 'coverage-token' cannot be provided at the same time."
+      );
+    });
   });
 
   describe("getFiles", () => {
@@ -61,7 +80,24 @@ describe("Settings", () => {
   });
 
   describe("getToken", () => {
-    test("returns the coverage token", () => {});
-    test("generates an ID token", () => {});
+    test("returns the coverage token", async () => {
+      const settings = Settings.createNull({
+        "coverage-token": "test-token",
+        oidc: false,
+      });
+
+      expect(await settings.getToken()).toEqual("test-token");
+    });
+
+    test("generates an ID token", async () => {
+      const settings = Settings.createNull({
+        "coverage-token": "",
+        oidc: true,
+      });
+
+      expect(await settings.getToken()).toEqual(
+        "oidc-token:audience=https://qlty.sh"
+      );
+    });
   });
 });

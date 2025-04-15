@@ -49731,12 +49731,12 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       return process.env[`STATE_${name}`] || "";
     }
     exports2.getState = getState;
-    function getIDToken2(aud) {
+    function getIDToken(aud) {
       return __awaiter(this, void 0, void 0, function* () {
         return yield oidc_utils_1.OidcClient.getIDToken(aud);
       });
     }
-    exports2.getIDToken = getIDToken2;
+    exports2.getIDToken = getIDToken;
     var summary_1 = require_summary();
     Object.defineProperty(exports2, "summary", { enumerable: true, get: function() {
       return summary_1.summary;
@@ -73309,7 +73309,7 @@ var z = /* @__PURE__ */ Object.freeze({
 // src/settings.ts
 var core2 = __toESM(require_core4());
 var glob = __toESM(require_glob());
-var stettingsParser = z.object({
+var settingsParser = z.object({
   files: z.string().trim(),
   addPrefix: z.string().transform((val) => val === "" ? void 0 : val),
   stripPrefix: z.string().transform((val) => val === "" ? void 0 : val),
@@ -73327,15 +73327,17 @@ var stettingsParser = z.object({
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var Settings = class _Settings {
-  constructor(data, fs) {
+  constructor(data, input, fs) {
     __publicField(this, "_data");
+    __publicField(this, "_input");
     __publicField(this, "_fs");
     this._data = data;
+    this._input = input;
     this._fs = fs;
   }
   static create(input = core2, fs = FileSystem.create()) {
-    return _Settings.parse(
-      {
+    return new _Settings(
+      settingsParser.parse({
         files: input.getInput("files", { required: true }).trim(),
         addPrefix: input.getInput("add-prefix"),
         stripPrefix: input.getInput("strip-prefix"),
@@ -73346,16 +73348,13 @@ var Settings = class _Settings {
         oidc: input.getBooleanInput("oidc"),
         coverageToken: input.getInput("coverage-token"),
         verbose: input.getBooleanInput("verbose")
-      },
+      }),
+      input,
       fs
     );
   }
   static createNull(input = {}, fs = FileSystem.createNull()) {
-    return _Settings.create(new StubbedInput(input), fs);
-  }
-  static parse(input, fs) {
-    const data = stettingsParser.parse(input);
-    return new _Settings(data, fs);
+    return _Settings.create(new StubbedInputProvider(input), fs);
   }
   validate() {
     if (!this._data.oidc && !this._data.coverageToken) {
@@ -73370,7 +73369,7 @@ var Settings = class _Settings {
   }
   async getToken() {
     if (this._data.oidc) {
-      return await core2.getIDToken(OIDC_AUDIENCE);
+      return await this._input.getIDToken(OIDC_AUDIENCE);
     } else {
       if (!this._data.coverageToken) {
         throw new Error("Coverage token is required when 'oidc' is false.");
@@ -73408,7 +73407,7 @@ var StubbedFileSystem = class {
     return patterns.split("\n").map((pattern) => pattern.trim()).filter(Boolean);
   }
 };
-var StubbedInput = class {
+var StubbedInputProvider = class {
   constructor(data) {
     __publicField(this, "_data");
     this._data = {

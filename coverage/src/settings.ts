@@ -6,7 +6,7 @@ interface GetInputOptions {
   required?: boolean;
 }
 
-interface ActionInput {
+interface InputProvider {
   getInput(name: string, options?: GetInputOptions): string;
   getBooleanInput(name: string, options?: GetInputOptions): boolean;
   getIDToken(audience: string): Promise<string>;
@@ -25,7 +25,7 @@ interface ActionInputKeys {
   verbose: boolean;
 }
 
-const stettingsParser = z.object({
+const settingsParser = z.object({
   files: z.string().trim(),
   addPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
   stripPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
@@ -42,18 +42,22 @@ const stettingsParser = z.object({
   verbose: z.boolean(),
 });
 
-type SettingsInput = z.input<typeof stettingsParser>;
-export type SettingsOutput = z.output<typeof stettingsParser>;
+type SettingsInput = z.input<typeof settingsParser>;
+export type SettingsOutput = z.output<typeof settingsParser>;
 
 const OIDC_AUDIENCE = "https://qlty.sh";
 
 export class Settings {
   private _data: SettingsOutput;
+  private _input: InputProvider;
   private _fs: FileSystem;
 
-  static create(input: ActionInput = core, fs = FileSystem.create()): Settings {
-    return Settings.parse(
-      {
+  static create(
+    input: InputProvider = core,
+    fs = FileSystem.create()
+  ): Settings {
+    return new Settings(
+      settingsParser.parse({
         files: input.getInput("files", { required: true }).trim(),
         addPrefix: input.getInput("add-prefix"),
         stripPrefix: input.getInput("strip-prefix"),
@@ -64,7 +68,8 @@ export class Settings {
         oidc: input.getBooleanInput("oidc"),
         coverageToken: input.getInput("coverage-token"),
         verbose: input.getBooleanInput("verbose"),
-      },
+      }),
+      input,
       fs
     );
   }
@@ -73,16 +78,12 @@ export class Settings {
     input: Partial<ActionInputKeys> = {},
     fs = FileSystem.createNull()
   ): Settings {
-    return Settings.create(new StubbedInput(input), fs);
+    return Settings.create(new StubbedInputProvider(input), fs);
   }
 
-  static parse(input: SettingsInput, fs: FileSystem) {
-    const data = stettingsParser.parse(input);
-    return new Settings(data, fs);
-  }
-
-  constructor(data: SettingsOutput, fs: FileSystem) {
+  constructor(data: SettingsOutput, input: InputProvider, fs: FileSystem) {
     this._data = data;
+    this._input = input;
     this._fs = fs;
   }
 
@@ -102,7 +103,7 @@ export class Settings {
 
   async getToken(): Promise<string> {
     if (this._data.oidc) {
-      return await core.getIDToken(OIDC_AUDIENCE);
+      return await this._input.getIDToken(OIDC_AUDIENCE);
     } else {
       if (!this._data.coverageToken) {
         throw new Error("Coverage token is required when 'oidc' is false.");
@@ -154,7 +155,7 @@ export class StubbedFileSystem implements FileSystem {
   }
 }
 
-export class StubbedInput implements ActionInput {
+export class StubbedInputProvider implements InputProvider {
   _data: ActionInputKeys;
 
   constructor(data: Partial<ActionInputKeys>) {
