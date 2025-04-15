@@ -1,14 +1,14 @@
 import { Settings } from "src/settings";
 
-class SettingsWrapper implements ProxyHandler<any> {
-  get(target: any, property: string | symbol, receiver: any) {
+class SettingsWrapper<T extends object> implements ProxyHandler<T> {
+  get(target: T, property: PropertyKey, receiver: unknown) {
     if (property === "getFiles") {
       return () => this.getFiles();
     }
     return Reflect.get(target, property, receiver);
   }
-  getFiles() {
-    return ["foo", "bar"];
+  async getFiles(): Promise<string[]> {
+    return Promise.resolve(["foo", "bar"]);
   }
 }
 
@@ -19,9 +19,12 @@ describe("Settings", () => {
       baz: 42,
     };
 
-    const proxy = new Proxy(target, new SettingsWrapper());
+    const proxy = new Proxy(
+      target,
+      new SettingsWrapper<typeof target>()
+    ) as typeof target & { getFiles(): string[] };
     expect(proxy.foo).toEqual("bar");
     expect(proxy.baz).toEqual(42);
-    expect(proxy.getFiles()).toEqual(["foo", "bar"]);
+    expect(await proxy.getFiles()).toEqual(["foo", "bar"]);
   });
 });
