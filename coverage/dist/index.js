@@ -73465,7 +73465,6 @@ var CoverageAction = class _CoverageAction {
     this._executor = executor;
     this._installer = installer;
     this._settings = settings;
-    console.log("Settings", this._settings);
   }
   static createNull({
     output = new StubbedOutput(),
@@ -73554,7 +73553,6 @@ var CoverageAction = class _CoverageAction {
       uploadArgs.push("--skip-missing-files");
     }
     const files = await this._settings.getFiles();
-    console.log(files);
     return uploadArgs.concat(files);
   }
   trackOutput() {

@@ -59,7 +59,6 @@ export class CoverageAction {
     this._executor = executor;
     this._installer = installer;
     this._settings = settings;
-    console.log("Settings", this._settings);
   }
 
   async run(): Promise<void> {
@@ -150,7 +149,6 @@ export class CoverageAction {
     }
 
     const files = await this._settings.getFiles();
-    console.log(files);
     return uploadArgs.concat(files);
   }
 
