@@ -8,16 +8,16 @@ interface SettingsFunctions {
 
 type WrappedSettings = Input & SettingsFunctions;
 
-function createSettingsFunctions(input: Input): SettingsFunctions {
-  return {
+// function createSettingsFunctions(input: Input): SettingsFunctions {
+//   return;
+// }
+
+function buildProxy(input: Input): WrappedSettings {
+  const settingsFunctions = {
     greet: async () => {
       return Promise.resolve(["Hello", input.name]);
     },
-  };
-}
-
-function buildProxy(input: Input): WrappedSettings {
-  const settingsFunctions = createSettingsFunctions(input);
+  }; //createSettingsFunctions(input);
 
   return new Proxy(input, {
     get(target, prop, receiver) {
