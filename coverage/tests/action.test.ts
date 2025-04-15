@@ -30,10 +30,6 @@ import { Settings } from "src/settings";
 //     }
 //   }
 
-//     if (this._settings.input.verbose) {
-//       uploadArgs.push("--print");
-//     }
-
 //     const payload = this._context.payload;
 
 //     // Github doesn't provide the head's sha for PRs, so we need to extract it from the event's payload
@@ -95,6 +91,19 @@ describe("CoverageAction", () => {
         "--skip-missing-files",
         "info.lcov",
       ],
+    ]);
+  });
+
+  test("uses the payload for the PR head SHA and ref", async () => {
+    const { action, commands } = createTrackedAction({
+      settings: Settings.createNull({
+        "coverage-token": "test-token",
+        files: "info.lcov",
+      }),
+    });
+    await action.run();
+    expect(commands.clear()).toEqual([
+      ["qlty", "coverage", "publish", "info.lcov"],
     ]);
   });
 

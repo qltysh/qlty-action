@@ -180,11 +180,11 @@ class StubbedActionContext implements ActionContext {
         },
         repositories: [],
       },
-      sender: {
-        type: "",
-        login: "",
-        id: 0,
-      },
+      // sender: {
+      //   type: "",
+      //   login: "",
+      //   id: 0,
+      // },
     };
   }
 }

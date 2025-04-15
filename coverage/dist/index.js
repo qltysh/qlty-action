@@ -73579,12 +73579,12 @@ var StubbedActionContext = class {
           id: 0
         },
         repositories: []
-      },
-      sender: {
-        type: "",
-        login: "",
-        id: 0
       }
+      // sender: {
+      //   type: "",
+      //   login: "",
+      //   id: 0,
+      // },
     };
   }
 };
