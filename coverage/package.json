@@ -25,10 +25,10 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=es2020 --outfile=dist/index.js",
+    "package": "esbuild src/index.ts --bundle --platform=node --target=es2020 --outfile=dist/index.js",
     "test": "vitest --run",
     "test:watch": "vitest --watch",
-    "all": "npm run typecheck && npm run test && npm run build"
+    "all": "npm run typecheck && npm run test && npm run package"
   },
   "license": "MIT",
   "dependencies": {
