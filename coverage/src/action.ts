@@ -103,7 +103,7 @@ export class CoverageAction {
   }
 
   async buildArgs(): Promise<string[]> {
-    let uploadArgs = ["coverage", "publish"];
+    const uploadArgs = ["coverage", "publish"];
 
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");

@@ -113,11 +113,11 @@ export class Settings {
   }
 
   async getFiles() {
-    let patterns: string[] = this._data.files
+    const patterns: string[] = this._data.files
       .split(",")
       .map((file) => file.trim())
       .filter(Boolean);
-    let expandedFiles = await this._fs.globPatterns(patterns.join("\n"));
+    const expandedFiles = await this._fs.globPatterns(patterns.join("\n"));
     return this.sortedUnique(expandedFiles);
   }
 

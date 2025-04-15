@@ -10,9 +10,9 @@ export interface CommandExecutor {
 
 export class StubbedCommandExecutor implements CommandExecutor {
   async exec(
-    command: string,
-    args?: string[],
-    options?: actionsExec.ExecOptions,
+    _command: string,
+    _args?: string[],
+    _options?: actionsExec.ExecOptions,
   ): Promise<number> {
     return 0;
   }
