@@ -2,13 +2,7 @@ import { CoverageAction } from "src/action";
 import { Settings } from "src/settings";
 
 describe("CoverageAction", () => {
-  test("works", async () => {
-    // const settings = Settings.createNull({
-    //   coverageToken: "test-token",
-    //   files: "**/coverage/**",
-    // });
-    // const action = CoverageAction.createNull({ settings });
-    // const commands = action.trackOutput();
+  test("runs qlty coverage publish", async () => {
     const { action, commands } = createTrackedAction({
       settings: Settings.createNull({
         coverageToken: "test-token",
