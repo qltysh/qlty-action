@@ -73360,9 +73360,13 @@ var Settings = class _Settings {
   validate() {
     if (!this._data.oidc && !this._data.coverageToken) {
       throw new Error("Either 'oidc' or 'coverage-token' must be provided.");
-    } else {
-      return true;
     }
+    if (this._data.oidc && this._data.coverageToken) {
+      throw new Error(
+        "Both 'oidc' and 'coverage-token' cannot be provided at the same time."
+      );
+    }
+    return true;
   }
   async getToken() {
     if (this._data.oidc) {
@@ -73427,7 +73431,7 @@ var StubbedInput = class {
     return this._data[name] === true;
   }
   async getIDToken(audience) {
-    return "fake-oidc-token";
+    return `oidc-token:audience=${audience}`;
   }
 };
 

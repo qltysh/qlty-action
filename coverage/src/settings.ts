@@ -86,9 +86,15 @@ export class Settings {
   validate(): boolean {
     if (!this._data.oidc && !this._data.coverageToken) {
       throw new Error("Either 'oidc' or 'coverage-token' must be provided.");
-    } else {
-      return true;
     }
+
+    if (this._data.oidc && this._data.coverageToken) {
+      throw new Error(
+        "Both 'oidc' and 'coverage-token' cannot be provided at the same time."
+      );
+    }
+
+    return true;
   }
 
   async getToken(): Promise<string> {
@@ -175,6 +181,6 @@ export class StubbedInput implements ActionInput {
   }
 
   async getIDToken(audience: string): Promise<string> {
-    return "fake-oidc-token";
+    return `oidc-token:audience=${audience}`;
   }
 }
