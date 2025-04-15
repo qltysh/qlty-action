@@ -73350,8 +73350,8 @@ var Settings = class _Settings {
       fs
     );
   }
-  static createNull(input = {}) {
-    return _Settings.create(new StubbedInput(input), FileSystem.createNull());
+  static createNull(input = {}, fs = FileSystem.createNull()) {
+    return _Settings.create(new StubbedInput(input), fs);
   }
   static parse(input, fs) {
     const data = stettingsParser.parse(input);

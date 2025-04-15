@@ -69,8 +69,11 @@ export class Settings {
     );
   }
 
-  static createNull(input: Partial<ActionInputKeys> = {}): Settings {
-    return Settings.create(new StubbedInput(input), FileSystem.createNull());
+  static createNull(
+    input: Partial<ActionInputKeys> = {},
+    fs = FileSystem.createNull()
+  ): Settings {
+    return Settings.create(new StubbedInput(input), fs);
   }
 
   static parse(input: SettingsInput, fs: FileSystem) {
