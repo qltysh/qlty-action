@@ -3,6 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
+
 - Build: `npm run build`
 - Typecheck: `npm run typecheck`
 - Run all tests: `npm run test`
@@ -11,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - All (typecheck, test, build): `npm run all`
 
 ## Code Style
+
 - TypeScript with strict typing and error checks
 - Use ES modules with NodeNext module system
 - Follow existing naming conventions: camelCase for variables/methods, PascalCase for classes
