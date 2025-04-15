@@ -25,19 +25,21 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "package": "esbuild src/index.ts --bundle --platform=node --target=es2020 --outfile=dist/index.js",
-    "test": "vitest",
-    "all": "npm run test && npm run package"
+    "build": "esbuild src/index.ts --bundle --platform=node --target=es2020 --outfile=dist/index.js",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
+    "all": "npm run typecheck && npm run test && npm run build"
   },
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
-    "@actions/glob": "^0.5.0",
     "@actions/github": "^6.0.0",
+    "@actions/glob": "^0.5.0",
     "@actions/tool-cache": "^2.0.2",
     "@sentry/node": "^9.12.0",
-    "esbuild": "^0.25.2"
+    "esbuild": "^0.25.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
