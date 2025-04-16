@@ -50,25 +50,43 @@ describe("Settings", () => {
   });
 
   describe("validation", () => {
-    test("fails when OIDC and coverage token are both missing", () => {
-      const settings = Settings.createNull({
+    test("allows valid cases", () => {
+      Settings.createNull({
+        "coverage-token": "coverage-token",
+        oidc: false,
+      }).validate();
+
+      Settings.createNull({
+        token: "token",
+        oidc: false,
+      }).validate();
+
+      Settings.createNull({
         "coverage-token": "",
+        token: "",
+        oidc: true,
+      }).validate();
+    });
+
+    test("fails when OIDC and token are both missing", () => {
+      const settings = Settings.createNull({
+        token: "",
         oidc: false,
       });
 
       expect(() => settings.validate()).toThrow(
-        "Either 'oidc' or 'coverage-token' must be provided.",
+        "Either 'oidc' or 'token' must be provided.",
       );
     });
 
-    test("fails when OIDC and coverage token are both present", () => {
+    test("fails when OIDC and token are both present", () => {
       const settings = Settings.createNull({
-        "coverage-token": "test-token",
+        token: "test-token",
         oidc: true,
       });
 
       expect(() => settings.validate()).toThrow(
-        "Both 'oidc' and 'coverage-token' cannot be provided at the same time.",
+        "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     });
   });

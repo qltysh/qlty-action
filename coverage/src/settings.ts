@@ -90,13 +90,15 @@ export class Settings {
   }
 
   validate(): boolean {
-    if (!this._data.oidc && !this._data.coverageToken) {
-      throw new Error("Either 'oidc' or 'coverage-token' must be provided.");
+    const coverageToken = this.getCoverageToken();
+
+    if (!this._data.oidc && !coverageToken) {
+      throw new Error("Either 'oidc' or 'token' must be provided.");
     }
 
-    if (this._data.oidc && this._data.coverageToken) {
+    if (this._data.oidc && coverageToken) {
       throw new Error(
-        "Both 'oidc' and 'coverage-token' cannot be provided at the same time.",
+        "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     }
 
