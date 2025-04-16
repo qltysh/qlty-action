@@ -57,7 +57,7 @@ describe("Settings", () => {
       });
 
       expect(() => settings.validate()).toThrow(
-        "Either 'oidc' or 'coverage-token' must be provided.",
+        "Either 'oidc' or 'coverage-token' must be provided."
       );
     });
 
@@ -68,7 +68,7 @@ describe("Settings", () => {
       });
 
       expect(() => settings.validate()).toThrow(
-        "Both 'oidc' and 'coverage-token' cannot be provided at the same time.",
+        "Both 'oidc' and 'coverage-token' cannot be provided at the same time."
       );
     });
   });
@@ -90,12 +90,29 @@ describe("Settings", () => {
   });
 
   describe("getToken", () => {
+    test("returns the token", async () => {
+      const settings = Settings.createNull({
+        token: "test-token",
+        oidc: false,
+      });
+      expect(await settings.getToken()).toEqual("test-token");
+    });
+
     test("returns the coverage token", async () => {
       const settings = Settings.createNull({
-        "coverage-token": "test-token",
+        "coverage-token": "test-coverage-token",
         oidc: false,
       });
 
+      expect(await settings.getToken()).toEqual("test-coverage-token");
+    });
+
+    test("prefers token over coverage-token", async () => {
+      const settings = Settings.createNull({
+        token: "test-token",
+        "coverage-token": "test-coverage-token",
+        oidc: false,
+      });
       expect(await settings.getToken()).toEqual("test-token");
     });
 
@@ -106,7 +123,7 @@ describe("Settings", () => {
       });
 
       expect(await settings.getToken()).toEqual(
-        "oidc-token:audience=https://qlty.sh",
+        "oidc-token:audience=https://qlty.sh"
       );
     });
   });

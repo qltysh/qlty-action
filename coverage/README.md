@@ -6,7 +6,7 @@ A GitHub Action for running code coverage analysis using the qlty tool.
 
 | Input                | Description                                                                                                                                                                                                            | Required | Default |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
-| `coverage-token`     | Authentication token for coverage submission. Required unless using `oidc`                                                                                                                                             | No       | -       |
+| `token`     | Coverage token for coverage submission. Required unless using `oidc`                                                                                                                                             | No       | -       |
 | `files`              | Files to process (supports glob patterns and comma-separated paths)                                                                                                                                                    | Yes      | -       |
 | `oidc`               | Use OpenID Connect (OIDC) for authentication instead of a coverage token. [Learn more](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect) | No       | `false` |
 | `total-parts-count`  | The total number of coverage uploads that qlty cloud should expect                                                                                                                                                     | No       |         |
@@ -23,13 +23,13 @@ A GitHub Action for running code coverage analysis using the qlty tool.
 - name: Run Coverage Analysis
   uses: qltysh/qlty-action/coverage@main
   with:
-    coverage-token: ${{ secrets.COVERAGE_TOKEN }}
+    oidc: true
     files: path/to/coverage/lcov.info
 
 # Multiple files with glob pattern
 - name: Run Coverage with Multiple Files
   uses: qltysh/qlty-action/coverage@main
   with:
-    coverage-token: ${{ secrets.COVERAGE_TOKEN }}
+    oidc: true
     files: path/to/coverage/*.json,other/path/to/coverage/*.json
 ```

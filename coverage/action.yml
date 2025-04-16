@@ -7,8 +7,14 @@ branding:
   color: "red"
 
 inputs:
-  coverage-token:
+  token:
     description: "The Qlty Cloud coverage token"
+    required: false
+    default: ""
+
+  coverage-token:
+    description: "[DEPRECATED] The Qlty Cloud coverage token"
+    deprecationMessage: The `coverage-token` input is deprecated. Please use `token` instead.
     required: false
     default: ""
 
