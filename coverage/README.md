@@ -1,50 +1,35 @@
-# qlty-action/coverage
+# Coverage qlty-action
 
-## Upload code coverage to Qlty from GitHub Actions in five minutes
-
-This is a reusable GitHub Action to upload code coverage data to Qlty Cloud.  
-Qlty Cloud provides code coverage analytics with commit status gates and trends.
-
-## Usage
-
-To upload code coverage to Qlty Cloud, follow these steps:
-
-1. Obtain a code coverage upload token.
-
-2. Generate code coverage data from your automated test builds in a supported format.
-
-3. Add this `qlty-action/coverage` step to your GitHub Actions test workflow. Here is a simple example:
-
-```yaml
-# ...
-- uses: qltysh/qlty-action/qlty-coverage@v1
-  with:
-    coverage-token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
-    files: ./coverage1.xml,./coverage2.xml
-    flags: unit # Optional
-    verbose: true # Optional, default is false
-    skip-errors: false # Optional, default is true
-```
-
-4. Optionally enable commit statuses to pass or fail based on code coverage standards
+A GitHub Action for running code coverage analysis using the qlty tool.
 
 ## Inputs
 
-| Parameter        | Description                                                  | Required | Default |
-| ---------------- | ------------------------------------------------------------ | -------- | ------- |
-| `coverage-token` | A Workspace or Project coverage upload token from Qlty Cloud | Yes      |         |
-| `...`            | ...                                                          | Y/N      |         |
+| Input                | Description                                                                                                                                                                                                            | Required | Default |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
+| `token`              | Coverage token for coverage submission. Required unless using `oidc`                                                                                                                                                   | No       | -       |
+| `files`              | Files to process (supports glob patterns and comma-separated paths)                                                                                                                                                    | Yes      | -       |
+| `oidc`               | Use OpenID Connect (OIDC) for authentication instead of a coverage token. [Learn more](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect) | No       | `false` |
+| `total-parts-count`  | The total number of coverage uploads that qlty cloud should expect                                                                                                                                                     | No       |         |
+| `verbose`            | Display debug logs along with coverage data                                                                                                                                                                            | No       | `false` |
+| `add-prefix`         | Prefix to add to file paths                                                                                                                                                                                            | No       | -       |
+| `strip-prefix`       | Prefix to remove from file paths                                                                                                                                                                                       | No       | -       |
+| `skip-errors`        | Continue execution even if errors occur                                                                                                                                                                                | No       | `true`  |
+| `skip-missing-files` | Files not in the directory are skipped                                                                                                                                                                                 | No       | `false` |
+| `tag`                | Tag to associate with the coverage data                                                                                                                                                                                | No       | -       |
 
-## Full Example
-
-This is a full example GitHub Action workflow of a NodeJS project generate code coverage data and uploading it to Qlty Cloud:
+## Usage
 
 ```yaml
-# Full workflow example
+- name: Run Coverage Analysis
+  uses: qltysh/qlty-action/coverage@main
+  with:
+    oidc: true
+    files: path/to/coverage/lcov.info
+
+# Multiple files with glob pattern
+- name: Run Coverage with Multiple Files
+  uses: qltysh/qlty-action/coverage@main
+  with:
+    oidc: true
+    files: path/to/coverage/*.json,other/path/to/coverage/*.json
 ```
-
-## Resources
-
-- [Get Started](https://qlty.sh/) with Qlty Cloud
-- [Documentation](https://docs.qlty.sh/what-is-qlty)
-- [Join us on Discord](https://discord.gg/HeqCgap6)
