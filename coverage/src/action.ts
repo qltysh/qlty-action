@@ -92,7 +92,7 @@ export class CoverageAction {
     } catch {
       if (this._settings.input.skipErrors) {
         this._output.warning(
-          "Error uploading coverage, skipping due to skip-errors"
+          "Error uploading coverage, skipping due to skip-errors",
         );
         this._output.warning("Output:");
         this._output.warning(qlytOutput);
@@ -116,7 +116,7 @@ export class CoverageAction {
     if (this._settings.input.stripPrefix) {
       uploadArgs.push(
         "--transform-strip-prefix",
-        this._settings.input.stripPrefix
+        this._settings.input.stripPrefix,
       );
     }
 
@@ -127,7 +127,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString()
+        this._settings.input.totalPartsCount.toString(),
       );
     }
 
@@ -139,7 +139,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha
+        payload.pull_request["head"].sha,
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }

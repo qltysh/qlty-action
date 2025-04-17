@@ -55,7 +55,7 @@ export class Settings {
 
   static create(
     input: InputProvider = core,
-    fs = FileSystem.create()
+    fs = FileSystem.create(),
   ): Settings {
     return new Settings(
       settingsParser.parse({
@@ -72,13 +72,13 @@ export class Settings {
         verbose: input.getBooleanInput("verbose"),
       }),
       input,
-      fs
+      fs,
     );
   }
 
   static createNull(
     input: Partial<ActionInputKeys> = {},
-    fs = FileSystem.createNull()
+    fs = FileSystem.createNull(),
   ): Settings {
     return Settings.create(new StubbedInputProvider(input), fs);
   }
@@ -98,7 +98,7 @@ export class Settings {
 
     if (this._data.oidc && coverageToken) {
       throw new Error(
-        "Both 'oidc' and 'token' cannot be provided at the same time."
+        "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     }
   }
@@ -195,7 +195,7 @@ export class StubbedInputProvider implements InputProvider {
 
   getBooleanInput(
     name: keyof ActionInputKeys,
-    _options?: GetInputOptions
+    _options?: GetInputOptions,
   ): boolean {
     return this._data[name] === true;
   }

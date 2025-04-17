@@ -114,7 +114,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.warnings).toContain(
-        "Error uploading coverage, skipping due to skip-errors"
+        "Error uploading coverage, skipping due to skip-errors",
       );
     });
   });

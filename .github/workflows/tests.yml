@@ -89,7 +89,7 @@ jobs:
       - name: Test
         working-directory: ./coverage
         run: npm run coverage
-      
+
       - name: Upload coverage
         uses: qltysh/qlty-action/coverage@main
         with:

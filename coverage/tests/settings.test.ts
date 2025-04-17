@@ -75,7 +75,7 @@ describe("Settings", () => {
       });
 
       expect(() => settings.validate()).toThrow(
-        "Either 'oidc' or 'token' must be provided."
+        "Either 'oidc' or 'token' must be provided.",
       );
     });
 
@@ -86,7 +86,7 @@ describe("Settings", () => {
       });
 
       expect(() => settings.validate()).toThrow(
-        "Both 'oidc' and 'token' cannot be provided at the same time."
+        "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     });
   });
@@ -141,7 +141,7 @@ describe("Settings", () => {
       });
 
       expect(await settings.getToken()).toEqual(
-        "oidc-token:audience=https://qlty.sh"
+        "oidc-token:audience=https://qlty.sh",
       );
     });
 
@@ -153,7 +153,7 @@ describe("Settings", () => {
       });
 
       await expect(settings.getToken()).rejects.toThrow(
-        "'token' is required when 'oidc' is false."
+        "'token' is required when 'oidc' is false.",
       );
     });
   });
