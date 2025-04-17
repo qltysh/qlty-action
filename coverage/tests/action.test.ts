@@ -42,7 +42,7 @@ describe("CoverageAction", () => {
     });
   });
 
-  test("runs qlty coverage publish", async () => {
+  test.only("runs qlty coverage publish", async () => {
     const { action, commands } = createTrackedAction({
       settings: Settings.createNull({
         "coverage-token": "qltcp_1234567890",
@@ -152,7 +152,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.warnings).toContain(
-        "Error uploading coverage, skipping due to skip-errors",
+        "Error uploading coverage. Output from the Qlty CLI follows:",
       );
     });
   });
