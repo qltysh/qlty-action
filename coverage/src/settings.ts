@@ -21,11 +21,14 @@ interface ActionInputKeys {
   tag: string;
   "total-parts-count": string;
   oidc: boolean;
+  token: string;
   "coverage-token": string;
   verbose: boolean;
 }
 
 const settingsParser = z.object({
+  token: z.string().transform((val) => (val === "" ? undefined : val)),
+  coverageToken: z.string().transform((val) => (val === "" ? undefined : val)),
   files: z.string().trim(),
   addPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
   stripPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
@@ -38,7 +41,6 @@ const settingsParser = z.object({
     return isNaN(num) ? undefined : num;
   }),
   oidc: z.boolean(),
-  coverageToken: z.string().transform((val) => (val === "" ? undefined : val)),
   verbose: z.boolean(),
 });
 
@@ -66,6 +68,7 @@ export class Settings {
         totalPartsCount: input.getInput("total-parts-count"),
         oidc: input.getBooleanInput("oidc"),
         coverageToken: input.getInput("coverage-token"),
+        token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
       }),
       input,
@@ -87,13 +90,15 @@ export class Settings {
   }
 
   validate(): boolean {
-    if (!this._data.oidc && !this._data.coverageToken) {
-      throw new Error("Either 'oidc' or 'coverage-token' must be provided.");
+    const coverageToken = this.getCoverageToken();
+
+    if (!this._data.oidc && !coverageToken) {
+      throw new Error("Either 'oidc' or 'token' must be provided.");
     }
 
-    if (this._data.oidc && this._data.coverageToken) {
+    if (this._data.oidc && coverageToken) {
       throw new Error(
-        "Both 'oidc' and 'coverage-token' cannot be provided at the same time.",
+        "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     }
 
@@ -104,10 +109,12 @@ export class Settings {
     if (this._data.oidc) {
       return await this._input.getIDToken(OIDC_AUDIENCE);
     } else {
-      if (!this._data.coverageToken) {
-        throw new Error("Coverage token is required when 'oidc' is false.");
+      const coverageToken = this.getCoverageToken();
+
+      if (!coverageToken) {
+        throw new Error("'token' is required when 'oidc' is false.");
       } else {
-        return this._data.coverageToken;
+        return coverageToken;
       }
     }
   }
@@ -123,6 +130,17 @@ export class Settings {
 
   get input() {
     return this._data;
+  }
+
+  // Handles getting the coverage token
+  // from the `token` or deprecated `coverage-token` input
+  private getCoverageToken() {
+    if (this._data.token) {
+      return this._data.token;
+    } else {
+      // Deprecated: token is preferred
+      return this._data.coverageToken;
+    }
   }
 
   private sortedUnique(files: string[]) {
@@ -168,6 +186,7 @@ export class StubbedInputProvider implements InputProvider {
       "total-parts-count": data["total-parts-count"] || "",
       oidc: data.oidc || false,
       "coverage-token": data["coverage-token"] || "",
+      token: data.token || "",
       verbose: data.verbose || false,
     };
   }

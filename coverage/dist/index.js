@@ -73310,6 +73310,8 @@ var z = /* @__PURE__ */ Object.freeze({
 var core2 = __toESM(require_core4());
 var glob = __toESM(require_glob());
 var settingsParser = z.object({
+  token: z.string().transform((val) => val === "" ? void 0 : val),
+  coverageToken: z.string().transform((val) => val === "" ? void 0 : val),
   files: z.string().trim(),
   addPrefix: z.string().transform((val) => val === "" ? void 0 : val),
   stripPrefix: z.string().transform((val) => val === "" ? void 0 : val),
@@ -73322,7 +73324,6 @@ var settingsParser = z.object({
     return isNaN(num) ? void 0 : num;
   }),
   oidc: z.boolean(),
-  coverageToken: z.string().transform((val) => val === "" ? void 0 : val),
   verbose: z.boolean()
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
@@ -73347,6 +73348,7 @@ var Settings = class _Settings {
         totalPartsCount: input.getInput("total-parts-count"),
         oidc: input.getBooleanInput("oidc"),
         coverageToken: input.getInput("coverage-token"),
+        token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose")
       }),
       input,
@@ -73357,12 +73359,13 @@ var Settings = class _Settings {
     return _Settings.create(new StubbedInputProvider(input), fs);
   }
   validate() {
-    if (!this._data.oidc && !this._data.coverageToken) {
-      throw new Error("Either 'oidc' or 'coverage-token' must be provided.");
+    const coverageToken = this.getCoverageToken();
+    if (!this._data.oidc && !coverageToken) {
+      throw new Error("Either 'oidc' or 'token' must be provided.");
     }
-    if (this._data.oidc && this._data.coverageToken) {
+    if (this._data.oidc && coverageToken) {
       throw new Error(
-        "Both 'oidc' and 'coverage-token' cannot be provided at the same time."
+        "Both 'oidc' and 'token' cannot be provided at the same time."
       );
     }
     return true;
@@ -73371,10 +73374,11 @@ var Settings = class _Settings {
     if (this._data.oidc) {
       return await this._input.getIDToken(OIDC_AUDIENCE);
     } else {
-      if (!this._data.coverageToken) {
-        throw new Error("Coverage token is required when 'oidc' is false.");
+      const coverageToken = this.getCoverageToken();
+      if (!coverageToken) {
+        throw new Error("'token' is required when 'oidc' is false.");
       } else {
-        return this._data.coverageToken;
+        return coverageToken;
       }
     }
   }
@@ -73385,6 +73389,15 @@ var Settings = class _Settings {
   }
   get input() {
     return this._data;
+  }
+  // Handles getting the coverage token
+  // from the `token` or deprecated `coverage-token` input
+  getCoverageToken() {
+    if (this._data.token) {
+      return this._data.token;
+    } else {
+      return this._data.coverageToken;
+    }
   }
   sortedUnique(files) {
     return Array.from(new Set(files)).sort();
@@ -73420,6 +73433,7 @@ var StubbedInputProvider = class {
       "total-parts-count": data["total-parts-count"] || "",
       oidc: data.oidc || false,
       "coverage-token": data["coverage-token"] || "",
+      token: data.token || "",
       verbose: data.verbose || false
     };
   }
