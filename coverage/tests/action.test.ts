@@ -22,6 +22,7 @@ describe("CoverageAction", () => {
       expect(output.warnings).toEqual([
         "Error validating action input:",
         "Either 'oidc' or 'token' must be provided.",
+        "Please check the action's inputs.",
       ]);
     });
 
@@ -42,7 +43,7 @@ describe("CoverageAction", () => {
     });
   });
 
-  test.only("runs qlty coverage publish", async () => {
+  test("runs qlty coverage publish", async () => {
     const { action, commands } = createTrackedAction({
       settings: Settings.createNull({
         "coverage-token": "qltcp_1234567890",
