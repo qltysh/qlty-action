@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Install Qlty CLI
         uses: qltysh/qlty-action/install@main
 
@@ -27,9 +24,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         id: setup-node
@@ -40,17 +35,14 @@ jobs:
           cache-dependency-path: fmt/package-lock.json
 
       - name: Install Dependencies
-        id: install
         working-directory: ./fmt
         run: npm ci
 
       - name: Build dist/ Directory
-        id: build
         working-directory: ./fmt
         run: npm run package
 
       - name: Compare Directories
-        id: diff
         working-directory: ./fmt
         run: |
           if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
@@ -68,12 +60,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        id: setup-node
         uses: actions/setup-node@v4
         with:
           node-version-file: coverage/.node-version
@@ -81,17 +70,14 @@ jobs:
           cache-dependency-path: coverage/package-lock.json
 
       - name: Install Dependencies
-        id: install
         working-directory: ./coverage
         run: npm ci
 
       - name: Build dist/ Directory
-        id: build
         working-directory: ./coverage
         run: npm run package
 
       - name: Compare Directories
-        id: diff
         working-directory: ./coverage
         run: |
           if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
@@ -101,9 +87,8 @@ jobs:
           fi
 
       - name: Test
-        id: npm-test
         working-directory: ./coverage
-        run: npm coverage
+        run: npm run coverage
       
       - name: Upload coverage
         uses: qltysh/qlty-action/coverage@main
