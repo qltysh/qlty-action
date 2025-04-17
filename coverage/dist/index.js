@@ -69253,6 +69253,7 @@ var StubbedOutput = class {
     __publicField(this, "secrets", []);
     __publicField(this, "paths", []);
     __publicField(this, "failures", []);
+    __publicField(this, "infos", []);
     __publicField(this, "warnings", []);
   }
   addPath(path) {
@@ -69263,6 +69264,9 @@ var StubbedOutput = class {
   }
   setFailed(message) {
     this.failures.push(message);
+  }
+  info(message) {
+    this.infos.push(message);
   }
   warning(message) {
     this.warnings.push(message);
@@ -73646,6 +73650,7 @@ var CoverageAction = class _CoverageAction {
         QLTY_COVERAGE_TOKEN: token
       };
       this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
+      this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
       await this._executor.exec("qlty", uploadArgs, {
         env,
         listeners: {

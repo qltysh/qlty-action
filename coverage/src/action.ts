@@ -93,6 +93,8 @@ export class CoverageAction {
       };
 
       this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
+      this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
+
       await this._executor.exec("qlty", uploadArgs, {
         env,
         listeners: {
