@@ -73627,20 +73627,30 @@ var CoverageAction = class _CoverageAction {
     });
   }
   async run() {
-    const errors = this._settings.validate();
-    if (errors.length > 0) {
-      if (this._settings.input.skipErrors) {
-        this._output.warning("Error validating action input:");
-        for (const error of errors) {
-          this._output.warning(error);
-        }
-      } else {
-        throw new CoverageSettingsValidationError(errors.join("; "));
-      }
+    if (!this.validate()) {
       return;
     }
     await this._installer.install();
-    const uploadArgs = await this.buildArgs();
+    let uploadArgs = await this.buildArgs();
+    const files = await this._settings.getFiles();
+    if (files.length === 0) {
+      if (this._settings.input.files.includes(" ")) {
+        this.warnOrThrow([
+          "No code coverage data files were found. Please check the action's inputs.",
+          "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",
+          "If you are using a pattern, make sure it is correct.",
+          "If you are using a file, make sure it exists."
+        ]);
+      } else {
+        this.warnOrThrow([
+          "No code coverage data files were found. Please check the action's inputs.",
+          "If you are using a pattern, make sure it is correct.",
+          "If you are using a file, make sure it exists."
+        ]);
+      }
+      return;
+    }
+    uploadArgs = uploadArgs.concat(files);
     const token = await this._settings.getToken();
     this._output.setSecret(token);
     let qlytOutput = "";
@@ -73663,15 +73673,31 @@ var CoverageAction = class _CoverageAction {
         }
       });
     } catch {
-      if (this._settings.input.skipErrors) {
-        this._output.warning(
-          "Error uploading coverage, skipping due to skip-errors"
-        );
-        this._output.warning("Output:");
-        this._output.warning(qlytOutput);
-      } else {
-        throw new CoverageUploadError(qlytOutput);
+      this.warnOrThrow([
+        "Error uploading coverage. Output from the Qlty CLI follows:",
+        qlytOutput
+      ]);
+    }
+  }
+  validate() {
+    const errors = this._settings.validate();
+    if (errors.length > 0) {
+      this.warnOrThrow([
+        "Error validating action input:",
+        ...errors,
+        "Please check the action's inputs."
+      ]);
+      return false;
+    }
+    return true;
+  }
+  warnOrThrow(messages) {
+    if (this._settings.input.skipErrors) {
+      for (const message of messages) {
+        this._output.warning(message);
       }
+    } else {
+      throw new CoverageError(messages.join("; "));
     }
   }
   async buildArgs() {
@@ -73708,23 +73734,16 @@ var CoverageAction = class _CoverageAction {
     if (this._settings.input.skipMissingFiles) {
       uploadArgs.push("--skip-missing-files");
     }
-    const files = await this._settings.getFiles();
-    return uploadArgs.concat(files);
+    return uploadArgs;
   }
   trackOutput() {
     return OutputTracker.create(this._emitter, EXEC_EVENT);
   }
 };
-var CoverageSettingsValidationError = class extends Error {
+var CoverageError = class extends Error {
   constructor(message) {
     super(message);
-    this.name = "CoverageSettingsValidationError";
-  }
-};
-var CoverageUploadError = class extends Error {
-  constructor(message) {
-    super(message);
-    this.name = "CoverageUploadError";
+    this.name = "CoverageError";
   }
 };
 var StubbedActionContext = class {

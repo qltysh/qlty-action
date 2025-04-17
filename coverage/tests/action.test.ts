@@ -22,6 +22,7 @@ describe("CoverageAction", () => {
       expect(output.warnings).toEqual([
         "Error validating action input:",
         "Either 'oidc' or 'token' must be provided.",
+        "Please check the action's inputs.",
       ]);
     });
 
@@ -39,6 +40,24 @@ describe("CoverageAction", () => {
       });
 
       await expect(action.run()).rejects.toThrow();
+    });
+
+    test("logs warnings no paths found", async () => {
+      const { output, action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({ throwError: true }),
+        settings: Settings.createNull({
+          oidc: true,
+          files: "",
+          "skip-errors": true,
+        }),
+      });
+
+      await action.run();
+      expect(output.warnings).toEqual([
+        "No code coverage data files were found. Please check the action's inputs.",
+        "If you are using a pattern, make sure it is correct.",
+        "If you are using a file, make sure it exists.",
+      ]);
     });
   });
 
@@ -152,7 +171,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.warnings).toContain(
-        "Error uploading coverage, skipping due to skip-errors",
+        "Error uploading coverage. Output from the Qlty CLI follows:",
       );
     });
   });
