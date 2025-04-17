@@ -21,19 +21,19 @@ To upload code coverage to Qlty Cloud, follow these steps:
   with:
     coverage-token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
     files: ./coverage1.xml,./coverage2.xml
-    flags: unit                                         # Optional
-    verbose: true                                       # Optional, default is false
-    skip-errors: false                                  # Optional, default is true
+    flags: unit # Optional
+    verbose: true # Optional, default is false
+    skip-errors: false # Optional, default is true
 ```
 
 4. Optionally enable commit statuses to pass or fail based on code coverage standards
 
 ## Inputs
 
-| Parameter | Description | Required | Default |
-|-|-|-|-|
-| `coverage-token` | A Workspace or Project coverage upload token from Qlty Cloud | Yes | |
-| `...` | ... | Y/N | |
+| Parameter        | Description                                                  | Required | Default |
+| ---------------- | ------------------------------------------------------------ | -------- | ------- |
+| `coverage-token` | A Workspace or Project coverage upload token from Qlty Cloud | Yes      |         |
+| `...`            | ...                                                          | Y/N      |         |
 
 ## Full Example
 
