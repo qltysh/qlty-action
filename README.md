@@ -20,11 +20,15 @@ The Qlty CLI is **completely free for all use**, including for commercial projec
 
 This is a collection of reusable GitHub Actions to make it easy to integrate Qlty into your continuous integration workflows.
 
+---
+
 ## 🖥️ Requirements
 
 The `qltysh/qlty-action/coverage` action requires a free account on [Qlty Cloud](https://qlty.sh) for code coverage reporting.
 
 The other actions use the Qlty CLI and do not require Qlty Cloud.
+
+---
 
 ## ▶️ Actions
 
@@ -33,6 +37,8 @@ The other actions use the Qlty CLI and do not require Qlty Cloud.
 | [qltysh/qlty-action/coverage](https://github.com/qltysh/qlty-action/tree/main/coverage#readme) | Upload code coverage data to [Qlty Cloud](https://qlty.sh) |
 | [qltysh/qlty-action/install](https://github.com/qltysh/qlty-action/tree/main/install)          | Install the Qlty CLI onto your CI runner                   |
 | [qltysh/qlty-action/fmt](https://github.com/qltysh/qlty-action/tree/main/fmt#readme)           | Auto-format your code                                      |
+
+---
 
 ## 🛟 Help or Feedback
 
@@ -43,6 +49,10 @@ The other actions use the Qlty CLI and do not require Qlty Cloud.
 - [Feature requests](https://github.com/orgs/qltysh/discussions/categories/feedback) via GitHub Discussions
 - [Bug reports](https://github.com/qltysh/qlty-action/issues/new/choose) via GitHub Issues
 
+---
+
 ## ⚖️ License
 
 This repository is provided under the [MIT License](https://github.com/qltysh/qlty-action/blob/main/LICENSE.md).
+
+---

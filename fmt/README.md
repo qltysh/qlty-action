@@ -14,7 +14,7 @@ A GitHub Action for running automated formatting using the qlty tool.
 
 ```yaml
 - name: Format Code
-  uses: qltysh/qlty-action/fmt@main
+  uses: qltysh/qlty-action/fmt@v1
   with:
     commit: false
 ```
