@@ -19,17 +19,9 @@ export default class OutputTracker<T> {
     this._emitter.on(this._event, this._trackerFn);
   }
 
-  get data(): T[] {
-    return this._data;
-  }
-
   clear(): T[] {
     const result = [...this._data];
     this._data.length = 0;
     return result;
-  }
-
-  stop(): void {
-    this._emitter.off(this._event, this._trackerFn);
   }
 }
