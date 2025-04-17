@@ -62,7 +62,22 @@ export class CoverageAction {
   }
 
   async run(): Promise<void> {
-    this._settings.validate();
+    const errors = this._settings.validate();
+
+    if (errors.length > 0) {
+      if (this._settings.input.skipErrors) {
+        this._output.warning("Error validating action input:");
+
+        for (const error of errors) {
+          this._output.warning(error);
+        }
+      } else {
+        throw new CoverageSettingsValidationError(errors.join("; "));
+      }
+
+      return;
+    }
+
     await this._installer.install();
 
     const uploadArgs = await this.buildArgs();
@@ -157,6 +172,13 @@ export class CoverageAction {
       command: string;
       env: Record<string, string>;
     }>(this._emitter, EXEC_EVENT);
+  }
+}
+
+export class CoverageSettingsValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CoverageSettingsValidationError";
   }
 }
 

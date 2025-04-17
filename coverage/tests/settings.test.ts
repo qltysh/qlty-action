@@ -3,7 +3,7 @@ import { Settings } from "src/settings";
 describe("Settings", () => {
   test("parses values", () => {
     const settings = Settings.createNull({
-      "coverage-token": "test-token",
+      "coverage-token": "qltcp_1234567890",
       files: "  whitespace  ",
       "add-prefix": "test-prefix",
       "strip-prefix": "test-strip-prefix",
@@ -16,7 +16,7 @@ describe("Settings", () => {
     });
 
     expect(settings.input).toMatchObject({
-      coverageToken: "test-token",
+      coverageToken: "qltcp_1234567890",
       files: "whitespace",
       addPrefix: "test-prefix",
       stripPrefix: "test-strip-prefix",
@@ -51,21 +51,27 @@ describe("Settings", () => {
 
   describe("validation", () => {
     test("allows valid cases", () => {
-      Settings.createNull({
-        "coverage-token": "coverage-token",
-        oidc: false,
-      }).validate();
+      expect(
+        Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          oidc: false,
+        }).validate(),
+      ).toEqual([]);
 
-      Settings.createNull({
-        token: "token",
-        oidc: false,
-      }).validate();
+      expect(
+        Settings.createNull({
+          token: "qltcp_1234567890",
+          oidc: false,
+        }).validate(),
+      ).toEqual([]);
 
-      Settings.createNull({
-        "coverage-token": "",
-        token: "",
-        oidc: true,
-      }).validate();
+      expect(
+        Settings.createNull({
+          "coverage-token": "",
+          token: "",
+          oidc: true,
+        }).validate(),
+      ).toEqual([]);
     });
 
     test("fails when OIDC and token are both missing", () => {
@@ -74,20 +80,44 @@ describe("Settings", () => {
         oidc: false,
       });
 
-      expect(() => settings.validate()).toThrow(
+      expect(settings.validate()).toEqual([
         "Either 'oidc' or 'token' must be provided.",
-      );
+      ]);
     });
 
     test("fails when OIDC and token are both present", () => {
       const settings = Settings.createNull({
-        token: "test-token",
+        token: "qltcp_1234567890",
         oidc: true,
       });
 
-      expect(() => settings.validate()).toThrow(
+      expect(settings.validate()).toEqual([
         "Both 'oidc' and 'token' cannot be provided at the same time.",
-      );
+      ]);
+    });
+
+    test("validates token", () => {
+      expect(
+        Settings.createNull({
+          token: "wrong",
+        }).validate(),
+      ).toEqual([
+        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
+      ]);
+
+      expect(
+        Settings.createNull({
+          "coverage-token": "wrong",
+        }).validate(),
+      ).toEqual([
+        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
+      ]);
+
+      expect(
+        Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+        }).validate(),
+      ).toEqual([]);
     });
   });
 
@@ -110,10 +140,10 @@ describe("Settings", () => {
   describe("getToken", () => {
     test("returns the token", async () => {
       const settings = Settings.createNull({
-        token: "test-token",
+        token: "qltcp_1234567890",
         oidc: false,
       });
-      expect(await settings.getToken()).toEqual("test-token");
+      expect(await settings.getToken()).toEqual("qltcp_1234567890");
     });
 
     test("returns the coverage token", async () => {
@@ -127,11 +157,11 @@ describe("Settings", () => {
 
     test("prefers token over coverage-token", async () => {
       const settings = Settings.createNull({
-        token: "test-token",
+        token: "qltcp_1234567890",
         "coverage-token": "test-coverage-token",
         oidc: false,
       });
-      expect(await settings.getToken()).toEqual("test-token");
+      expect(await settings.getToken()).toEqual("qltcp_1234567890");
     });
 
     test("generates an ID token", async () => {

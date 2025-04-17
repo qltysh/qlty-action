@@ -73436,6 +73436,7 @@ var settingsParser = z.object({
   verbose: z.boolean()
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
+var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
 var Settings = class _Settings {
   constructor(data, input, fs) {
     __publicField(this, "_data");
@@ -73468,15 +73469,22 @@ var Settings = class _Settings {
     return _Settings.create(new StubbedInputProvider(input), fs);
   }
   validate() {
+    const errors = [];
     const coverageToken = this.getCoverageToken();
     if (!this._data.oidc && !coverageToken) {
-      throw new Error("Either 'oidc' or 'token' must be provided.");
+      errors.push("Either 'oidc' or 'token' must be provided.");
     }
     if (this._data.oidc && coverageToken) {
-      throw new Error(
+      errors.push(
         "Both 'oidc' and 'token' cannot be provided at the same time."
       );
     }
+    if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
+      errors.push(
+        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
+      );
+    }
+    return errors;
   }
   async getToken() {
     if (this._data.oidc) {
@@ -73615,7 +73623,18 @@ var CoverageAction = class _CoverageAction {
     });
   }
   async run() {
-    this._settings.validate();
+    const errors = this._settings.validate();
+    if (errors.length > 0) {
+      if (this._settings.input.skipErrors) {
+        this._output.warning("Error validating action input:");
+        for (const error of errors) {
+          this._output.warning(error);
+        }
+      } else {
+        throw new CoverageSettingsValidationError(errors.join("; "));
+      }
+      return;
+    }
     await this._installer.install();
     const uploadArgs = await this.buildArgs();
     const token = await this._settings.getToken();
@@ -73689,6 +73708,12 @@ var CoverageAction = class _CoverageAction {
   }
   trackOutput() {
     return OutputTracker.create(this._emitter, EXEC_EVENT);
+  }
+};
+var CoverageSettingsValidationError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "CoverageSettingsValidationError";
   }
 };
 var CoverageUploadError = class extends Error {

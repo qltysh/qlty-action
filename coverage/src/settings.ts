@@ -47,6 +47,7 @@ const settingsParser = z.object({
 export type SettingsOutput = z.output<typeof settingsParser>;
 
 const OIDC_AUDIENCE = "https://qlty.sh";
+const COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
 
 export class Settings {
   private _data: SettingsOutput;
@@ -89,18 +90,27 @@ export class Settings {
     this._fs = fs;
   }
 
-  validate(): void {
+  validate(): string[] {
+    const errors = [];
     const coverageToken = this.getCoverageToken();
 
     if (!this._data.oidc && !coverageToken) {
-      throw new Error("Either 'oidc' or 'token' must be provided.");
+      errors.push("Either 'oidc' or 'token' must be provided.");
     }
 
     if (this._data.oidc && coverageToken) {
-      throw new Error(
+      errors.push(
         "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     }
+
+    if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
+      errors.push(
+        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
+      );
+    }
+
+    return errors;
   }
 
   async getToken(): Promise<string> {
