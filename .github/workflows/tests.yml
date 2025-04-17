@@ -1,0 +1,97 @@
+name: Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-install:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Qlty CLI
+        uses: qltysh/qlty-action/install@main
+
+      - name: Check Qlty CLI version
+        shell: bash
+        run: qlty --version
+
+  test-fmt:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: fmt/.node-version
+          cache: npm
+          cache-dependency-path: fmt/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./fmt
+        run: npm ci
+
+      - name: Build dist/ Directory
+        working-directory: ./fmt
+        run: npm run package
+
+      - name: Compare Directories
+        working-directory: ./fmt
+        run: |
+          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build. See status below:"
+            git diff --ignore-space-at-eol --text dist/
+            exit 1
+          fi
+
+      # - name: Test
+      #   id: npm-ci-test
+      #   working-directory: ./fmt
+      #   run: npm run ci-test
+
+  test-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: coverage/.node-version
+          cache: npm
+          cache-dependency-path: coverage/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./coverage
+        run: npm ci
+
+      - name: Build dist/ Directory
+        working-directory: ./coverage
+        run: npm run package
+
+      - name: Compare Directories
+        working-directory: ./coverage
+        run: |
+          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build. See status below:"
+            git diff --ignore-space-at-eol --text dist/
+            exit 1
+          fi
+
+      - name: Test
+        working-directory: ./coverage
+        run: npm run coverage
+
+      - name: Upload coverage
+        uses: qltysh/qlty-action/coverage@main
+        with:
+          oidc: true
+          files: coverage/coverage/clover.xml

@@ -144,5 +144,17 @@ describe("Settings", () => {
         "oidc-token:audience=https://qlty.sh",
       );
     });
+
+    test("raises when token is missing", async () => {
+      const settings = Settings.createNull({
+        "coverage-token": "",
+        token: "",
+        oidc: false,
+      });
+
+      await expect(settings.getToken()).rejects.toThrow(
+        "'token' is required when 'oidc' is false.",
+      );
+    });
   });
 });

@@ -89,7 +89,7 @@ export class Settings {
     this._fs = fs;
   }
 
-  validate(): boolean {
+  validate(): void {
     const coverageToken = this.getCoverageToken();
 
     if (!this._data.oidc && !coverageToken) {
@@ -101,8 +101,6 @@ export class Settings {
         "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     }
-
-    return true;
   }
 
   async getToken(): Promise<string> {

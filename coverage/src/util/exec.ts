@@ -9,11 +9,21 @@ export interface CommandExecutor {
 }
 
 export class StubbedCommandExecutor implements CommandExecutor {
+  private throwError: boolean;
+
+  constructor({ throwError }: { throwError?: boolean } = {}) {
+    this.throwError = !!throwError;
+  }
+
   async exec(
     _command: string,
     _args?: string[],
     _options?: actionsExec.ExecOptions,
   ): Promise<number> {
-    return 0;
+    if (this.throwError) {
+      throw new Error("Command execution failed");
+    } else {
+      return 0;
+    }
   }
 }

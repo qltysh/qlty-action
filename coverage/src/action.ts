@@ -62,10 +62,7 @@ export class CoverageAction {
   }
 
   async run(): Promise<void> {
-    if (!this._settings.validate()) {
-      return;
-    }
-
+    this._settings.validate();
     await this._installer.install();
 
     const uploadArgs = await this.buildArgs();
@@ -73,13 +70,16 @@ export class CoverageAction {
     this._output.setSecret(token);
 
     let qlytOutput = "";
+
     try {
-      this._emitter.emit(EXEC_EVENT, ["qlty", ...uploadArgs]);
+      const env = {
+        ...process.env,
+        QLTY_COVERAGE_TOKEN: token,
+      };
+
+      this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
       await this._executor.exec("qlty", uploadArgs, {
-        env: {
-          ...process.env,
-          QLTY_COVERAGE_TOKEN: token,
-        },
+        env,
         listeners: {
           stdout: (data: Buffer) => {
             qlytOutput += data.toString();
@@ -153,7 +153,10 @@ export class CoverageAction {
   }
 
   trackOutput() {
-    return OutputTracker.create<string[]>(this._emitter, EXEC_EVENT);
+    return OutputTracker.create<{
+      command: string;
+      env: Record<string, string>;
+    }>(this._emitter, EXEC_EVENT);
   }
 }
 
