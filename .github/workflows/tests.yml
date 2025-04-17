@@ -103,4 +103,10 @@ jobs:
       - name: Test
         id: npm-test
         working-directory: ./coverage
-        run: npm test
+        run: npm coverage
+      
+      - name: Upload coverage
+        uses: qltysh/qlty-action/coverage@main
+        with:
+          oidc: true
+          files: coverage/coverage/clover.xml
