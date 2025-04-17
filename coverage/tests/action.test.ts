@@ -4,10 +4,48 @@ import { StubbedCommandExecutor } from "src/util/exec";
 import { StubbedOutput } from "src/util/output";
 
 describe("CoverageAction", () => {
+  describe("validaiton errors", async () => {
+    test("logs warnings shen skip-errors is true", async () => {
+      const { output, action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({ throwError: true }),
+        settings: Settings.createNull({
+          // Invalid configuration:
+          "coverage-token": "",
+          token: "",
+          oidc: false,
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+      });
+
+      await action.run();
+      expect(output.warnings).toEqual([
+        "Error validating action input:",
+        "Either 'oidc' or 'token' must be provided.",
+      ]);
+    });
+
+    test("raises errors shen skip-errors is false", async () => {
+      const { action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({ throwError: true }),
+        settings: Settings.createNull({
+          // Invalid configuration:
+          "coverage-token": "",
+          token: "",
+          oidc: false,
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+      });
+
+      await expect(action.run()).rejects.toThrow();
+    });
+  });
+
   test("runs qlty coverage publish", async () => {
     const { action, commands } = createTrackedAction({
       settings: Settings.createNull({
-        "coverage-token": "test-token",
+        "coverage-token": "qltcp_1234567890",
         files: "info.lcov",
       }),
       context: { payload: {} },
@@ -28,7 +66,7 @@ describe("CoverageAction", () => {
   test("adds arguments based on inputs", async () => {
     const { action, commands } = createTrackedAction({
       settings: Settings.createNull({
-        "coverage-token": "DEADBEEF",
+        "coverage-token": "qltcp_DEADBEEF10",
         files: "info.lcov",
         "skip-missing-files": true,
         "total-parts-count": "5",
@@ -61,13 +99,13 @@ describe("CoverageAction", () => {
       "--skip-missing-files",
       "info.lcov",
     ]);
-    expect(command?.env["QLTY_COVERAGE_TOKEN"]).toBe("DEADBEEF");
+    expect(command?.env["QLTY_COVERAGE_TOKEN"]).toBe("qltcp_DEADBEEF10");
   });
 
   test("uses the payload for the PR head SHA and ref", async () => {
     const { action, commands } = createTrackedAction({
       settings: Settings.createNull({
-        "coverage-token": "test-token",
+        "coverage-token": "qltcp_1234567890",
         files: "info.lcov",
       }),
     });
@@ -93,7 +131,7 @@ describe("CoverageAction", () => {
       const { action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
         settings: Settings.createNull({
-          "coverage-token": "test-token",
+          "coverage-token": "qltcp_1234567890",
           files: "info.lcov",
           "skip-errors": false,
         }),
@@ -106,7 +144,7 @@ describe("CoverageAction", () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
         settings: Settings.createNull({
-          "coverage-token": "test-token",
+          "coverage-token": "qltcp_1234567890",
           files: "info.lcov",
           "skip-errors": true,
         }),
@@ -114,7 +152,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.warnings).toContain(
-        "Error uploading coverage, skipping due to skip-errors",
+        "Error uploading coverage, skipping due to skip-errors"
       );
     });
   });

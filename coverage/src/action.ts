@@ -62,7 +62,22 @@ export class CoverageAction {
   }
 
   async run(): Promise<void> {
-    this._settings.validate();
+    const errors = this._settings.validate();
+
+    if (errors.length > 0) {
+      if (this._settings.input.skipErrors) {
+        this._output.warning("Error validating action input:");
+
+        for (const error of errors) {
+          this._output.warning(error);
+        }
+      } else {
+        throw new CoverageSettingsValidationError(errors.join("; "));
+      }
+
+      return;
+    }
+
     await this._installer.install();
 
     const uploadArgs = await this.buildArgs();
@@ -92,7 +107,7 @@ export class CoverageAction {
     } catch {
       if (this._settings.input.skipErrors) {
         this._output.warning(
-          "Error uploading coverage, skipping due to skip-errors",
+          "Error uploading coverage, skipping due to skip-errors"
         );
         this._output.warning("Output:");
         this._output.warning(qlytOutput);
@@ -116,7 +131,7 @@ export class CoverageAction {
     if (this._settings.input.stripPrefix) {
       uploadArgs.push(
         "--transform-strip-prefix",
-        this._settings.input.stripPrefix,
+        this._settings.input.stripPrefix
       );
     }
 
@@ -127,7 +142,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString(),
+        this._settings.input.totalPartsCount.toString()
       );
     }
 
@@ -139,7 +154,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha,
+        payload.pull_request["head"].sha
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
@@ -157,6 +172,13 @@ export class CoverageAction {
       command: string;
       env: Record<string, string>;
     }>(this._emitter, EXEC_EVENT);
+  }
+}
+
+export class CoverageSettingsValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CoverageSettingsValidationError";
   }
 }
 
