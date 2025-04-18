@@ -86,7 +86,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 | `skip-errors`        | If coverage upload fails, do not fail the CI build occur                                                                                                                                                               | No       | `true`  |
 | `skip-missing-files` | Files not in the directory are skipped                                                                                                                                                                                 | No       | `false` |
 | `tag`                | Tag to associate with the coverage data                                                                                                                                                                                | No       | -       |
-| `cli-version`        | Specific version of the Qlty CLI to use (e.g., '1.2.3' or 'v1.2.3'). If not specified, the latest version is used                                                                                                      | No       | -       |
+| `cli-version`        | Specific version of the Qlty CLI to use (e.g., '1.0.1')                                                                                                                                                                | No       | Latest  |
 
 ---
 
@@ -118,16 +118,6 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
     oidc: true
     files: lcov.info
     tag: units
-```
-
-### Use a specific CLI version
-
-```yaml
-- uses: qltysh/qlty-action/coverage@v1
-  with:
-    oidc: true
-    files: lcov.info
-    cli-version: 1.2.3
 ```
 
 ### Example repositories

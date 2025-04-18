@@ -53,7 +53,7 @@ describe("Installer", () => {
     });
     await installer.install();
     expect(downloads.clear()).toEqual([
-      "https://qlty-releases.s3.amazonaws.com/qlty/1.2.3/qlty-x86_64-unknown-linux-gnu.tar.xz",
+      "https://qlty-releases.s3.amazonaws.com/qlty/v1.2.3/qlty-x86_64-unknown-linux-gnu.tar.xz",
     ]);
   });
 

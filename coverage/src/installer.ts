@@ -64,8 +64,7 @@ export class Installer {
       return;
     }
 
-    const versionPath = this._version || "latest";
-    const versionTag = this._version || "latest";
+    const versionPath = this._version ? `v${this._version}` : "latest";
 
     const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.tar.xz`;
     const tarPath = await this._tc.downloadTool(downloadUrl);
@@ -73,7 +72,7 @@ export class Installer {
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
-      versionTag,
+      versionPath,
     );
     this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
     const binPath = `${cachedPath}/qlty-${platformArch}`;
