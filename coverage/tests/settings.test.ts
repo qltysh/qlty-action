@@ -13,6 +13,7 @@ describe("Settings", () => {
       "total-parts-count": "10",
       oidc: true,
       verbose: true,
+      "cli-version": "1.2.3",
     });
 
     expect(settings.input).toMatchObject({
@@ -26,6 +27,7 @@ describe("Settings", () => {
       totalPartsCount: 10,
       oidc: true,
       verbose: true,
+      cliVersion: "1.2.3",
     });
   });
 
@@ -185,6 +187,29 @@ describe("Settings", () => {
       await expect(settings.getToken()).rejects.toThrow(
         "'token' is required when 'oidc' is false.",
       );
+    });
+  });
+
+  describe("getVersion", () => {
+    test("returns undefined for empty version", () => {
+      const settings = Settings.createNull({
+        "cli-version": "",
+      });
+      expect(settings.getVersion()).toBeUndefined();
+    });
+
+    test("returns version without v prefix", () => {
+      const settings = Settings.createNull({
+        "cli-version": "1.2.3",
+      });
+      expect(settings.getVersion()).toEqual("1.2.3");
+    });
+
+    test("strips v prefix from version", () => {
+      const settings = Settings.createNull({
+        "cli-version": "v1.2.3",
+      });
+      expect(settings.getVersion()).toEqual("1.2.3");
     });
   });
 });

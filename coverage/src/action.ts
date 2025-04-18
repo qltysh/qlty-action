@@ -23,7 +23,7 @@ export class CoverageAction {
     output = new StubbedOutput(),
     context = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
-    installer = Installer.createNull(),
+    installer,
     settings = Settings.createNull(),
   }: {
     output?: ActionOutput;
@@ -36,7 +36,7 @@ export class CoverageAction {
       output,
       context,
       executor,
-      installer,
+      installer: installer || Installer.createNull(settings.getVersion()),
       settings,
     });
   }
@@ -45,7 +45,7 @@ export class CoverageAction {
     output = actionsCore,
     context = actionsGithub.context,
     executor = actionsExec,
-    installer = Installer.create(),
+    installer,
     settings = Settings.create(),
   }: {
     output?: ActionOutput;
@@ -57,7 +57,7 @@ export class CoverageAction {
     this._output = output;
     this._context = context;
     this._executor = executor;
-    this._installer = installer;
+    this._installer = installer || Installer.create(settings.getVersion());
     this._settings = settings;
   }
 
@@ -66,7 +66,15 @@ export class CoverageAction {
       return;
     }
 
-    await this._installer.install();
+    try {
+      await this._installer.install();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
+      this.warnOrThrow([
+        `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`,
+      ]);
+      return;
+    }
 
     let uploadArgs = await this.buildArgs();
     const files = await this._settings.getFiles();

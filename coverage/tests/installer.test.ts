@@ -46,6 +46,17 @@ describe("Installer", () => {
     ]);
   });
 
+  test("installs specific version", async () => {
+    const { downloads, installer } = createTrackedInstaller({
+      os: new StubbedOperatingSystem("linux", "x64"),
+      version: "1.2.3",
+    });
+    await installer.install();
+    expect(downloads.clear()).toEqual([
+      "https://qlty-releases.s3.amazonaws.com/qlty/v1.2.3/qlty-x86_64-unknown-linux-gnu.tar.xz",
+    ]);
+  });
+
   test("rejects unknown OS", async () => {
     const { output, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("unknown", "unknown"),
@@ -68,8 +79,14 @@ describe("Installer", () => {
     toolCache = new StubbedToolCache(),
     os = new StubbedOperatingSystem(),
     output = new StubbedOutput(),
+    version = undefined,
+  }: {
+    toolCache?: StubbedToolCache;
+    os?: StubbedOperatingSystem;
+    output?: StubbedOutput;
+    version?: string;
   } = {}) {
-    const installer = new Installer(os, output, toolCache);
+    const installer = new Installer(os, output, toolCache, version);
     const downloads = installer.trackOutput();
     return { installer, downloads, output };
   }
