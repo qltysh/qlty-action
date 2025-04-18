@@ -69,9 +69,9 @@ export class CoverageAction {
     try {
       await this._installer.install();
     } catch (error) {
+      const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
       this.warnOrThrow([
-        "Error installing Qlty CLI. Please check the action's inputs.",
-        "If you are using a 'cli-version', make sure it is correct.",
+        `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`,
       ]);
       return;
     }
