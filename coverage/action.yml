@@ -64,7 +64,7 @@ inputs:
   cli-version:
     description: "The version of the Qlty CLI to use (e.g., '1.2.3')"
     required: false
-    default: ""
+    default: "latest"
 
 runs:
   using: node20
