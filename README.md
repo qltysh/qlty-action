@@ -53,6 +53,10 @@ The other actions use the Qlty CLI and do not require Qlty Cloud.
 
 ## ⚖️ License
 
-This repository is provided under the [MIT License](https://github.com/qltysh/qlty-action/blob/main/LICENSE.md).
+This reusable GitHub Action is provided under the [MIT License](https://github.com/qltysh/qlty-action/blob/main/LICENSE.md).
+
+Qlty CLI is published under a Fair Source license. As Fair Source, the Qlty CLI is free to use (including in commercial contexts), modify, and distribute in accordance with its license.
+
+More details are available [in the qltysh/qlty repository](https://github.com/qltysh/qlty/blob/main/LICENSE.md).
 
 ---
