@@ -73643,7 +73643,15 @@ var CoverageAction = class _CoverageAction {
     if (!this.validate()) {
       return;
     }
-    await this._installer.install();
+    try {
+      await this._installer.install();
+    } catch (error) {
+      this.warnOrThrow([
+        "Error installing Qlty CLI. Please check the action's inputs.",
+        "If you are using a 'cli-version', make sure it is correct."
+      ]);
+      return;
+    }
     let uploadArgs = await this.buildArgs();
     const files = await this._settings.getFiles();
     if (files.length === 0) {
