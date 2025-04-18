@@ -1,5 +1,6 @@
 import { CoverageAction, StubbedActionContext } from "src/action";
-import { Settings } from "src/settings";
+import { Installer } from "src/installer";
+import { Settings, StubbedFileSystem } from "src/settings";
 import { StubbedCommandExecutor } from "src/util/exec";
 import { StubbedOutput } from "src/util/output";
 
@@ -174,6 +175,43 @@ describe("CoverageAction", () => {
         "Error uploading coverage. Output from the Qlty CLI follows:",
       );
     });
+
+    test("handles installer error when skip-errors is true", async () => {
+      const { output, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+        installer: Installer.createNull(undefined, true),
+      });
+
+      await action.run();
+      expect(output.warnings).toEqual([
+        "Error installing Qlty CLI: download error. Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.",
+      ]);
+    });
+
+    test("handles empty files array with spaces in the files input", async () => {
+      const { output, action } = createTrackedAction({
+        settings: Settings.createNull(
+          {
+            "coverage-token": "qltcp_1234567890",
+            files: "file1.lcov file2.lcov",
+            "skip-errors": true,
+          },
+          new StubbedFileSystem([]),
+        ),
+      });
+
+      await action.run();
+      expect(output.warnings).toEqual([
+        "No code coverage data files were found. Please check the action's inputs.",
+        "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",
+        "If you are using a pattern, make sure it is correct.",
+        "If you are using a file, make sure it exists.",
+      ]);
+    });
   });
 
   function createTrackedAction({
@@ -181,12 +219,14 @@ describe("CoverageAction", () => {
     context = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
     output = new StubbedOutput(),
+    installer = Installer.createNull(undefined),
   } = {}) {
     const action = CoverageAction.createNull({
       output,
       settings,
       context,
       executor,
+      installer,
     });
     const commands = action.trackOutput();
     return { commands, action, output };

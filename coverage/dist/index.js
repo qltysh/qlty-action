@@ -69290,11 +69290,11 @@ var Installer = class _Installer {
   static create(version) {
     return new _Installer(import_os.default, core, tc, version);
   }
-  static createNull(version) {
+  static createNull(version, raiseDownloadError) {
     return new _Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
-      new StubbedToolCache(),
+      new StubbedToolCache(raiseDownloadError),
       version
     );
   }
@@ -69348,12 +69348,18 @@ var StubbedOperatingSystem = class {
   }
 };
 var StubbedToolCache = class {
-  constructor() {
+  constructor(raiseError) {
     __publicField(this, "downloads", []);
+    __publicField(this, "raiseError", false);
+    this.raiseError = raiseError || false;
   }
   async downloadTool(url2) {
-    this.downloads.push(url2);
-    return `downloaded[${url2}]`;
+    if (this.raiseError) {
+      throw new Error("download error");
+    } else {
+      this.downloads.push(url2);
+      return `downloaded[${url2}]`;
+    }
   }
   async extractTar(file, _dest, _options) {
     return `extracted[${file} dest=${_dest} options=${_options}]`;
@@ -73539,8 +73545,8 @@ var FileSystem = class _FileSystem {
   static create() {
     return new _FileSystem();
   }
-  static createNull() {
-    return new StubbedFileSystem();
+  static createNull(results) {
+    return new StubbedFileSystem(results);
   }
   async globPatterns(patterns) {
     const globber = await glob.create(patterns);
@@ -73548,8 +73554,16 @@ var FileSystem = class _FileSystem {
   }
 };
 var StubbedFileSystem = class {
+  constructor(results = void 0) {
+    __publicField(this, "results", []);
+    this.results = results;
+  }
   async globPatterns(patterns) {
-    return patterns.split("\n").map((pattern) => pattern.trim()).filter(Boolean);
+    if (this.results) {
+      return this.results;
+    } else {
+      return patterns.split("\n").map((pattern) => pattern.trim()).filter(Boolean);
+    }
   }
 };
 var StubbedInputProvider = class {

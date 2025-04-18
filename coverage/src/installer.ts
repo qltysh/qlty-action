@@ -18,11 +18,11 @@ export class Installer {
     return new Installer(os, core, tc, version);
   }
 
-  static createNull(version?: string): Installer {
+  static createNull(version?: string, raiseDownloadError?: boolean): Installer {
     return new Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
-      new StubbedToolCache(),
+      new StubbedToolCache(raiseDownloadError),
       version,
     );
   }
@@ -111,10 +111,19 @@ export class StubbedOperatingSystem implements OperatingSystem {
 
 export class StubbedToolCache implements ToolCache {
   downloads: string[] = [];
+  raiseError: boolean = false;
+
+  constructor(raiseError?: boolean) {
+    this.raiseError = raiseError || false;
+  }
 
   async downloadTool(url: string): Promise<string> {
-    this.downloads.push(url);
-    return `downloaded[${url}]`;
+    if (this.raiseError) {
+      throw new Error("download error");
+    } else {
+      this.downloads.push(url);
+      return `downloaded[${url}]`;
+    }
   }
 
   async extractTar(

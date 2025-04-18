@@ -175,8 +175,8 @@ export class FileSystem {
     return new FileSystem();
   }
 
-  static createNull() {
-    return new StubbedFileSystem();
+  static createNull(results?: string[]) {
+    return new StubbedFileSystem(results);
   }
 
   async globPatterns(patterns: string): Promise<string[]> {
@@ -186,11 +186,21 @@ export class FileSystem {
 }
 
 export class StubbedFileSystem implements FileSystem {
+  private results: string[] | undefined = [];
+
+  constructor(results: string[] | undefined = undefined) {
+    this.results = results;
+  }
+
   async globPatterns(patterns: string): Promise<string[]> {
-    return patterns
-      .split("\n")
-      .map((pattern) => pattern.trim())
-      .filter(Boolean);
+    if (this.results) {
+      return this.results;
+    } else {
+      return patterns
+        .split("\n")
+        .map((pattern) => pattern.trim())
+        .filter(Boolean);
+    }
   }
 }
 
