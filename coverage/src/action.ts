@@ -23,7 +23,7 @@ export class CoverageAction {
     output = new StubbedOutput(),
     context = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
-    installer = Installer.createNull(),
+    installer,
     settings = Settings.createNull(),
   }: {
     output?: ActionOutput;
@@ -36,7 +36,7 @@ export class CoverageAction {
       output,
       context,
       executor,
-      installer,
+      installer: installer || Installer.createNull(settings.getVersion()),
       settings,
     });
   }
@@ -45,7 +45,7 @@ export class CoverageAction {
     output = actionsCore,
     context = actionsGithub.context,
     executor = actionsExec,
-    installer = Installer.create(),
+    installer,
     settings = Settings.create(),
   }: {
     output?: ActionOutput;
@@ -57,7 +57,7 @@ export class CoverageAction {
     this._output = output;
     this._context = context;
     this._executor = executor;
-    this._installer = installer;
+    this._installer = installer || Installer.create(settings.getVersion());
     this._settings = settings;
   }
 

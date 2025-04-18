@@ -24,6 +24,7 @@ interface ActionInputKeys {
   token: string;
   "coverage-token": string;
   verbose: boolean;
+  "cli-version": string;
 }
 
 const settingsParser = z.object({
@@ -42,6 +43,7 @@ const settingsParser = z.object({
   }),
   oidc: z.boolean(),
   verbose: z.boolean(),
+  cliVersion: z.string().transform((val) => (val === "" ? undefined : val)),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -71,6 +73,7 @@ export class Settings {
         coverageToken: input.getInput("coverage-token"),
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
+        cliVersion: input.getInput("cli-version"),
       }),
       input,
       fs,
@@ -125,6 +128,17 @@ export class Settings {
         return coverageToken;
       }
     }
+  }
+
+  getVersion(): string | undefined {
+    if (!this._data.cliVersion) {
+      return undefined;
+    }
+
+    // Format version string (remove 'v' prefix if present)
+    return this._data.cliVersion.startsWith("v")
+      ? this._data.cliVersion.substring(1)
+      : this._data.cliVersion;
   }
 
   async getFiles() {
@@ -196,6 +210,7 @@ export class StubbedInputProvider implements InputProvider {
       "coverage-token": data["coverage-token"] || "",
       token: data.token || "",
       verbose: data.verbose || false,
+      "cli-version": data["cli-version"] || "",
     };
   }
 

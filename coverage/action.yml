@@ -61,6 +61,11 @@ inputs:
     description: "The total number of coverage uploads that qlty cloud should expect"
     required: false
 
+  cli-version:
+    description: "The version of the Qlty CLI to use (e.g., '1.2.3' or 'v1.2.3')"
+    required: false
+    default: ""
+
 runs:
   using: node20
   main: dist/index.js

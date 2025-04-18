@@ -69276,23 +69276,26 @@ var StubbedOutput = class {
 // src/installer.ts
 var DOWNLOAD_EVENT = "download";
 var Installer = class _Installer {
-  constructor(os4, output, toolCache) {
+  constructor(os4, output, toolCache, version) {
     __publicField(this, "_os");
     __publicField(this, "_output");
     __publicField(this, "_tc");
     __publicField(this, "_emitter", new import_node_events.default());
+    __publicField(this, "_version");
     this._os = os4;
     this._output = output;
     this._tc = toolCache;
+    this._version = version;
   }
-  static create() {
-    return new _Installer(import_os.default, core, tc);
+  static create(version) {
+    return new _Installer(import_os.default, core, tc, version);
   }
-  static createNull() {
+  static createNull(version) {
     return new _Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
-      new StubbedToolCache()
+      new StubbedToolCache(),
+      version
     );
   }
   trackOutput() {
@@ -69316,13 +69319,15 @@ var Installer = class _Installer {
       );
       return;
     }
-    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-${platformArch}.tar.xz`;
+    const versionPath = this._version || "latest";
+    const versionTag = this._version || "latest";
+    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.tar.xz`;
     const tarPath = await this._tc.downloadTool(downloadUrl);
     const extractedFolder = await this._tc.extractTar(tarPath, void 0, "x");
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
-      "latest"
+      versionTag
     );
     this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
     const binPath = `${cachedPath}/qlty-${platformArch}`;
@@ -73437,7 +73442,8 @@ var settingsParser = z.object({
     return isNaN(num) ? void 0 : num;
   }),
   oidc: z.boolean(),
-  verbose: z.boolean()
+  verbose: z.boolean(),
+  cliVersion: z.string().transform((val) => val === "" ? void 0 : val)
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73463,7 +73469,8 @@ var Settings = class _Settings {
         oidc: input.getBooleanInput("oidc"),
         coverageToken: input.getInput("coverage-token"),
         token: input.getInput("token"),
-        verbose: input.getBooleanInput("verbose")
+        verbose: input.getBooleanInput("verbose"),
+        cliVersion: input.getInput("cli-version")
       }),
       input,
       fs
@@ -73501,6 +73508,12 @@ var Settings = class _Settings {
         return coverageToken;
       }
     }
+  }
+  getVersion() {
+    if (!this._data.cliVersion) {
+      return void 0;
+    }
+    return this._data.cliVersion.startsWith("v") ? this._data.cliVersion.substring(1) : this._data.cliVersion;
   }
   async getFiles() {
     const patterns = this._data.files.split(",").map((file) => file.trim()).filter(Boolean);
@@ -73554,7 +73567,8 @@ var StubbedInputProvider = class {
       oidc: data.oidc || false,
       "coverage-token": data["coverage-token"] || "",
       token: data.token || "",
-      verbose: data.verbose || false
+      verbose: data.verbose || false,
+      "cli-version": data["cli-version"] || ""
     };
   }
   getInput(name, _options) {
@@ -73596,7 +73610,7 @@ var CoverageAction = class _CoverageAction {
     output = actionsCore,
     context: context3 = actionsGithub.context,
     executor = actionsExec,
-    installer = Installer.create(),
+    installer,
     settings = Settings.create()
   } = {}) {
     __publicField(this, "_output");
@@ -73608,21 +73622,21 @@ var CoverageAction = class _CoverageAction {
     this._output = output;
     this._context = context3;
     this._executor = executor;
-    this._installer = installer;
+    this._installer = installer || Installer.create(settings.getVersion());
     this._settings = settings;
   }
   static createNull({
     output = new StubbedOutput(),
     context: context3 = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
-    installer = Installer.createNull(),
+    installer,
     settings = Settings.createNull()
   } = {}) {
     return new _CoverageAction({
       output,
       context: context3,
       executor,
-      installer,
+      installer: installer || Installer.createNull(settings.getVersion()),
       settings
     });
   }

@@ -12,23 +12,31 @@ export class Installer {
   private _output: ActionOutput;
   private _tc: ToolCache;
   private _emitter: EventEmitter = new EventEmitter();
+  private _version: string | undefined;
 
-  static create(): Installer {
-    return new Installer(os, core, tc);
+  static create(version?: string): Installer {
+    return new Installer(os, core, tc, version);
   }
 
-  static createNull(): Installer {
+  static createNull(version?: string): Installer {
     return new Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
       new StubbedToolCache(),
+      version,
     );
   }
 
-  constructor(os: OperatingSystem, output: ActionOutput, toolCache: ToolCache) {
+  constructor(
+    os: OperatingSystem,
+    output: ActionOutput,
+    toolCache: ToolCache,
+    version?: string,
+  ) {
     this._os = os;
     this._output = output;
     this._tc = toolCache;
+    this._version = version;
   }
 
   trackOutput() {
@@ -56,13 +64,16 @@ export class Installer {
       return;
     }
 
-    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-${platformArch}.tar.xz`;
+    const versionPath = this._version || "latest";
+    const versionTag = this._version || "latest";
+
+    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.tar.xz`;
     const tarPath = await this._tc.downloadTool(downloadUrl);
     const extractedFolder = await this._tc.extractTar(tarPath, undefined, "x");
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
-      "latest",
+      versionTag,
     );
     this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
     const binPath = `${cachedPath}/qlty-${platformArch}`;
