@@ -159,7 +159,7 @@ export class CoverageAction {
   }
 
   async buildArgs(): Promise<string[]> {
-    const uploadArgs = ["coverage", "publish"];
+    const uploadArgs = ["coverage", "publish", "--summary"];
 
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");
@@ -172,7 +172,7 @@ export class CoverageAction {
     if (this._settings.input.stripPrefix) {
       uploadArgs.push(
         "--transform-strip-prefix",
-        this._settings.input.stripPrefix,
+        this._settings.input.stripPrefix
       );
     }
 
@@ -183,7 +183,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString(),
+        this._settings.input.totalPartsCount.toString()
       );
     }
 
@@ -195,7 +195,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha,
+        payload.pull_request["head"].sha
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }

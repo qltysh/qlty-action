@@ -73736,7 +73736,7 @@ var CoverageAction = class _CoverageAction {
     }
   }
   async buildArgs() {
-    const uploadArgs = ["coverage", "publish"];
+    const uploadArgs = ["coverage", "publish", "--summary"];
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");
     }
