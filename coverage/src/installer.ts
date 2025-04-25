@@ -48,6 +48,7 @@ export class Installer {
     const arch = this._os.arch();
 
     let platformArch;
+    let extension = "tar.xz";
 
     if (platform === "linux" && arch === "x64") {
       platformArch = "x86_64-unknown-linux-gnu";
@@ -57,6 +58,9 @@ export class Installer {
       platformArch = "x86_64-apple-darwin";
     } else if (platform === "darwin" && arch === "arm64") {
       platformArch = "aarch64-apple-darwin";
+    } else if (platform === "win32" && arch === "x64") {
+      platformArch = "x86_64-pc-windows-msvc";
+      extension = "zip";
     } else {
       this._output.setFailed(
         `Unsupported platform/architecture: ${platform}/${arch}`,
@@ -66,9 +70,14 @@ export class Installer {
 
     const versionPath = this._version ? `v${this._version}` : "latest";
 
-    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.tar.xz`;
+    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.${extension}`;
     const tarPath = await this._tc.downloadTool(downloadUrl);
-    const extractedFolder = await this._tc.extractTar(tarPath, undefined, "x");
+    let extractedFolder;
+    if (extension === "zip") {
+      extractedFolder = await this._tc.extractZip(tarPath, undefined);
+    } else {
+      extractedFolder = await this._tc.extractTar(tarPath, undefined, "x");
+    }
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
@@ -84,6 +93,7 @@ export interface ToolCache {
   downloadTool(url: string): Promise<string>;
   extractTar(file: string, dest?: string, options?: string): Promise<string>;
   cacheDir(folder: string, tool: string, version: string): Promise<string>;
+  extractZip(file: string, dest?: string): Promise<string>;
 }
 
 export interface OperatingSystem {
@@ -132,6 +142,10 @@ export class StubbedToolCache implements ToolCache {
     _options?: string,
   ): Promise<string> {
     return `extracted[${file} dest=${_dest} options=${_options}]`;
+  }
+
+  async extractZip(file: string, _dest?: string): Promise<string> {
+    return `extracted[${file} dest=${_dest}]`;
   }
 
   async cacheDir(

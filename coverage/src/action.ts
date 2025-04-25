@@ -8,8 +8,10 @@ import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import OutputTracker from "./util/output_tracker";
 import EventEmitter from "node:events";
+import * as os from "os";
 
 const EXEC_EVENT = "exec";
+const QLTY_BIN = os.platform() === "win32" ? "qlty.exe" : "qlty";
 
 export class CoverageAction {
   private _output: ActionOutput;
@@ -111,10 +113,13 @@ export class CoverageAction {
         QLTY_COVERAGE_TOKEN: token,
       };
 
-      this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
-      this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
+      this._emitter.emit(EXEC_EVENT, {
+        command: [QLTY_BIN, ...uploadArgs],
+        env,
+      });
+      this._output.info(`Running: ${[QLTY_BIN, ...uploadArgs].join(" ")}`);
 
-      await this._executor.exec("qlty", uploadArgs, {
+      await this._executor.exec(QLTY_BIN, uploadArgs, {
         env,
         listeners: {
           stdout: (data: Buffer) => {
