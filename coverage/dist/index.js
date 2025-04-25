@@ -8416,7 +8416,7 @@ var require_has_flag = __commonJS({
 var require_supports_color = __commonJS({
   "node_modules/supports-color/index.js"(exports2, module2) {
     "use strict";
-    var os4 = require("os");
+    var os5 = require("os");
     var tty = require("tty");
     var hasFlag = require_has_flag();
     var { env } = process;
@@ -8464,7 +8464,7 @@ var require_supports_color = __commonJS({
         return min;
       }
       if (process.platform === "win32") {
-        const osRelease = os4.release().split(".");
+        const osRelease = os5.release().split(".");
         if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
           return Number(osRelease[2]) >= 14931 ? 3 : 2;
         }
@@ -8725,8 +8725,8 @@ var require_module_details_from_path = __commonJS({
 var require_homedir = __commonJS({
   "node_modules/resolve/lib/homedir.js"(exports2, module2) {
     "use strict";
-    var os4 = require("os");
-    module2.exports = os4.homedir || function homedir() {
+    var os5 = require("os");
+    module2.exports = os5.homedir || function homedir() {
       var home = process.env.HOME;
       var user = process.env.LOGNAME || process.env.USER || process.env.LNAME || process.env.USERNAME;
       if (process.platform === "win32") {
@@ -22077,7 +22077,7 @@ var require_ProcessDetectorSync = __commonJS({
     var api_1 = (init_esm(), __toCommonJS(esm_exports));
     var semantic_conventions_1 = (init_esm6(), __toCommonJS(esm_exports6));
     var Resource_1 = require_Resource();
-    var os4 = require("os");
+    var os5 = require("os");
     var ProcessDetectorSync = class {
       detect(_config) {
         const attributes = {
@@ -22097,7 +22097,7 @@ var require_ProcessDetectorSync = __commonJS({
           attributes[semantic_conventions_1.SEMRESATTRS_PROCESS_COMMAND] = process.argv[1];
         }
         try {
-          const userInfo = os4.userInfo();
+          const userInfo = os5.userInfo();
           attributes[semantic_conventions_1.SEMRESATTRS_PROCESS_OWNER] = userInfo.username;
         } catch (e) {
           api_1.diag.debug(`error obtaining process owner: ${e}`);
@@ -30137,11 +30137,11 @@ var require_command = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.issue = exports2.issueCommand = void 0;
-    var os4 = __importStar(require("os"));
+    var os5 = __importStar(require("os"));
     var utils_1 = require_utils20();
     function issueCommand(command, properties, message) {
       const cmd = new Command(command, properties, message);
-      process.stdout.write(cmd.toString() + os4.EOL);
+      process.stdout.write(cmd.toString() + os5.EOL);
     }
     exports2.issueCommand = issueCommand;
     function issue(name, message = "") {
@@ -30225,7 +30225,7 @@ var require_file_command = __commonJS({
     exports2.prepareKeyValueMessage = exports2.issueFileCommand = void 0;
     var crypto = __importStar(require("crypto"));
     var fs = __importStar(require("fs"));
-    var os4 = __importStar(require("os"));
+    var os5 = __importStar(require("os"));
     var utils_1 = require_utils20();
     function issueFileCommand(command, message) {
       const filePath = process.env[`GITHUB_${command}`];
@@ -30235,7 +30235,7 @@ var require_file_command = __commonJS({
       if (!fs.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
       }
-      fs.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os4.EOL}`, {
+      fs.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os5.EOL}`, {
         encoding: "utf8"
       });
     }
@@ -30249,7 +30249,7 @@ var require_file_command = __commonJS({
       if (convertedValue.includes(delimiter)) {
         throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
       }
-      return `${key}<<${delimiter}${os4.EOL}${convertedValue}${os4.EOL}${delimiter}`;
+      return `${key}<<${delimiter}${os5.EOL}${convertedValue}${os5.EOL}${delimiter}`;
     }
     exports2.prepareKeyValueMessage = prepareKeyValueMessage;
   }
@@ -48991,7 +48991,7 @@ var require_toolrunner = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.argStringToArray = exports2.ToolRunner = void 0;
-    var os4 = __importStar(require("os"));
+    var os5 = __importStar(require("os"));
     var events = __importStar(require("events"));
     var child = __importStar(require("child_process"));
     var path = __importStar(require("path"));
@@ -49046,12 +49046,12 @@ var require_toolrunner = __commonJS({
       _processLineBuffer(data, strBuffer, onLine) {
         try {
           let s = strBuffer + data.toString();
-          let n = s.indexOf(os4.EOL);
+          let n = s.indexOf(os5.EOL);
           while (n > -1) {
             const line = s.substring(0, n);
             onLine(line);
-            s = s.substring(n + os4.EOL.length);
-            n = s.indexOf(os4.EOL);
+            s = s.substring(n + os5.EOL.length);
+            n = s.indexOf(os5.EOL);
           }
           return s;
         } catch (err) {
@@ -49220,7 +49220,7 @@ var require_toolrunner = __commonJS({
             }
             const optionsNonNull = this._cloneExecOptions(this.options);
             if (!optionsNonNull.silent && optionsNonNull.outStream) {
-              optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os4.EOL);
+              optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os5.EOL);
             }
             const state = new ExecState(optionsNonNull, this.toolPath);
             state.on("debug", (message) => {
@@ -49708,7 +49708,7 @@ var require_core4 = __commonJS({
     var command_1 = require_command();
     var file_command_1 = require_file_command();
     var utils_1 = require_utils20();
-    var os4 = __importStar(require("os"));
+    var os5 = __importStar(require("os"));
     var path = __importStar(require("path"));
     var oidc_utils_1 = require_oidc_utils();
     var ExitCode;
@@ -49776,7 +49776,7 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       if (filePath) {
         return (0, file_command_1.issueFileCommand)("OUTPUT", (0, file_command_1.prepareKeyValueMessage)(name, value));
       }
-      process.stdout.write(os4.EOL);
+      process.stdout.write(os5.EOL);
       (0, command_1.issueCommand)("set-output", { name }, (0, utils_1.toCommandValue)(value));
     }
     exports2.setOutput = setOutput;
@@ -49810,7 +49810,7 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
     }
     exports2.notice = notice;
     function info(message) {
-      process.stdout.write(message + os4.EOL);
+      process.stdout.write(message + os5.EOL);
     }
     exports2.info = info;
     function startGroup(name) {
@@ -51092,12 +51092,12 @@ var require_manifest = __commonJS({
     exports2._readLinuxVersionFile = exports2._getOsVersion = exports2._findMatch = void 0;
     var semver = __importStar(require_semver3());
     var core_1 = require_core4();
-    var os4 = require("os");
+    var os5 = require("os");
     var cp = require("child_process");
     var fs = require("fs");
     function _findMatch(versionSpec, stable, candidates, archFilter) {
       return __awaiter(this, void 0, void 0, function* () {
-        const platFilter = os4.platform();
+        const platFilter = os5.platform();
         let result;
         let match;
         let file;
@@ -51134,7 +51134,7 @@ var require_manifest = __commonJS({
     }
     exports2._findMatch = _findMatch;
     function _getOsVersion() {
-      const plat = os4.platform();
+      const plat = os5.platform();
       let version = "";
       if (plat === "darwin") {
         version = cp.execSync("sw_vers -productVersion").toString();
@@ -51340,7 +51340,7 @@ var require_tool_cache = __commonJS({
     var crypto = __importStar(require("crypto"));
     var fs = __importStar(require("fs"));
     var mm = __importStar(require_manifest());
-    var os4 = __importStar(require("os"));
+    var os5 = __importStar(require("os"));
     var path = __importStar(require("path"));
     var httpm = __importStar(require_lib());
     var semver = __importStar(require_semver3());
@@ -51618,7 +51618,7 @@ var require_tool_cache = __commonJS({
     function cacheDir(sourceDir, tool, version, arch2) {
       return __awaiter(this, void 0, void 0, function* () {
         version = semver.clean(version) || version;
-        arch2 = arch2 || os4.arch();
+        arch2 = arch2 || os5.arch();
         core4.debug(`Caching tool ${tool} ${version} ${arch2}`);
         core4.debug(`source dir: ${sourceDir}`);
         if (!fs.statSync(sourceDir).isDirectory()) {
@@ -51637,7 +51637,7 @@ var require_tool_cache = __commonJS({
     function cacheFile(sourceFile, targetFile, tool, version, arch2) {
       return __awaiter(this, void 0, void 0, function* () {
         version = semver.clean(version) || version;
-        arch2 = arch2 || os4.arch();
+        arch2 = arch2 || os5.arch();
         core4.debug(`Caching tool ${tool} ${version} ${arch2}`);
         core4.debug(`source file: ${sourceFile}`);
         if (!fs.statSync(sourceFile).isFile()) {
@@ -51659,7 +51659,7 @@ var require_tool_cache = __commonJS({
       if (!versionSpec) {
         throw new Error("versionSpec parameter is required");
       }
-      arch2 = arch2 || os4.arch();
+      arch2 = arch2 || os5.arch();
       if (!isExplicitVersion(versionSpec)) {
         const localVersions = findAllVersions(toolName, arch2);
         const match = evaluateVersions(localVersions, versionSpec);
@@ -51682,7 +51682,7 @@ var require_tool_cache = __commonJS({
     exports2.find = find;
     function findAllVersions(toolName, arch2) {
       const versions = [];
-      arch2 = arch2 || os4.arch();
+      arch2 = arch2 || os5.arch();
       const toolPath = path.join(_getCacheDirectory(), toolName);
       if (fs.existsSync(toolPath)) {
         const children = fs.readdirSync(toolPath);
@@ -51733,7 +51733,7 @@ var require_tool_cache = __commonJS({
       });
     }
     exports2.getManifestFromRepo = getManifestFromRepo;
-    function findFromManifest(versionSpec, stable, manifest, archFilter = os4.arch()) {
+    function findFromManifest(versionSpec, stable, manifest, archFilter = os5.arch()) {
       return __awaiter(this, void 0, void 0, function* () {
         const match = yield mm._findMatch(versionSpec, stable, manifest, archFilter);
         return match;
@@ -53057,7 +53057,7 @@ var require_internal_pattern = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.Pattern = void 0;
-    var os4 = __importStar(require("os"));
+    var os5 = __importStar(require("os"));
     var path = __importStar(require("path"));
     var pathHelper = __importStar(require_internal_path_helper());
     var assert_1 = __importDefault(require("assert"));
@@ -53150,7 +53150,7 @@ var require_internal_pattern = __commonJS({
         if (pattern === "." || pattern.startsWith(`.${path.sep}`)) {
           pattern = _Pattern.globEscape(process.cwd()) + pattern.substr(1);
         } else if (pattern === "~" || pattern.startsWith(`~${path.sep}`)) {
-          homedir = homedir || os4.homedir();
+          homedir = homedir || os5.homedir();
           (0, assert_1.default)(homedir, "Unable to determine HOME directory");
           (0, assert_1.default)(pathHelper.hasAbsoluteRoot(homedir), `Expected HOME directory to be a rooted path. Actual '${homedir}'`);
           pattern = _Pattern.globEscape(homedir) + pattern.substr(1);
@@ -69276,13 +69276,13 @@ var StubbedOutput = class {
 // src/installer.ts
 var DOWNLOAD_EVENT = "download";
 var Installer = class _Installer {
-  constructor(os4, output, toolCache, version) {
+  constructor(os5, output, toolCache, version) {
     __publicField(this, "_os");
     __publicField(this, "_output");
     __publicField(this, "_tc");
     __publicField(this, "_emitter", new import_node_events.default());
     __publicField(this, "_version");
-    this._os = os4;
+    this._os = os5;
     this._output = output;
     this._tc = toolCache;
     this._version = version;
@@ -69302,27 +69302,36 @@ var Installer = class _Installer {
     return OutputTracker.create(this._emitter, DOWNLOAD_EVENT);
   }
   async install() {
-    const platform2 = this._os.platform();
+    const platform3 = this._os.platform();
     const arch2 = this._os.arch();
     let platformArch;
-    if (platform2 === "linux" && arch2 === "x64") {
+    let extension = "tar.xz";
+    if (platform3 === "linux" && arch2 === "x64") {
       platformArch = "x86_64-unknown-linux-gnu";
-    } else if (platform2 === "linux" && arch2 === "arm64") {
+    } else if (platform3 === "linux" && arch2 === "arm64") {
       platformArch = "aarch64-unknown-linux-gnu";
-    } else if (platform2 === "darwin" && arch2 === "x64") {
+    } else if (platform3 === "darwin" && arch2 === "x64") {
       platformArch = "x86_64-apple-darwin";
-    } else if (platform2 === "darwin" && arch2 === "arm64") {
+    } else if (platform3 === "darwin" && arch2 === "arm64") {
       platformArch = "aarch64-apple-darwin";
+    } else if (platform3 === "win32" && arch2 === "x64") {
+      platformArch = "x86_64-pc-windows-msvc";
+      extension = "zip";
     } else {
       this._output.setFailed(
-        `Unsupported platform/architecture: ${platform2}/${arch2}`
+        `Unsupported platform/architecture: ${platform3}/${arch2}`
       );
       return;
     }
     const versionPath = this._version ? `v${this._version}` : "latest";
-    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.tar.xz`;
+    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.${extension}`;
     const tarPath = await this._tc.downloadTool(downloadUrl);
-    const extractedFolder = await this._tc.extractTar(tarPath, void 0, "x");
+    let extractedFolder;
+    if (extension === "zip") {
+      extractedFolder = await this._tc.extractZip(tarPath, void 0);
+    } else {
+      extractedFolder = await this._tc.extractTar(tarPath, void 0, "x");
+    }
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
@@ -69334,10 +69343,10 @@ var Installer = class _Installer {
   }
 };
 var StubbedOperatingSystem = class {
-  constructor(platform2 = "linux", arch2 = "x64") {
+  constructor(platform3 = "linux", arch2 = "x64") {
     __publicField(this, "_platform");
     __publicField(this, "_arch");
-    this._platform = platform2;
+    this._platform = platform3;
     this._arch = arch2;
   }
   platform() {
@@ -69363,6 +69372,9 @@ var StubbedToolCache = class {
   }
   async extractTar(file, _dest, _options) {
     return `extracted[${file} dest=${_dest} options=${_options}]`;
+  }
+  async extractZip(file, _dest) {
+    return `extracted[${file} dest=${_dest}]`;
   }
   async cacheDir(folder, _tool, _version) {
     return `cached[${folder}]`;
@@ -73617,7 +73629,9 @@ var StubbedCommandExecutor = class {
 
 // src/action.ts
 var import_node_events2 = __toESM(require("node:events"));
+var os4 = __toESM(require("os"));
 var EXEC_EVENT = "exec";
+var QLTY_BIN = os4.platform() === "win32" ? "qlty.exe" : "qlty";
 var CoverageAction = class _CoverageAction {
   constructor({
     output = actionsCore,
@@ -73694,9 +73708,12 @@ var CoverageAction = class _CoverageAction {
         ...process.env,
         QLTY_COVERAGE_TOKEN: token
       };
-      this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
-      this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
-      await this._executor.exec("qlty", uploadArgs, {
+      this._emitter.emit(EXEC_EVENT, {
+        command: [QLTY_BIN, ...uploadArgs],
+        env
+      });
+      this._output.info(`Running: ${[QLTY_BIN, ...uploadArgs].join(" ")}`);
+      await this._executor.exec(QLTY_BIN, uploadArgs, {
         env,
         listeners: {
           stdout: (data) => {
