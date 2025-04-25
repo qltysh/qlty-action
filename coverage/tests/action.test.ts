@@ -146,6 +146,32 @@ describe("CoverageAction", () => {
     ]);
   });
 
+  test("uses qlty.exe as QLTY_BIN on Windows", async () => {
+    const originalPlatform = process.platform;
+    Object.defineProperty(process, "platform", {
+      value: "win32",
+    });
+
+    const { action, commands } = createTrackedAction({
+      settings: Settings.createNull({
+        "coverage-token": "qltcp_1234567890",
+        files: "info.lcov",
+      }),
+    });
+
+    await action.run();
+
+    const executedCommands = commands.clear();
+    expect(executedCommands.length).toBe(1);
+    const command = executedCommands[0];
+    expect(command?.command[0]).toBe("qlty.exe");
+
+    // Restore original platform
+    Object.defineProperty(process, "platform", {
+      value: originalPlatform,
+    });
+  });
+
   describe("error handling", () => {
     test("throws an error if qlty fails when skip-errors is false", async () => {
       const { action } = createTrackedAction({

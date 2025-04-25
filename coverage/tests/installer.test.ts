@@ -46,6 +46,16 @@ describe("Installer", () => {
     ]);
   });
 
+  test("installs windows x64", async () => {
+    const { downloads, installer } = createTrackedInstaller({
+      os: new StubbedOperatingSystem("win32", "x64"),
+    });
+    await installer.install();
+    expect(downloads.clear()).toEqual([
+      "https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-pc-windows-msvc.zip",
+    ]);
+  });
+
   test("installs specific version", async () => {
     const { downloads, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("linux", "x64"),

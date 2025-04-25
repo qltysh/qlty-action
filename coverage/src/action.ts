@@ -11,7 +11,6 @@ import EventEmitter from "node:events";
 import * as os from "os";
 
 const EXEC_EVENT = "exec";
-const QLTY_BIN = os.platform() === "win32" ? "qlty.exe" : "qlty";
 
 export class CoverageAction {
   private _output: ActionOutput;
@@ -114,12 +113,12 @@ export class CoverageAction {
       };
 
       this._emitter.emit(EXEC_EVENT, {
-        command: [QLTY_BIN, ...uploadArgs],
+        command: [this.getQltyBin(), ...uploadArgs],
         env,
       });
-      this._output.info(`Running: ${[QLTY_BIN, ...uploadArgs].join(" ")}`);
+      this._output.info(`Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`);
 
-      await this._executor.exec(QLTY_BIN, uploadArgs, {
+      await this._executor.exec(this.getQltyBin(), uploadArgs, {
         env,
         listeners: {
           stdout: (data: Buffer) => {
@@ -217,6 +216,10 @@ export class CoverageAction {
       command: string;
       env: Record<string, string>;
     }>(this._emitter, EXEC_EVENT);
+  }
+
+  private getQltyBin(): string {
+    return os.platform() === "win32" ? "qlty.exe" : "qlty";
   }
 }
 
