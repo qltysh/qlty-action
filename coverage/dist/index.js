@@ -73711,7 +73711,9 @@ var CoverageAction = class _CoverageAction {
         command: [this.getQltyBin(), ...uploadArgs],
         env
       });
-      this._output.info(`Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`);
+      this._output.info(
+        `Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
+      );
       await this._executor.exec(this.getQltyBin(), uploadArgs, {
         env,
         listeners: {
