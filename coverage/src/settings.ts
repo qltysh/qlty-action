@@ -25,6 +25,7 @@ interface ActionInputKeys {
   "coverage-token": string;
   verbose: boolean;
   "cli-version": string;
+  format: string;
 }
 
 const settingsParser = z.object({
@@ -44,6 +45,7 @@ const settingsParser = z.object({
   oidc: z.boolean(),
   verbose: z.boolean(),
   cliVersion: z.string().transform((val) => (val === "" ? undefined : val)),
+  format: z.string().transform((val) => (val === "" ? undefined : val)),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -74,6 +76,7 @@ export class Settings {
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
+        format: input.getInput("format"),
       }),
       input,
       fs,
@@ -221,6 +224,7 @@ export class StubbedInputProvider implements InputProvider {
       token: data.token || "",
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
+      "format": data["format"] || "",
     };
   }
 

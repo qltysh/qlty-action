@@ -166,13 +166,20 @@ export class CoverageAction {
     }
 
     if (this._settings.input.addPrefix) {
-      uploadArgs.push("--transform-add-prefix", this._settings.input.addPrefix);
+      uploadArgs.push("--add-prefix", this._settings.input.addPrefix);
     }
 
     if (this._settings.input.stripPrefix) {
       uploadArgs.push(
-        "--transform-strip-prefix",
+        "--strip-prefix",
         this._settings.input.stripPrefix,
+      );
+    }
+
+    if (this._settings.input.format) {
+      uploadArgs.push(
+        "--format",
+        this._settings.input.format,
       );
     }
 
