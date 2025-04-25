@@ -73631,7 +73631,6 @@ var StubbedCommandExecutor = class {
 var import_node_events2 = __toESM(require("node:events"));
 var os4 = __toESM(require("os"));
 var EXEC_EVENT = "exec";
-var QLTY_BIN = os4.platform() === "win32" ? "qlty.exe" : "qlty";
 var CoverageAction = class _CoverageAction {
   constructor({
     output = actionsCore,
@@ -73709,11 +73708,11 @@ var CoverageAction = class _CoverageAction {
         QLTY_COVERAGE_TOKEN: token
       };
       this._emitter.emit(EXEC_EVENT, {
-        command: [QLTY_BIN, ...uploadArgs],
+        command: [this.getQltyBin(), ...uploadArgs],
         env
       });
-      this._output.info(`Running: ${[QLTY_BIN, ...uploadArgs].join(" ")}`);
-      await this._executor.exec(QLTY_BIN, uploadArgs, {
+      this._output.info(`Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`);
+      await this._executor.exec(this.getQltyBin(), uploadArgs, {
         env,
         listeners: {
           stdout: (data) => {
@@ -73790,6 +73789,9 @@ var CoverageAction = class _CoverageAction {
   }
   trackOutput() {
     return OutputTracker.create(this._emitter, EXEC_EVENT);
+  }
+  getQltyBin() {
+    return os4.platform() === "win32" ? "qlty.exe" : "qlty";
   }
 };
 var CoverageError = class extends Error {
