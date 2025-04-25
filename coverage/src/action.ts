@@ -8,6 +8,7 @@ import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import OutputTracker from "./util/output_tracker";
 import EventEmitter from "node:events";
+import Version from "./version";
 
 const EXEC_EVENT = "exec";
 
@@ -109,6 +110,8 @@ export class CoverageAction {
       const env = {
         ...process.env,
         QLTY_COVERAGE_TOKEN: token,
+        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+        QLTY_CI_UPLOADER_VERSION: Version.VERSION,
       };
 
       this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
