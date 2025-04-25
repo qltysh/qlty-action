@@ -1,0 +1,7 @@
+*
+!configs
+!configs/**
+configs/node_modules
+!hooks/**
+!qlty.toml
+!.gitignore

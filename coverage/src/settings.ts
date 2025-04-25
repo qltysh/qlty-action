@@ -224,7 +224,7 @@ export class StubbedInputProvider implements InputProvider {
       token: data.token || "",
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
-      "format": data["format"] || "",
+      format: data["format"] || "",
     };
   }
 

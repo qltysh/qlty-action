@@ -9738,8 +9738,8 @@ var require_sync = __commonJS({
       }
       return x;
     };
-    var defaultReadPackageSync = function defaultReadPackageSync2(readFileSync2, pkgfile) {
-      var body = readFileSync2(pkgfile);
+    var defaultReadPackageSync = function defaultReadPackageSync2(readFileSync3, pkgfile) {
+      var body = readFileSync3(pkgfile);
       try {
         var pkg = JSON.parse(body);
         return pkg;
@@ -9759,7 +9759,7 @@ var require_sync = __commonJS({
       }
       var opts = normalizeOptions(x, options);
       var isFile = opts.isFile || defaultIsFile;
-      var readFileSync2 = opts.readFileSync || fs.readFileSync;
+      var readFileSync3 = opts.readFileSync || fs.readFileSync;
       var isDirectory = opts.isDirectory || defaultIsDir;
       var realpathSync = opts.realpathSync || defaultRealpathSync;
       var readPackageSync = opts.readPackageSync || defaultReadPackageSync;
@@ -9816,7 +9816,7 @@ var require_sync = __commonJS({
         if (!isFile(pkgfile)) {
           return loadpkg(path.dirname(dir));
         }
-        var pkg = readPackageSync(readFileSync2, pkgfile);
+        var pkg = readPackageSync(readFileSync3, pkgfile);
         if (pkg && opts.packageFilter) {
           pkg = opts.packageFilter(
             pkg,
@@ -9830,7 +9830,7 @@ var require_sync = __commonJS({
         var pkgfile = path.join(maybeRealpathSync(realpathSync, x2, opts), "/package.json");
         if (isFile(pkgfile)) {
           try {
-            var pkg = readPackageSync(readFileSync2, pkgfile);
+            var pkg = readPackageSync(readFileSync3, pkgfile);
           } catch (e) {
           }
           if (pkg && opts.packageFilter) {
@@ -73448,7 +73448,8 @@ var settingsParser = z.object({
   }),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: z.string().transform((val) => val === "" ? void 0 : val)
+  cliVersion: z.string().transform((val) => val === "" ? void 0 : val),
+  format: z.string().transform((val) => val === "" ? void 0 : val)
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73475,7 +73476,8 @@ var Settings = class _Settings {
         coverageToken: input.getInput("coverage-token"),
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
-        cliVersion: input.getInput("cli-version")
+        cliVersion: input.getInput("cli-version"),
+        format: input.getInput("format")
       }),
       input,
       fs
@@ -73581,7 +73583,8 @@ var StubbedInputProvider = class {
       "coverage-token": data["coverage-token"] || "",
       token: data.token || "",
       verbose: data.verbose || false,
-      "cli-version": data["cli-version"] || ""
+      "cli-version": data["cli-version"] || "",
+      format: data["format"] || ""
     };
   }
   getInput(name, _options) {
@@ -73617,6 +73620,20 @@ var StubbedCommandExecutor = class {
 
 // src/action.ts
 var import_node_events2 = __toESM(require("node:events"));
+
+// src/version.ts
+var import_fs = require("fs");
+var import_path2 = require("path");
+var Version = class {
+  static get VERSION() {
+    const packageJsonPath = (0, import_path2.join)(__dirname, "../package.json");
+    const packageJsonContent = (0, import_fs.readFileSync)(packageJsonPath, "utf-8");
+    const packageJson = JSON.parse(packageJsonContent);
+    return packageJson.version;
+  }
+};
+
+// src/action.ts
 var EXEC_EVENT = "exec";
 var CoverageAction = class _CoverageAction {
   constructor({
@@ -73692,7 +73709,9 @@ var CoverageAction = class _CoverageAction {
     try {
       const env = {
         ...process.env,
-        QLTY_COVERAGE_TOKEN: token
+        QLTY_COVERAGE_TOKEN: token,
+        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+        QLTY_CI_UPLOADER_VERSION: Version.VERSION
       };
       this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
       this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
@@ -73741,13 +73760,13 @@ var CoverageAction = class _CoverageAction {
       uploadArgs.push("--print");
     }
     if (this._settings.input.addPrefix) {
-      uploadArgs.push("--transform-add-prefix", this._settings.input.addPrefix);
+      uploadArgs.push("--add-prefix", this._settings.input.addPrefix);
     }
     if (this._settings.input.stripPrefix) {
-      uploadArgs.push(
-        "--transform-strip-prefix",
-        this._settings.input.stripPrefix
-      );
+      uploadArgs.push("--strip-prefix", this._settings.input.stripPrefix);
+    }
+    if (this._settings.input.format) {
+      uploadArgs.push("--format", this._settings.input.format);
     }
     if (this._settings.input.tag) {
       uploadArgs.push("--tag", this._settings.input.tag);

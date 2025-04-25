@@ -173,17 +173,11 @@ export class CoverageAction {
     }
 
     if (this._settings.input.stripPrefix) {
-      uploadArgs.push(
-        "--strip-prefix",
-        this._settings.input.stripPrefix,
-      );
+      uploadArgs.push("--strip-prefix", this._settings.input.stripPrefix);
     }
 
     if (this._settings.input.format) {
-      uploadArgs.push(
-        "--format",
-        this._settings.input.format,
-      );
+      uploadArgs.push("--format", this._settings.input.format);
     }
 
     if (this._settings.input.tag) {
