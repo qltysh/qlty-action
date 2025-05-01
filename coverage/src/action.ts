@@ -78,6 +78,13 @@ export class CoverageAction {
       return;
     }
 
+    this._output.info(`PATH: ${process.env.PATH}`);
+    const expectedPath = this.getQltyBin();
+    this._output.info(`Expected Qlty binary path: ${expectedPath}`);
+    if (!fs.existsSync(expectedPath)) {
+      this._output.info(`Qlty binary not found at: ${expectedPath}`);
+    }
+
     let uploadArgs = await this.buildArgs();
     const files = await this._settings.getFiles();
 

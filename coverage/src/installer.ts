@@ -2,6 +2,7 @@ import * as tc from "@actions/tool-cache";
 import * as core from "@actions/core";
 import os from "os";
 import EventEmitter from "node:events";
+import fs from "fs";
 import OutputTracker from "./util/output_tracker";
 import { ActionOutput, StubbedOutput } from "./util/output";
 
@@ -84,7 +85,14 @@ export class Installer {
       versionPath,
     );
     this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
+    this._output.info(`Download URL: ${downloadUrl}`);
+    this._output.info(`Extracted folder: ${extractedFolder}`);
+    this._output.info(`Cached path: ${cachedPath}`);
     const binPath = `${cachedPath}/qlty-${platformArch}`;
+    this._output.info(`Binary path: ${binPath}`);
+    if (!fs.existsSync(binPath)) {
+      this._output.warning(`Binary not found at: ${binPath}`);
+    }
     this._output.addPath(binPath);
   }
 }

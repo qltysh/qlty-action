@@ -9199,14 +9199,14 @@ var require_is_core_module = __commonJS({
 // node_modules/resolve/lib/async.js
 var require_async = __commonJS({
   "node_modules/resolve/lib/async.js"(exports2, module2) {
-    var fs2 = require("fs");
+    var fs3 = require("fs");
     var getHomedir = require_homedir();
     var path = require("path");
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
     var isCore = require_is_core_module();
-    var realpathFS = process.platform !== "win32" && fs2.realpath && typeof fs2.realpath.native === "function" ? fs2.realpath.native : fs2.realpath;
+    var realpathFS = process.platform !== "win32" && fs3.realpath && typeof fs3.realpath.native === "function" ? fs3.realpath.native : fs3.realpath;
     var homedir = getHomedir();
     var defaultPaths = function() {
       return [
@@ -9215,7 +9215,7 @@ var require_async = __commonJS({
       ];
     };
     var defaultIsFile = function isFile(file, cb) {
-      fs2.stat(file, function(err, stat) {
+      fs3.stat(file, function(err, stat) {
         if (!err) {
           return cb(null, stat.isFile() || stat.isFIFO());
         }
@@ -9224,7 +9224,7 @@ var require_async = __commonJS({
       });
     };
     var defaultIsDir = function isDirectory(dir, cb) {
-      fs2.stat(dir, function(err, stat) {
+      fs3.stat(dir, function(err, stat) {
         if (!err) {
           return cb(null, stat.isDirectory());
         }
@@ -9281,7 +9281,7 @@ var require_async = __commonJS({
       opts = normalizeOptions(x, opts);
       var isFile = opts.isFile || defaultIsFile;
       var isDirectory = opts.isDirectory || defaultIsDir;
-      var readFile2 = opts.readFile || fs2.readFile;
+      var readFile2 = opts.readFile || fs3.readFile;
       var realpath = opts.realpath || defaultRealpath;
       var readPackage = opts.readPackage || defaultReadPackage;
       if (opts.readFile && opts.readPackage) {
@@ -9690,13 +9690,13 @@ var require_is_core = __commonJS({
 var require_sync = __commonJS({
   "node_modules/resolve/lib/sync.js"(exports2, module2) {
     var isCore = require_is_core_module();
-    var fs2 = require("fs");
+    var fs3 = require("fs");
     var path = require("path");
     var getHomedir = require_homedir();
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
-    var realpathFS = process.platform !== "win32" && fs2.realpathSync && typeof fs2.realpathSync.native === "function" ? fs2.realpathSync.native : fs2.realpathSync;
+    var realpathFS = process.platform !== "win32" && fs3.realpathSync && typeof fs3.realpathSync.native === "function" ? fs3.realpathSync.native : fs3.realpathSync;
     var homedir = getHomedir();
     var defaultPaths = function() {
       return [
@@ -9706,7 +9706,7 @@ var require_sync = __commonJS({
     };
     var defaultIsFile = function isFile(file) {
       try {
-        var stat = fs2.statSync(file, { throwIfNoEntry: false });
+        var stat = fs3.statSync(file, { throwIfNoEntry: false });
       } catch (e) {
         if (e && (e.code === "ENOENT" || e.code === "ENOTDIR")) return false;
         throw e;
@@ -9715,7 +9715,7 @@ var require_sync = __commonJS({
     };
     var defaultIsDir = function isDirectory(dir) {
       try {
-        var stat = fs2.statSync(dir, { throwIfNoEntry: false });
+        var stat = fs3.statSync(dir, { throwIfNoEntry: false });
       } catch (e) {
         if (e && (e.code === "ENOENT" || e.code === "ENOTDIR")) return false;
         throw e;
@@ -9759,7 +9759,7 @@ var require_sync = __commonJS({
       }
       var opts = normalizeOptions(x, options);
       var isFile = opts.isFile || defaultIsFile;
-      var readFileSync3 = opts.readFileSync || fs2.readFileSync;
+      var readFileSync3 = opts.readFileSync || fs3.readFileSync;
       var isDirectory = opts.isDirectory || defaultIsDir;
       var realpathSync = opts.realpathSync || defaultRealpathSync;
       var readPackageSync = opts.readPackageSync || defaultReadPackageSync;
@@ -30224,7 +30224,7 @@ var require_file_command = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.prepareKeyValueMessage = exports2.issueFileCommand = void 0;
     var crypto = __importStar(require("crypto"));
-    var fs2 = __importStar(require("fs"));
+    var fs3 = __importStar(require("fs"));
     var os5 = __importStar(require("os"));
     var utils_1 = require_utils20();
     function issueFileCommand(command, message) {
@@ -30232,10 +30232,10 @@ var require_file_command = __commonJS({
       if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
       }
-      if (!fs2.existsSync(filePath)) {
+      if (!fs3.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
       }
-      fs2.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os5.EOL}`, {
+      fs3.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os5.EOL}`, {
         encoding: "utf8"
       });
     }
@@ -48571,12 +48571,12 @@ var require_io_util = __commonJS({
     var _a;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getCmdPath = exports2.tryGetExecutablePath = exports2.isRooted = exports2.isDirectory = exports2.exists = exports2.READONLY = exports2.UV_FS_O_EXLOCK = exports2.IS_WINDOWS = exports2.unlink = exports2.symlink = exports2.stat = exports2.rmdir = exports2.rm = exports2.rename = exports2.readlink = exports2.readdir = exports2.open = exports2.mkdir = exports2.lstat = exports2.copyFile = exports2.chmod = void 0;
-    var fs2 = __importStar(require("fs"));
+    var fs3 = __importStar(require("fs"));
     var path = __importStar(require("path"));
-    _a = fs2.promises, exports2.chmod = _a.chmod, exports2.copyFile = _a.copyFile, exports2.lstat = _a.lstat, exports2.mkdir = _a.mkdir, exports2.open = _a.open, exports2.readdir = _a.readdir, exports2.readlink = _a.readlink, exports2.rename = _a.rename, exports2.rm = _a.rm, exports2.rmdir = _a.rmdir, exports2.stat = _a.stat, exports2.symlink = _a.symlink, exports2.unlink = _a.unlink;
+    _a = fs3.promises, exports2.chmod = _a.chmod, exports2.copyFile = _a.copyFile, exports2.lstat = _a.lstat, exports2.mkdir = _a.mkdir, exports2.open = _a.open, exports2.readdir = _a.readdir, exports2.readlink = _a.readlink, exports2.rename = _a.rename, exports2.rm = _a.rm, exports2.rmdir = _a.rmdir, exports2.stat = _a.stat, exports2.symlink = _a.symlink, exports2.unlink = _a.unlink;
     exports2.IS_WINDOWS = process.platform === "win32";
     exports2.UV_FS_O_EXLOCK = 268435456;
-    exports2.READONLY = fs2.constants.O_RDONLY;
+    exports2.READONLY = fs3.constants.O_RDONLY;
     function exists(fsPath) {
       return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -51094,7 +51094,7 @@ var require_manifest = __commonJS({
     var core_1 = require_core4();
     var os5 = require("os");
     var cp = require("child_process");
-    var fs2 = require("fs");
+    var fs3 = require("fs");
     function _findMatch(versionSpec, stable, candidates, archFilter) {
       return __awaiter(this, void 0, void 0, function* () {
         const platFilter = os5.platform();
@@ -51158,10 +51158,10 @@ var require_manifest = __commonJS({
       const lsbReleaseFile = "/etc/lsb-release";
       const osReleaseFile = "/etc/os-release";
       let contents = "";
-      if (fs2.existsSync(lsbReleaseFile)) {
-        contents = fs2.readFileSync(lsbReleaseFile).toString();
-      } else if (fs2.existsSync(osReleaseFile)) {
-        contents = fs2.readFileSync(osReleaseFile).toString();
+      if (fs3.existsSync(lsbReleaseFile)) {
+        contents = fs3.readFileSync(lsbReleaseFile).toString();
+      } else if (fs3.existsSync(osReleaseFile)) {
+        contents = fs3.readFileSync(osReleaseFile).toString();
       }
       return contents;
     }
@@ -51338,7 +51338,7 @@ var require_tool_cache = __commonJS({
     var core4 = __importStar(require_core4());
     var io = __importStar(require_io());
     var crypto = __importStar(require("crypto"));
-    var fs2 = __importStar(require("fs"));
+    var fs3 = __importStar(require("fs"));
     var mm = __importStar(require_manifest());
     var os5 = __importStar(require("os"));
     var path = __importStar(require("path"));
@@ -51385,7 +51385,7 @@ var require_tool_cache = __commonJS({
     exports2.downloadTool = downloadTool;
     function downloadToolAttempt(url2, dest, auth, headers) {
       return __awaiter(this, void 0, void 0, function* () {
-        if (fs2.existsSync(dest)) {
+        if (fs3.existsSync(dest)) {
           throw new Error(`Destination file path ${dest} already exists`);
         }
         const http4 = new httpm.HttpClient(userAgent, [], {
@@ -51409,7 +51409,7 @@ var require_tool_cache = __commonJS({
         const readStream = responseMessageFactory();
         let succeeded = false;
         try {
-          yield pipeline(readStream, fs2.createWriteStream(dest));
+          yield pipeline(readStream, fs3.createWriteStream(dest));
           core4.debug("download complete");
           succeeded = true;
           return dest;
@@ -51621,11 +51621,11 @@ var require_tool_cache = __commonJS({
         arch2 = arch2 || os5.arch();
         core4.debug(`Caching tool ${tool} ${version} ${arch2}`);
         core4.debug(`source dir: ${sourceDir}`);
-        if (!fs2.statSync(sourceDir).isDirectory()) {
+        if (!fs3.statSync(sourceDir).isDirectory()) {
           throw new Error("sourceDir is not a directory");
         }
         const destPath = yield _createToolPath(tool, version, arch2);
-        for (const itemName of fs2.readdirSync(sourceDir)) {
+        for (const itemName of fs3.readdirSync(sourceDir)) {
           const s = path.join(sourceDir, itemName);
           yield io.cp(s, destPath, { recursive: true });
         }
@@ -51640,7 +51640,7 @@ var require_tool_cache = __commonJS({
         arch2 = arch2 || os5.arch();
         core4.debug(`Caching tool ${tool} ${version} ${arch2}`);
         core4.debug(`source file: ${sourceFile}`);
-        if (!fs2.statSync(sourceFile).isFile()) {
+        if (!fs3.statSync(sourceFile).isFile()) {
           throw new Error("sourceFile is not a file");
         }
         const destFolder = yield _createToolPath(tool, version, arch2);
@@ -51670,7 +51670,7 @@ var require_tool_cache = __commonJS({
         versionSpec = semver.clean(versionSpec) || "";
         const cachePath = path.join(_getCacheDirectory(), toolName, versionSpec, arch2);
         core4.debug(`checking cache: ${cachePath}`);
-        if (fs2.existsSync(cachePath) && fs2.existsSync(`${cachePath}.complete`)) {
+        if (fs3.existsSync(cachePath) && fs3.existsSync(`${cachePath}.complete`)) {
           core4.debug(`Found tool in cache ${toolName} ${versionSpec} ${arch2}`);
           toolPath = cachePath;
         } else {
@@ -51684,12 +51684,12 @@ var require_tool_cache = __commonJS({
       const versions = [];
       arch2 = arch2 || os5.arch();
       const toolPath = path.join(_getCacheDirectory(), toolName);
-      if (fs2.existsSync(toolPath)) {
-        const children = fs2.readdirSync(toolPath);
+      if (fs3.existsSync(toolPath)) {
+        const children = fs3.readdirSync(toolPath);
         for (const child of children) {
           if (isExplicitVersion(child)) {
             const fullPath = path.join(toolPath, child, arch2 || "");
-            if (fs2.existsSync(fullPath) && fs2.existsSync(`${fullPath}.complete`)) {
+            if (fs3.existsSync(fullPath) && fs3.existsSync(`${fullPath}.complete`)) {
               versions.push(child);
             }
           }
@@ -51763,7 +51763,7 @@ var require_tool_cache = __commonJS({
     function _completeToolPath(tool, version, arch2) {
       const folderPath = path.join(_getCacheDirectory(), tool, semver.clean(version) || version, arch2 || "");
       const markerPath = `${folderPath}.complete`;
-      fs2.writeFileSync(markerPath, "");
+      fs3.writeFileSync(markerPath, "");
       core4.debug("finished caching tool");
     }
     function isExplicitVersion(versionSpec) {
@@ -53358,7 +53358,7 @@ var require_internal_globber = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.DefaultGlobber = void 0;
     var core4 = __importStar(require_core4());
-    var fs2 = __importStar(require("fs"));
+    var fs3 = __importStar(require("fs"));
     var globOptionsHelper = __importStar(require_internal_glob_options_helper());
     var path = __importStar(require("path"));
     var patternHelper = __importStar(require_internal_pattern_helper());
@@ -53412,7 +53412,7 @@ var require_internal_globber = __commonJS({
           for (const searchPath of patternHelper.getSearchPaths(patterns)) {
             core4.debug(`Search path '${searchPath}'`);
             try {
-              yield __await(fs2.promises.lstat(searchPath));
+              yield __await(fs3.promises.lstat(searchPath));
             } catch (err) {
               if (err.code === "ENOENT") {
                 continue;
@@ -53446,7 +53446,7 @@ var require_internal_globber = __commonJS({
                 continue;
               }
               const childLevel = item.level + 1;
-              const childItems = (yield __await(fs2.promises.readdir(item.path))).map((x) => new internal_search_state_1.SearchState(path.join(item.path, x), childLevel));
+              const childItems = (yield __await(fs3.promises.readdir(item.path))).map((x) => new internal_search_state_1.SearchState(path.join(item.path, x), childLevel));
               stack.push(...childItems.reverse());
             } else if (match & internal_match_kind_1.MatchKind.File) {
               yield yield __await(item.path);
@@ -53481,7 +53481,7 @@ var require_internal_globber = __commonJS({
           let stats;
           if (options.followSymbolicLinks) {
             try {
-              stats = yield fs2.promises.stat(item.path);
+              stats = yield fs3.promises.stat(item.path);
             } catch (err) {
               if (err.code === "ENOENT") {
                 if (options.omitBrokenSymbolicLinks) {
@@ -53493,10 +53493,10 @@ var require_internal_globber = __commonJS({
               throw err;
             }
           } else {
-            stats = yield fs2.promises.lstat(item.path);
+            stats = yield fs3.promises.lstat(item.path);
           }
           if (stats.isDirectory() && options.followSymbolicLinks) {
-            const realPath = yield fs2.promises.realpath(item.path);
+            const realPath = yield fs3.promises.realpath(item.path);
             while (traversalChain.length >= item.level) {
               traversalChain.pop();
             }
@@ -53595,7 +53595,7 @@ var require_internal_hash_files = __commonJS({
     exports2.hashFiles = void 0;
     var crypto = __importStar(require("crypto"));
     var core4 = __importStar(require_core4());
-    var fs2 = __importStar(require("fs"));
+    var fs3 = __importStar(require("fs"));
     var stream = __importStar(require("stream"));
     var util3 = __importStar(require("util"));
     var path = __importStar(require("path"));
@@ -53618,13 +53618,13 @@ var require_internal_hash_files = __commonJS({
               writeDelegate(`Ignore '${file}' since it is not under GITHUB_WORKSPACE.`);
               continue;
             }
-            if (fs2.statSync(file).isDirectory()) {
+            if (fs3.statSync(file).isDirectory()) {
               writeDelegate(`Skip directory '${file}'.`);
               continue;
             }
             const hash = crypto.createHash("sha256");
             const pipeline = util3.promisify(stream.pipeline);
-            yield pipeline(fs2.createReadStream(file), hash);
+            yield pipeline(fs3.createReadStream(file), hash);
             result.write(hash.digest());
             count++;
             if (!hasMatch) {
@@ -69223,6 +69223,7 @@ var tc = __toESM(require_tool_cache());
 var core = __toESM(require_core4());
 var import_os = __toESM(require("os"));
 var import_node_events = __toESM(require("node:events"));
+var import_fs = __toESM(require("fs"));
 
 // src/util/output_tracker.ts
 var OutputTracker = class _OutputTracker {
@@ -69338,7 +69339,14 @@ var Installer = class _Installer {
       versionPath
     );
     this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
+    this._output.info(`Download URL: ${downloadUrl}`);
+    this._output.info(`Extracted folder: ${extractedFolder}`);
+    this._output.info(`Cached path: ${cachedPath}`);
     const binPath = `${cachedPath}/qlty-${platformArch}`;
+    this._output.info(`Binary path: ${binPath}`);
+    if (!import_fs.default.existsSync(binPath)) {
+      this._output.warning(`Binary not found at: ${binPath}`);
+    }
     this._output.addPath(binPath);
   }
 };
@@ -73465,15 +73473,15 @@ var settingsParser = z.object({
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
 var Settings = class _Settings {
-  constructor(data, input, fs2) {
+  constructor(data, input, fs3) {
     __publicField(this, "_data");
     __publicField(this, "_input");
     __publicField(this, "_fs");
     this._data = data;
     this._input = input;
-    this._fs = fs2;
+    this._fs = fs3;
   }
-  static create(input = core2, fs2 = FileSystem.create()) {
+  static create(input = core2, fs3 = FileSystem.create()) {
     return new _Settings(
       settingsParser.parse({
         files: input.getInput("files", { required: true }).trim(),
@@ -73490,11 +73498,11 @@ var Settings = class _Settings {
         cliVersion: input.getInput("cli-version")
       }),
       input,
-      fs2
+      fs3
     );
   }
-  static createNull(input = {}, fs2 = FileSystem.createNull()) {
-    return _Settings.create(new StubbedInputProvider(input), fs2);
+  static createNull(input = {}, fs3 = FileSystem.createNull()) {
+    return _Settings.create(new StubbedInputProvider(input), fs3);
   }
   validate() {
     const errors = [];
@@ -73630,7 +73638,7 @@ var StubbedCommandExecutor = class {
 // src/action.ts
 var import_node_events2 = __toESM(require("node:events"));
 var os4 = __toESM(require("os"));
-var fs = __toESM(require("fs"));
+var fs2 = __toESM(require("fs"));
 var EXEC_EVENT = "exec";
 var CoverageAction = class _CoverageAction {
   constructor({
@@ -73680,6 +73688,12 @@ var CoverageAction = class _CoverageAction {
       ]);
       return;
     }
+    this._output.info(`PATH: ${process.env.PATH}`);
+    const expectedPath = this.getQltyBin();
+    this._output.info(`Expected Qlty binary path: ${expectedPath}`);
+    if (!fs2.existsSync(expectedPath)) {
+      this._output.info(`Qlty binary not found at: ${expectedPath}`);
+    }
     let uploadArgs = await this.buildArgs();
     const files = await this._settings.getFiles();
     if (files.length === 0) {
@@ -73700,11 +73714,11 @@ var CoverageAction = class _CoverageAction {
       return;
     }
     this._output.info(`Checking if file exists: ${files[0]}`);
-    if (!fs.existsSync(files[0])) {
+    if (!fs2.existsSync(files[0])) {
       this._output.warning(`File not found: ${files[0]}`);
     } else {
       this._output.info(`File exists. Logging contents:`);
-      const fileContents = fs.readFileSync(files[0], "utf-8");
+      const fileContents = fs2.readFileSync(files[0], "utf-8");
       this._output.info(fileContents);
     }
     uploadArgs = uploadArgs.concat(files);
