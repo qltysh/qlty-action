@@ -69347,6 +69347,13 @@ var Installer = class _Installer {
     this._output.info(`Binary path: ${binPath}`);
     if (!import_fs.default.existsSync(binPath)) {
       this._output.warning(`Binary not found at: ${binPath}`);
+      this._output.info(`Listing contents of cached path: ${cachedPath}`);
+      if (import_fs.default.existsSync(cachedPath)) {
+        const cachedContents = import_fs.default.readdirSync(cachedPath);
+        this._output.info(`Cached path contents: ${cachedContents.join(", ")}`);
+      } else {
+        this._output.warning(`Cached path does not exist: ${cachedPath}`);
+      }
     }
     this._output.addPath(binPath);
   }

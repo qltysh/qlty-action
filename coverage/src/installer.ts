@@ -95,9 +95,14 @@ export class Installer {
     if (!fs.existsSync(binPath)) {
       this._output.warning(`Binary not found at: ${binPath}`);
       this._output.info(`Listing contents of cached path: ${cachedPath}`);
-      const cachedContents = fs.readdirSync(cachedPath);
-      this._output.info(`Cached path contents: ${cachedContents.join(', ')}`);
+      if (fs.existsSync(cachedPath)) {
+        const cachedContents = fs.readdirSync(cachedPath);
+        this._output.info(`Cached path contents: ${cachedContents.join(', ')}`);
+      } else {
+        this._output.warning(`Cached path does not exist: ${cachedPath}`);
+      }
     }
+
     this._output.addPath(binPath);
   }
 }
