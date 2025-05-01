@@ -81,7 +81,7 @@ describe("Installer", () => {
     const { output, installer } = createTrackedInstaller();
     await installer.install();
     expect(output.paths).toEqual([
-      "cached[extracted[downloaded[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]/qlty-x86_64-unknown-linux-gnu",
+      "cached[extracted[downloaded[https:/qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]/qlty-x86_64-unknown-linux-gnu",
     ]);
   });
 
