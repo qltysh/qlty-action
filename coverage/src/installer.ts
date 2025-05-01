@@ -89,7 +89,7 @@ export class Installer {
     this._output.info(`Download URL: ${downloadUrl}`);
     this._output.info(`Extracted folder: ${extractedFolder}`);
     this._output.info(`Cached path: ${cachedPath}`);
-    const binPath = path.join(cachedPath, `qlty-${platformArch}`);
+    const binPath = platform === "win32" ? cachedPath : `${cachedPath}/qlty-${platformArch}`;
     this._output.info(`Binary path: ${binPath}`);
 
     if (!fs.existsSync(binPath)) {
