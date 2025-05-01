@@ -85,23 +85,9 @@ export class Installer {
       "qlty",
       versionPath,
     );
-    this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
-    this._output.info(`Download URL: ${downloadUrl}`);
-    this._output.info(`Extracted folder: ${extractedFolder}`);
-    this._output.info(`Cached path: ${cachedPath}`);
-    const binPath = platform === "win32" ? cachedPath : `${cachedPath}/qlty-${platformArch}`;
-    this._output.info(`Binary path: ${binPath}`);
 
-    if (!fs.existsSync(binPath)) {
-      this._output.warning(`Binary not found at: ${binPath}`);
-      this._output.info(`Listing contents of cached path: ${cachedPath}`);
-      if (fs.existsSync(cachedPath)) {
-        const cachedContents = fs.readdirSync(cachedPath);
-        this._output.info(`Cached path contents: ${cachedContents.join(', ')}`);
-      } else {
-        this._output.warning(`Cached path does not exist: ${cachedPath}`);
-      }
-    }
+    this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
+    const binPath = platform === "win32" ? cachedPath : `${cachedPath}/qlty-${platformArch}`;
 
     this._output.addPath(binPath);
   }

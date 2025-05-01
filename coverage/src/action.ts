@@ -9,9 +9,13 @@ import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import OutputTracker from "./util/output_tracker";
 import EventEmitter from "node:events";
 import * as os from "os";
-import * as fs from "fs";
+import path from 'path';
 
 const EXEC_EVENT = "exec";
+
+function toForwardSlashPath(p: string): string {
+  return path.normalize(p).replace(/\\/g, '/');
+}
 
 export class CoverageAction {
   private _output: ActionOutput;
@@ -78,13 +82,6 @@ export class CoverageAction {
       return;
     }
 
-    this._output.info(`PATH: ${process.env.PATH}`);
-    const expectedPath = this.getQltyBin();
-    this._output.info(`Expected Qlty binary path: ${expectedPath}`);
-    if (!fs.existsSync(expectedPath)) {
-      this._output.info(`Qlty binary not found at: ${expectedPath}`);
-    }
-
     let uploadArgs = await this.buildArgs();
     const files = await this._settings.getFiles();
 
@@ -107,17 +104,12 @@ export class CoverageAction {
       return;
     }
 
-    this._output.info(`Checking if file exists: ${files[0]}`);
 
-    if (!fs.existsSync(files[0])) {
-      this._output.warning(`File not found: ${files[0]}`);
+    if (process.platform === 'win32') {
+      uploadArgs = uploadArgs.concat(files.map(file => toForwardSlashPath(file)));
     } else {
-      this._output.info(`File exists. Logging contents:`);
-      const fileContents = fs.readFileSync(files[0], "utf-8");
-      this._output.info(fileContents);
+      uploadArgs = uploadArgs.concat(files);
     }
-
-    uploadArgs = uploadArgs.concat(files);
 
     const token = await this._settings.getToken();
     this._output.setSecret(token);
@@ -130,20 +122,13 @@ export class CoverageAction {
         QLTY_COVERAGE_TOKEN: token,
       };
 
-      this._output.info(`Platform: ${os.platform()}`);
-      this._output.info(`Qlty Binary: ${this.getQltyBin()}`);
-      this._output.info(`Environment Variables: ${JSON.stringify(env)}`);
-      this._output.info(
-        `Command: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
-      );
-      this._output.info(`Files: ${files.join(", ")}`);
-
       this._emitter.emit(EXEC_EVENT, {
         command: [this.getQltyBin(), ...uploadArgs],
         env,
       });
+
       this._output.info(
-        `Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
+        `Running: ${this.getQltyBin()} --version"`
       );
 
       try {
@@ -152,12 +137,10 @@ export class CoverageAction {
           listeners: {
             stdout: (data: Buffer) => {
               const output = data.toString();
-              qlytOutput += output;
               this._output.info(`Captured stdout: ${output}`);
             },
             stderr: (data: Buffer) => {
               const errorOutput = data.toString();
-              qlytOutput += errorOutput;
               this._output.warning(`Captured stderr: ${errorOutput}`);
             },
           },
@@ -169,6 +152,10 @@ export class CoverageAction {
           `Error running Qlty CLI${errorMessage} Please check the action's inputs.`
         );
       }
+
+      this._output.info(
+        `Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
+      );
 
       await this._executor.exec(this.getQltyBin(), uploadArgs, {
         env,
