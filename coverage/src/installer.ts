@@ -90,10 +90,13 @@ export class Installer {
     this._output.info(`Extracted folder: ${extractedFolder}`);
     this._output.info(`Cached path: ${cachedPath}`);
     const binPath = path.join(cachedPath, `qlty-${platformArch}`);
-
     this._output.info(`Binary path: ${binPath}`);
+
     if (!fs.existsSync(binPath)) {
       this._output.warning(`Binary not found at: ${binPath}`);
+      this._output.info(`Listing contents of cached path: ${cachedPath}`);
+      const cachedContents = fs.readdirSync(cachedPath);
+      this._output.info(`Cached path contents: ${cachedContents.join(', ')}`);
     }
     this._output.addPath(binPath);
   }
