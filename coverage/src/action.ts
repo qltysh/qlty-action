@@ -9,6 +9,7 @@ import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import OutputTracker from "./util/output_tracker";
 import EventEmitter from "node:events";
 import * as os from "os";
+import * as fs from "fs";
 
 const EXEC_EVENT = "exec";
 
@@ -100,15 +101,15 @@ export class CoverageAction {
     }
 
     this._output.info(`Checking if file exists: ${files[0]}`);
-    const fs = require('fs');
+
     if (!fs.existsSync(files[0])) {
-      this.warnOrThrow([`File not found: ${files[0]}`]);
-      return;
+      this._output.warning(`File not found: ${files[0]}`);
+    } else {
+      this._output.info(`File exists. Logging contents:`);
+      const fileContents = fs.readFileSync(files[0], 'utf-8');
+      this._output.info(fileContents);
     }
 
-    this._output.info(`File exists. Logging contents:`);
-    const fileContents = fs.readFileSync(files[0], 'utf-8');
-    this._output.info(fileContents);
 
     uploadArgs = uploadArgs.concat(files);
 
