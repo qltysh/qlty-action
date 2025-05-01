@@ -73707,6 +73707,11 @@ var CoverageAction = class _CoverageAction {
         ...process.env,
         QLTY_COVERAGE_TOKEN: token
       };
+      this._output.info(`Platform: ${os4.platform()}`);
+      this._output.info(`Qlty Binary: ${this.getQltyBin()}`);
+      this._output.info(`Environment Variables: ${JSON.stringify(env)}`);
+      this._output.info(`Command: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`);
+      this._output.info(`Files: ${files.join(", ")}`);
       this._emitter.emit(EXEC_EVENT, {
         command: [this.getQltyBin(), ...uploadArgs],
         env
