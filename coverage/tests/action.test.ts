@@ -4,6 +4,8 @@ import { Settings, StubbedFileSystem } from "src/settings";
 import { StubbedCommandExecutor } from "src/util/exec";
 import { StubbedOutput } from "src/util/output";
 
+const QLTY_BIN = process.platform === "win32" ? "qlty.exe" : "qlty";
+
 describe("CoverageAction", () => {
   describe("validaiton errors", async () => {
     test("logs warnings shen skip-errors is true", async () => {
@@ -76,7 +78,7 @@ describe("CoverageAction", () => {
 
     const command = executedCommands[0];
     expect(command?.command).toEqual([
-      "qlty",
+      QLTY_BIN,
       "coverage",
       "publish",
       "info.lcov",
@@ -104,7 +106,7 @@ describe("CoverageAction", () => {
 
     const command = executedCommands[0];
     expect(command?.command).toEqual([
-      "qlty",
+      QLTY_BIN,
       "coverage",
       "publish",
       "--print",
@@ -135,7 +137,7 @@ describe("CoverageAction", () => {
     expect(executedCommands.length).toBe(1);
     const command = executedCommands[0];
     expect(command?.command).toEqual([
-      "qlty",
+      QLTY_BIN,
       "coverage",
       "publish",
       "--override-commit-sha",
