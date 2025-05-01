@@ -73698,6 +73698,15 @@ var CoverageAction = class _CoverageAction {
       }
       return;
     }
+    this._output.info(`Checking if file exists: ${files[0]}`);
+    const fs = require("fs");
+    if (!fs.existsSync(files[0])) {
+      this.warnOrThrow([`File not found: ${files[0]}`]);
+      return;
+    }
+    this._output.info(`File exists. Logging contents:`);
+    const fileContents = fs.readFileSync(files[0], "utf-8");
+    this._output.info(fileContents);
     uploadArgs = uploadArgs.concat(files);
     const token = await this._settings.getToken();
     this._output.setSecret(token);
@@ -73723,10 +73732,14 @@ var CoverageAction = class _CoverageAction {
         env,
         listeners: {
           stdout: (data) => {
-            qlytOutput += data.toString();
+            const output = data.toString();
+            qlytOutput += output;
+            this._output.info(`Captured stdout: ${output}`);
           },
           stderr: (data) => {
-            qlytOutput += data.toString();
+            const errorOutput = data.toString();
+            qlytOutput += errorOutput;
+            this._output.warning(`Captured stderr: ${errorOutput}`);
           }
         }
       });
