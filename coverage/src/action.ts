@@ -106,10 +106,9 @@ export class CoverageAction {
       this._output.warning(`File not found: ${files[0]}`);
     } else {
       this._output.info(`File exists. Logging contents:`);
-      const fileContents = fs.readFileSync(files[0], 'utf-8');
+      const fileContents = fs.readFileSync(files[0], "utf-8");
       this._output.info(fileContents);
     }
-
 
     uploadArgs = uploadArgs.concat(files);
 
@@ -127,7 +126,9 @@ export class CoverageAction {
       this._output.info(`Platform: ${os.platform()}`);
       this._output.info(`Qlty Binary: ${this.getQltyBin()}`);
       this._output.info(`Environment Variables: ${JSON.stringify(env)}`);
-      this._output.info(`Command: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`);
+      this._output.info(
+        `Command: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
+      );
       this._output.info(`Files: ${files.join(", ")}`);
 
       this._emitter.emit(EXEC_EVENT, {
@@ -135,8 +136,32 @@ export class CoverageAction {
         env,
       });
       this._output.info(
-        `Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`,
+        `Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
       );
+
+      try {
+        await this._executor.exec(this.getQltyBin(), ["--version"], {
+          env,
+          listeners: {
+            stdout: (data: Buffer) => {
+              const output = data.toString();
+              qlytOutput += output;
+              this._output.info(`Captured stdout: ${output}`);
+            },
+            stderr: (data: Buffer) => {
+              const errorOutput = data.toString();
+              qlytOutput += errorOutput;
+              this._output.warning(`Captured stderr: ${errorOutput}`);
+            },
+          },
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? `: ${error.message}.` : ".";
+        this._output.warning(
+          `Error running Qlty CLI${errorMessage} Please check the action's inputs.`
+        );
+      }
 
       await this._executor.exec(this.getQltyBin(), uploadArgs, {
         env,
@@ -200,7 +225,7 @@ export class CoverageAction {
     if (this._settings.input.stripPrefix) {
       uploadArgs.push(
         "--transform-strip-prefix",
-        this._settings.input.stripPrefix,
+        this._settings.input.stripPrefix
       );
     }
 
@@ -211,7 +236,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString(),
+        this._settings.input.totalPartsCount.toString()
       );
     }
 
@@ -223,7 +248,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha,
+        payload.pull_request["head"].sha
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }

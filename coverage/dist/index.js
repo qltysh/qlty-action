@@ -73719,7 +73719,9 @@ var CoverageAction = class _CoverageAction {
       this._output.info(`Platform: ${os4.platform()}`);
       this._output.info(`Qlty Binary: ${this.getQltyBin()}`);
       this._output.info(`Environment Variables: ${JSON.stringify(env)}`);
-      this._output.info(`Command: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`);
+      this._output.info(
+        `Command: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
+      );
       this._output.info(`Files: ${files.join(", ")}`);
       this._emitter.emit(EXEC_EVENT, {
         command: [this.getQltyBin(), ...uploadArgs],
@@ -73728,6 +73730,28 @@ var CoverageAction = class _CoverageAction {
       this._output.info(
         `Running: ${[this.getQltyBin(), ...uploadArgs].join(" ")}`
       );
+      try {
+        await this._executor.exec(this.getQltyBin(), ["--version"], {
+          env,
+          listeners: {
+            stdout: (data) => {
+              const output = data.toString();
+              qlytOutput += output;
+              this._output.info(`Captured stdout: ${output}`);
+            },
+            stderr: (data) => {
+              const errorOutput = data.toString();
+              qlytOutput += errorOutput;
+              this._output.warning(`Captured stderr: ${errorOutput}`);
+            }
+          }
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
+        this._output.warning(
+          `Error running Qlty CLI${errorMessage} Please check the action's inputs.`
+        );
+      }
       await this._executor.exec(this.getQltyBin(), uploadArgs, {
         env,
         listeners: {
