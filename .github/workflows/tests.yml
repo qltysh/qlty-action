@@ -123,3 +123,5 @@ jobs:
         with:
           oidc: true
           files: coverage/coverage/clover.xml
+          verbose: true
+          skip-errors: false
