@@ -96,3 +96,30 @@ jobs:
         with:
           oidc: true
           files: coverage/coverage/clover.xml
+
+  test-windows-coverage:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: coverage/.node-version
+          cache: npm
+          cache-dependency-path: coverage/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./coverage
+        run: npm ci
+
+      - name: Test
+        working-directory: ./coverage
+        run: npm run coverage
+
+      - name: Upload coverage
+        uses: qltysh/qlty-action/coverage@ma/add_windows_support_to_coverage
+        with:
+          oidc: true
+          files: coverage/coverage/clover.xml
