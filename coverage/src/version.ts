@@ -26,5 +26,5 @@ interface SyncFileSystem {
 }
 
 interface Logger {
-  error: (message: string, ...args: any[]) => void;
+  error: (message: string, ...args: unknown[]) => void;
 }
