@@ -4,7 +4,7 @@ import * as nodeFs from "fs";
 export default class Version {
   static readVersion(
     fileSystem?: SyncFileSystem,
-    logger: Logger = console
+    logger: Logger = console,
   ): string | null {
     try {
       const fs = fileSystem ?? nodeFs;

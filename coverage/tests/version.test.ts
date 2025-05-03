@@ -8,7 +8,7 @@ describe("Version", () => {
   test("returns a semver", () => {
     const version = Version.readVersion();
     expect(version).toMatch(
-      /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*)?(?:\+(?:[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/
+      /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*)?(?:\+(?:[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/,
     );
   });
 
@@ -26,7 +26,7 @@ describe("Version", () => {
           throw new Error("File not found");
         },
       },
-      nullConsole
+      nullConsole,
     );
     expect(version).toBeNull();
   });
@@ -36,7 +36,7 @@ describe("Version", () => {
       {
         readFileSync: () => "NOT JSON",
       },
-      nullConsole
+      nullConsole,
     );
     expect(version).toBeNull();
   });
