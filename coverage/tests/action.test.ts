@@ -108,9 +108,9 @@ describe("CoverageAction", () => {
       "coverage",
       "publish",
       "--print",
-      "--transform-add-prefix",
+      "--add-prefix",
       "prefix",
-      "--transform-strip-prefix",
+      "--strip-prefix",
       "strip",
       "--tag",
       "test-tag",
@@ -172,7 +172,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.warnings).toContain(
-        "Error uploading coverage. Output from the Qlty CLI follows:",
+        "Error uploading coverage. Output from the Qlty CLI follows:"
       );
     });
 
@@ -200,7 +200,7 @@ describe("CoverageAction", () => {
             files: "file1.lcov file2.lcov",
             "skip-errors": true,
           },
-          new StubbedFileSystem([]),
+          new StubbedFileSystem([])
         ),
       });
 
