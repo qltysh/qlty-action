@@ -1025,7 +1025,7 @@ var init_NonRecordingSpan = __esm({
 function getSpan(context3) {
   return context3.getValue(SPAN_KEY) || void 0;
 }
-function getActiveSpan() {
+function getActiveSpan2() {
   return getSpan(ContextAPI.getInstance().active());
 }
 function setSpan(context3, span) {
@@ -1561,7 +1561,7 @@ var init_trace = __esm({
         this.isSpanContextValid = isSpanContextValid;
         this.deleteSpan = deleteSpan;
         this.getSpan = getSpan;
-        this.getActiveSpan = getActiveSpan;
+        this.getActiveSpan = getActiveSpan2;
         this.getSpanContext = getSpanContext;
         this.setSpan = setSpan;
         this.setSpanContext = setSpanContext;
@@ -8100,12 +8100,12 @@ var require_common = __commonJS({
             args.unshift("%O");
           }
           let index = 0;
-          args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format2) => {
+          args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format) => {
             if (match === "%%") {
               return "%";
             }
             index++;
-            const formatter = createDebug.formatters[format2];
+            const formatter = createDebug.formatters[format];
             if (typeof formatter === "function") {
               const val = args[index];
               match = formatter.call(self, val);
@@ -8518,14 +8518,14 @@ var require_supports_color = __commonJS({
 var require_node3 = __commonJS({
   "node_modules/debug/src/node.js"(exports2, module2) {
     var tty = require("tty");
-    var util3 = require("util");
+    var util2 = require("util");
     exports2.init = init2;
     exports2.log = log2;
     exports2.formatArgs = formatArgs;
     exports2.save = save;
     exports2.load = load;
     exports2.useColors = useColors;
-    exports2.destroy = util3.deprecate(
+    exports2.destroy = util2.deprecate(
       () => {
       },
       "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."
@@ -8656,7 +8656,7 @@ var require_node3 = __commonJS({
       return (/* @__PURE__ */ new Date()).toISOString() + " ";
     }
     function log2(...args) {
-      return process.stderr.write(util3.formatWithOptions(exports2.inspectOpts, ...args) + "\n");
+      return process.stderr.write(util2.formatWithOptions(exports2.inspectOpts, ...args) + "\n");
     }
     function save(namespaces) {
       if (namespaces) {
@@ -8679,11 +8679,11 @@ var require_node3 = __commonJS({
     var { formatters } = module2.exports;
     formatters.o = function(v) {
       this.inspectOpts.colors = this.useColors;
-      return util3.inspect(v, this.inspectOpts).split("\n").map((str) => str.trim()).join(" ");
+      return util2.inspect(v, this.inspectOpts).split("\n").map((str) => str.trim()).join(" ");
     };
     formatters.O = function(v) {
       this.inspectOpts.colors = this.useColors;
-      return util3.inspect(v, this.inspectOpts);
+      return util2.inspect(v, this.inspectOpts);
     };
   }
 });
@@ -12951,14 +12951,14 @@ var require_AttributeNames = __commonJS({
 var require_error = __commonJS({
   "node_modules/forwarded-parse/lib/error.js"(exports2, module2) {
     "use strict";
-    var util3 = require("util");
+    var util2 = require("util");
     function ParseError(message, input) {
       Error.captureStackTrace(this, ParseError);
       this.name = this.constructor.name;
       this.message = message;
       this.input = input;
     }
-    util3.inherits(ParseError, Error);
+    util2.inherits(ParseError, Error);
     module2.exports = ParseError;
   }
 });
@@ -12992,7 +12992,7 @@ var require_ascii = __commonJS({
 var require_forwarded_parse = __commonJS({
   "node_modules/forwarded-parse/index.js"(exports2, module2) {
     "use strict";
-    var util3 = require("util");
+    var util2 = require("util");
     var ParseError = require_error();
     var ascii = require_ascii();
     var isDelimiter = ascii.isDelimiter;
@@ -13003,7 +13003,7 @@ var require_forwarded_parse = __commonJS({
       return str.replace(/\\(.)/g, "$1");
     }
     function unexpectedCharacterMessage(header, position) {
-      return util3.format(
+      return util2.format(
         "Unexpected character '%s' at index %d",
         header.charAt(position),
         position
@@ -21822,8 +21822,8 @@ var require_execAsync = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.execAsync = void 0;
     var child_process = require("child_process");
-    var util3 = require("util");
-    exports2.execAsync = util3.promisify(child_process.exec);
+    var util2 = require("util");
+    exports2.execAsync = util2.promisify(child_process.exec);
   }
 });
 
@@ -26408,14 +26408,14 @@ var require_utils11 = __commonJS({
       }
       return jdbcString;
     }
-    function getDbStatement(query, format2, values) {
-      if (!format2) {
+    function getDbStatement(query, format, values) {
+      if (!format) {
         return typeof query === "string" ? query : query.sql;
       }
       if (typeof query === "string") {
-        return values ? format2(query, values) : query;
+        return values ? format(query, values) : query;
       } else {
-        return values || query.values ? format2(query.sql, values || query.values) : query.sql;
+        return values || query.values ? format(query.sql, values || query.values) : query.sql;
       }
     }
     exports2.getDbStatement = getDbStatement;
@@ -26479,21 +26479,21 @@ var require_instrumentation10 = __commonJS({
         super(version_1.PACKAGE_NAME, version_1.PACKAGE_VERSION, config2);
       }
       init() {
-        let format2;
+        let format;
         function setFormatFunction(moduleExports) {
-          if (!format2 && moduleExports.format) {
-            format2 = moduleExports.format;
+          if (!format && moduleExports.format) {
+            format = moduleExports.format;
           }
         }
         const patch = (ConnectionPrototype) => {
           if ((0, instrumentation_1.isWrapped)(ConnectionPrototype.query)) {
             this._unwrap(ConnectionPrototype, "query");
           }
-          this._wrap(ConnectionPrototype, "query", this._patchQuery(format2, false));
+          this._wrap(ConnectionPrototype, "query", this._patchQuery(format, false));
           if ((0, instrumentation_1.isWrapped)(ConnectionPrototype.execute)) {
             this._unwrap(ConnectionPrototype, "execute");
           }
-          this._wrap(ConnectionPrototype, "execute", this._patchQuery(format2, true));
+          this._wrap(ConnectionPrototype, "execute", this._patchQuery(format, true));
         };
         const unpatch = (ConnectionPrototype) => {
           this._unwrap(ConnectionPrototype, "query");
@@ -26523,7 +26523,7 @@ var require_instrumentation10 = __commonJS({
           ])
         ];
       }
-      _patchQuery(format2, isPrepared) {
+      _patchQuery(format, isPrepared) {
         return (originalQuery) => {
           const thisPlugin = this;
           return function query(query, _valuesOrCallback, _callback) {
@@ -26535,7 +26535,7 @@ var require_instrumentation10 = __commonJS({
             }
             const span = thisPlugin.tracer.startSpan((0, utils_1.getSpanName)(query), {
               kind: api.SpanKind.CLIENT,
-              attributes: Object.assign(Object.assign(Object.assign({}, _MySQL2Instrumentation.COMMON_ATTRIBUTES), (0, utils_1.getConnectionAttributes)(this.config)), { [semantic_conventions_1.SEMATTRS_DB_STATEMENT]: (0, utils_1.getDbStatement)(query, format2, values) })
+              attributes: Object.assign(Object.assign(Object.assign({}, _MySQL2Instrumentation.COMMON_ATTRIBUTES), (0, utils_1.getConnectionAttributes)(this.config)), { [semantic_conventions_1.SEMATTRS_DB_STATEMENT]: (0, utils_1.getDbStatement)(query, format, values) })
             });
             if (!isPrepared && thisPlugin.getConfig().addSqlCommenterCommentToQueries) {
               arguments[0] = query = typeof query === "string" ? (0, sql_common_1.addSqlCommenterComment)(span, query) : Object.assign(query, {
@@ -30334,7 +30334,7 @@ var require_tunnel = __commonJS({
     var https2 = require("https");
     var events = require("events");
     var assert = require("assert");
-    var util3 = require("util");
+    var util2 = require("util");
     exports2.httpOverHttp = httpOverHttp;
     exports2.httpsOverHttp = httpsOverHttp;
     exports2.httpOverHttps = httpOverHttps;
@@ -30384,7 +30384,7 @@ var require_tunnel = __commonJS({
         self.removeSocket(socket);
       });
     }
-    util3.inherits(TunnelingAgent, events.EventEmitter);
+    util2.inherits(TunnelingAgent, events.EventEmitter);
     TunnelingAgent.prototype.addRequest = function addRequest(req, host, port, localAddress) {
       var self = this;
       var options = mergeOptions({ request: req }, self.options, toOptions(host, port, localAddress));
@@ -35283,7 +35283,7 @@ var require_body = __commonJS({
   "node_modules/undici/lib/fetch/body.js"(exports2, module2) {
     "use strict";
     var Busboy = require_main();
-    var util3 = require_util();
+    var util2 = require_util();
     var {
       ReadableStreamFrom,
       isBlobLike,
@@ -35351,7 +35351,7 @@ var require_body = __commonJS({
         source = new Uint8Array(object.slice());
       } else if (ArrayBuffer.isView(object)) {
         source = new Uint8Array(object.buffer.slice(object.byteOffset, object.byteOffset + object.byteLength));
-      } else if (util3.isFormDataLike(object)) {
+      } else if (util2.isFormDataLike(object)) {
         const boundary = `----formdata-undici-0${`${random(1e11)}`.padStart(11, "0")}`;
         const prefix = `--${boundary}\r
 Content-Disposition: form-data`;
@@ -35409,14 +35409,14 @@ Content-Type: ${value.type || "application/octet-stream"}\r
         if (keepalive) {
           throw new TypeError("keepalive");
         }
-        if (util3.isDisturbed(object) || object.locked) {
+        if (util2.isDisturbed(object) || object.locked) {
           throw new TypeError(
             "Response body object should not be disturbed or locked"
           );
         }
         stream = object instanceof ReadableStream ? object : ReadableStreamFrom(object);
       }
-      if (typeof source === "string" || util3.isBuffer(source)) {
+      if (typeof source === "string" || util2.isBuffer(source)) {
         length = Buffer.byteLength(source);
       }
       if (action != null) {
@@ -35452,7 +35452,7 @@ Content-Type: ${value.type || "application/octet-stream"}\r
         ReadableStream = require("stream/web").ReadableStream;
       }
       if (object instanceof ReadableStream) {
-        assert(!util3.isDisturbed(object), "The body has already been consumed.");
+        assert(!util2.isDisturbed(object), "The body has already been consumed.");
         assert(!object.locked, "The stream is locked.");
       }
       return extractBody(object, keepalive);
@@ -35474,7 +35474,7 @@ Content-Type: ${value.type || "application/octet-stream"}\r
           yield body;
         } else {
           const stream = body.stream;
-          if (util3.isDisturbed(stream)) {
+          if (util2.isDisturbed(stream)) {
             throw new TypeError("The body has already been consumed.");
           }
           if (stream.locked) {
@@ -35624,7 +35624,7 @@ Content-Type: ${value.type || "application/octet-stream"}\r
       return promise.promise;
     }
     function bodyUnusable(body) {
-      return body != null && (body.stream.locked || util3.isDisturbed(body.stream));
+      return body != null && (body.stream.locked || util2.isDisturbed(body.stream));
     }
     function utf8DecodeBytes(buffer) {
       if (buffer.length === 0) {
@@ -35666,7 +35666,7 @@ var require_request = __commonJS({
     } = require_errors();
     var assert = require("assert");
     var { kHTTP2BuildRequest, kHTTP2CopyHeaders, kHTTP1BuildRequest } = require_symbols2();
-    var util3 = require_util();
+    var util2 = require_util();
     var tokenRegExp = /^[\^_`a-zA-Z\-0-9!#$%&'*+.|~]+$/;
     var headerCharRegex = /[^\t\x20-\x7e\x80-\xff]/;
     var invalidPathRegex = /[^\u0021-\u00ff]/;
@@ -35737,12 +35737,12 @@ var require_request = __commonJS({
         this.abort = null;
         if (body == null) {
           this.body = null;
-        } else if (util3.isStream(body)) {
+        } else if (util2.isStream(body)) {
           this.body = body;
           const rState = this.body._readableState;
           if (!rState || !rState.autoDestroy) {
             this.endHandler = function autoDestroy() {
-              util3.destroy(this);
+              util2.destroy(this);
             };
             this.body.on("end", this.endHandler);
           }
@@ -35754,7 +35754,7 @@ var require_request = __commonJS({
             }
           };
           this.body.on("error", this.errorHandler);
-        } else if (util3.isBuffer(body)) {
+        } else if (util2.isBuffer(body)) {
           this.body = body.byteLength ? body : null;
         } else if (ArrayBuffer.isView(body)) {
           this.body = body.buffer.byteLength ? Buffer.from(body.buffer, body.byteOffset, body.byteLength) : null;
@@ -35762,7 +35762,7 @@ var require_request = __commonJS({
           this.body = body.byteLength ? Buffer.from(body) : null;
         } else if (typeof body === "string") {
           this.body = body.length ? Buffer.from(body) : null;
-        } else if (util3.isFormDataLike(body) || util3.isIterable(body) || util3.isBlobLike(body)) {
+        } else if (util2.isFormDataLike(body) || util2.isIterable(body) || util2.isBlobLike(body)) {
           this.body = body;
         } else {
           throw new InvalidArgumentError("body must be a string, a Buffer, a Readable stream, an iterable, or an async iterable");
@@ -35770,7 +35770,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? util3.buildURL(path2, query) : path2;
+        this.path = query ? util2.buildURL(path2, query) : path2;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking == null ? false : blocking;
@@ -35796,8 +35796,8 @@ var require_request = __commonJS({
         } else if (headers != null) {
           throw new InvalidArgumentError("headers must be an object or an array");
         }
-        if (util3.isFormDataLike(this.body)) {
-          if (util3.nodeMajor < 16 || util3.nodeMajor === 16 && util3.nodeMinor < 8) {
+        if (util2.isFormDataLike(this.body)) {
+          if (util2.nodeMajor < 16 || util2.nodeMajor === 16 && util2.nodeMinor < 8) {
             throw new InvalidArgumentError("Form-Data bodies are only supported in node v16.8 and newer.");
           }
           if (!extractBody) {
@@ -35811,13 +35811,13 @@ var require_request = __commonJS({
           }
           this.body = bodyStream.stream;
           this.contentLength = bodyStream.length;
-        } else if (util3.isBlobLike(body) && this.contentType == null && body.type) {
+        } else if (util2.isBlobLike(body) && this.contentType == null && body.type) {
           this.contentType = body.type;
           this.headers += `content-type: ${body.type}\r
 `;
         }
-        util3.validateHandler(handler, method, upgrade);
-        this.servername = util3.getServerName(this.host);
+        util2.validateHandler(handler, method, upgrade);
+        this.servername = util2.getServerName(this.host);
         this[kHandler] = handler;
         if (channels.create.hasSubscribers) {
           channels.create.publish({ request: this });
@@ -36215,7 +36215,7 @@ var require_connect = __commonJS({
     "use strict";
     var net2 = require("net");
     var assert = require("assert");
-    var util3 = require_util();
+    var util2 = require_util();
     var { InvalidArgumentError, ConnectTimeoutError } = require_errors();
     var tls2;
     var SessionCache;
@@ -36281,7 +36281,7 @@ var require_connect = __commonJS({
           if (!tls2) {
             tls2 = require("tls");
           }
-          servername = servername || options.servername || util3.getServerName(host) || null;
+          servername = servername || options.servername || util2.getServerName(host) || null;
           const sessionKey = servername || hostname2;
           const session = sessionCache.get(sessionKey) || null;
           assert(sessionKey);
@@ -36359,7 +36359,7 @@ var require_connect = __commonJS({
       };
     }
     function onConnectTimeout(socket) {
-      util3.destroy(socket, new ConnectTimeoutError());
+      util2.destroy(socket, new ConnectTimeoutError());
     }
     module2.exports = buildConnector;
   }
@@ -36710,7 +36710,7 @@ var require_constants6 = __commonJS({
 var require_RedirectHandler = __commonJS({
   "node_modules/undici/lib/handler/RedirectHandler.js"(exports2, module2) {
     "use strict";
-    var util3 = require_util();
+    var util2 = require_util();
     var { kBodyUsed } = require_symbols2();
     var assert = require("assert");
     var { InvalidArgumentError } = require_errors();
@@ -36733,7 +36733,7 @@ var require_RedirectHandler = __commonJS({
         if (maxRedirections != null && (!Number.isInteger(maxRedirections) || maxRedirections < 0)) {
           throw new InvalidArgumentError("maxRedirections must be a positive number");
         }
-        util3.validateHandler(handler, opts.method, opts.upgrade);
+        util2.validateHandler(handler, opts.method, opts.upgrade);
         this.dispatch = dispatch;
         this.location = null;
         this.abort = null;
@@ -36741,8 +36741,8 @@ var require_RedirectHandler = __commonJS({
         this.maxRedirections = maxRedirections;
         this.handler = handler;
         this.history = [];
-        if (util3.isStream(this.opts.body)) {
-          if (util3.bodyLength(this.opts.body) === 0) {
+        if (util2.isStream(this.opts.body)) {
+          if (util2.bodyLength(this.opts.body) === 0) {
             this.opts.body.on("data", function() {
               assert(false);
             });
@@ -36755,7 +36755,7 @@ var require_RedirectHandler = __commonJS({
           }
         } else if (this.opts.body && typeof this.opts.body.pipeTo === "function") {
           this.opts.body = new BodyAsyncIterable(this.opts.body);
-        } else if (this.opts.body && typeof this.opts.body !== "string" && !ArrayBuffer.isView(this.opts.body) && util3.isIterable(this.opts.body)) {
+        } else if (this.opts.body && typeof this.opts.body !== "string" && !ArrayBuffer.isView(this.opts.body) && util2.isIterable(this.opts.body)) {
           this.opts.body = new BodyAsyncIterable(this.opts.body);
         }
       }
@@ -36770,14 +36770,14 @@ var require_RedirectHandler = __commonJS({
         this.handler.onError(error);
       }
       onHeaders(statusCode, headers, resume2, statusText) {
-        this.location = this.history.length >= this.maxRedirections || util3.isDisturbed(this.opts.body) ? null : parseLocation(statusCode, headers);
+        this.location = this.history.length >= this.maxRedirections || util2.isDisturbed(this.opts.body) ? null : parseLocation(statusCode, headers);
         if (this.opts.origin) {
           this.history.push(new URL(this.opts.path, this.opts.origin));
         }
         if (!this.location) {
           return this.handler.onHeaders(statusCode, headers, resume2, statusText);
         }
-        const { origin, pathname, search } = util3.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
+        const { origin, pathname, search } = util2.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
         const path2 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
         this.opts.path = path2;
@@ -36822,13 +36822,13 @@ var require_RedirectHandler = __commonJS({
     }
     function shouldRemoveHeader(header, removeContent, unknownOrigin) {
       if (header.length === 4) {
-        return util3.headerNameToString(header) === "host";
+        return util2.headerNameToString(header) === "host";
       }
-      if (removeContent && util3.headerNameToString(header).startsWith("content-")) {
+      if (removeContent && util2.headerNameToString(header).startsWith("content-")) {
         return true;
       }
       if (unknownOrigin && (header.length === 13 || header.length === 6 || header.length === 19)) {
-        const name = util3.headerNameToString(header);
+        const name = util2.headerNameToString(header);
         return name === "authorization" || name === "cookie" || name === "proxy-authorization";
       }
       return false;
@@ -36900,7 +36900,7 @@ var require_client = __commonJS({
     var net2 = require("net");
     var http4 = require("http");
     var { pipeline } = require("stream");
-    var util3 = require_util();
+    var util2 = require_util();
     var timers = require_timers();
     var Request2 = require_request();
     var DispatcherBase = require_dispatcher_base();
@@ -37111,12 +37111,12 @@ var require_client = __commonJS({
             allowH2,
             socketPath,
             timeout: connectTimeout,
-            ...util3.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : void 0,
+            ...util2.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : void 0,
             ...connect4
           });
         }
         this[kInterceptors] = interceptors && interceptors.Client && Array.isArray(interceptors.Client) ? interceptors.Client : [createRedirectInterceptor({ maxRedirections })];
-        this[kUrl] = util3.parseOrigin(url2);
+        this[kUrl] = util2.parseOrigin(url2);
         this[kConnector] = connect4;
         this[kSocket] = null;
         this[kPipelining] = pipelining != null ? pipelining : 1;
@@ -37185,7 +37185,7 @@ var require_client = __commonJS({
         const request = this[kHTTPConnVersion] === "h2" ? Request2[kHTTP2BuildRequest](origin, opts, handler) : Request2[kHTTP1BuildRequest](origin, opts, handler);
         this[kQueue].push(request);
         if (this[kResuming]) {
-        } else if (util3.bodyLength(request.body) == null && util3.isIterable(request.body)) {
+        } else if (util2.bodyLength(request.body) == null && util2.isIterable(request.body)) {
           this[kResuming] = 1;
           process.nextTick(resume2, this);
         } else {
@@ -37220,14 +37220,14 @@ var require_client = __commonJS({
             resolve2();
           };
           if (this[kHTTP2Session] != null) {
-            util3.destroy(this[kHTTP2Session], err);
+            util2.destroy(this[kHTTP2Session], err);
             this[kHTTP2Session] = null;
             this[kHTTP2SessionState] = null;
           }
           if (!this[kSocket]) {
             queueMicrotask(callback);
           } else {
-            util3.destroy(this[kSocket].on("close", callback), err);
+            util2.destroy(this[kSocket].on("close", callback), err);
           }
           resume2(this);
         });
@@ -37246,8 +37246,8 @@ var require_client = __commonJS({
       }
     }
     function onHttp2SessionEnd() {
-      util3.destroy(this, new SocketError("other side closed"));
-      util3.destroy(this[kSocket], new SocketError("other side closed"));
+      util2.destroy(this, new SocketError("other side closed"));
+      util2.destroy(this[kSocket], new SocketError("other side closed"));
     }
     function onHTTP2GoAway(code) {
       const client = this[kClient];
@@ -37450,7 +37450,7 @@ var require_client = __commonJS({
             throw new HTTPParserError(message, constants.ERROR[ret], data.slice(offset));
           }
         } catch (err) {
-          util3.destroy(socket, err);
+          util2.destroy(socket, err);
         }
       }
       destroy() {
@@ -37507,7 +37507,7 @@ var require_client = __commonJS({
       trackHeader(len) {
         this.headersSize += len;
         if (this.headersSize >= this.headersMaxSize) {
-          util3.destroy(this.socket, new HeadersOverflowError());
+          util2.destroy(this.socket, new HeadersOverflowError());
         }
       }
       onUpgrade(head) {
@@ -37537,7 +37537,7 @@ var require_client = __commonJS({
         try {
           request.onUpgrade(statusCode, headers, socket);
         } catch (err) {
-          util3.destroy(socket, err);
+          util2.destroy(socket, err);
         }
         resume2(client);
       }
@@ -37553,11 +37553,11 @@ var require_client = __commonJS({
         assert(!this.upgrade);
         assert(this.statusCode < 200);
         if (statusCode === 100) {
-          util3.destroy(socket, new SocketError("bad response", util3.getSocketInfo(socket)));
+          util2.destroy(socket, new SocketError("bad response", util2.getSocketInfo(socket)));
           return -1;
         }
         if (upgrade && !request.upgrade) {
-          util3.destroy(socket, new SocketError("bad upgrade", util3.getSocketInfo(socket)));
+          util2.destroy(socket, new SocketError("bad upgrade", util2.getSocketInfo(socket)));
           return -1;
         }
         assert.strictEqual(this.timeoutType, TIMEOUT_HEADERS);
@@ -37586,7 +37586,7 @@ var require_client = __commonJS({
         this.headers = [];
         this.headersSize = 0;
         if (this.shouldKeepAlive && client[kPipelining]) {
-          const keepAliveTimeout = this.keepAlive ? util3.parseKeepAliveTimeout(this.keepAlive) : null;
+          const keepAliveTimeout = this.keepAlive ? util2.parseKeepAliveTimeout(this.keepAlive) : null;
           if (keepAliveTimeout != null) {
             const timeout = Math.min(
               keepAliveTimeout - client[kKeepAliveTimeoutThreshold],
@@ -37634,7 +37634,7 @@ var require_client = __commonJS({
         }
         assert(statusCode >= 200);
         if (maxResponseSize > -1 && this.bytesRead + buf.length > maxResponseSize) {
-          util3.destroy(socket, new ResponseExceededMaxSizeError());
+          util2.destroy(socket, new ResponseExceededMaxSizeError());
           return -1;
         }
         this.bytesRead += buf.length;
@@ -37666,20 +37666,20 @@ var require_client = __commonJS({
           return;
         }
         if (request.method !== "HEAD" && contentLength && bytesRead !== parseInt(contentLength, 10)) {
-          util3.destroy(socket, new ResponseContentLengthMismatchError());
+          util2.destroy(socket, new ResponseContentLengthMismatchError());
           return -1;
         }
         request.onComplete(headers);
         client[kQueue][client[kRunningIdx]++] = null;
         if (socket[kWriting]) {
           assert.strictEqual(client[kRunning], 0);
-          util3.destroy(socket, new InformationalError("reset"));
+          util2.destroy(socket, new InformationalError("reset"));
           return constants.ERROR.PAUSED;
         } else if (!shouldKeepAlive) {
-          util3.destroy(socket, new InformationalError("reset"));
+          util2.destroy(socket, new InformationalError("reset"));
           return constants.ERROR.PAUSED;
         } else if (socket[kReset] && client[kRunning] === 0) {
-          util3.destroy(socket, new InformationalError("reset"));
+          util2.destroy(socket, new InformationalError("reset"));
           return constants.ERROR.PAUSED;
         } else if (client[kPipelining] === 1) {
           setImmediate(resume2, client);
@@ -37693,15 +37693,15 @@ var require_client = __commonJS({
       if (timeoutType === TIMEOUT_HEADERS) {
         if (!socket[kWriting] || socket.writableNeedDrain || client[kRunning] > 1) {
           assert(!parser.paused, "cannot be paused while waiting for headers");
-          util3.destroy(socket, new HeadersTimeoutError());
+          util2.destroy(socket, new HeadersTimeoutError());
         }
       } else if (timeoutType === TIMEOUT_BODY) {
         if (!parser.paused) {
-          util3.destroy(socket, new BodyTimeoutError());
+          util2.destroy(socket, new BodyTimeoutError());
         }
       } else if (timeoutType === TIMEOUT_IDLE) {
         assert(client[kRunning] === 0 && client[kKeepAliveTimeoutValue]);
-        util3.destroy(socket, new InformationalError("socket idle timeout"));
+        util2.destroy(socket, new InformationalError("socket idle timeout"));
       }
     }
     function onSocketReadable() {
@@ -37741,7 +37741,7 @@ var require_client = __commonJS({
           return;
         }
       }
-      util3.destroy(this, new SocketError("other side closed", util3.getSocketInfo(this)));
+      util2.destroy(this, new SocketError("other side closed", util2.getSocketInfo(this)));
     }
     function onSocketClose() {
       const { [kClient]: client, [kParser]: parser } = this;
@@ -37752,7 +37752,7 @@ var require_client = __commonJS({
         this[kParser].destroy();
         this[kParser] = null;
       }
-      const err = this[kError] || new SocketError("closed", util3.getSocketInfo(this));
+      const err = this[kError] || new SocketError("closed", util2.getSocketInfo(this));
       client[kSocket] = null;
       if (client.destroyed) {
         assert(client[kPending] === 0);
@@ -37814,7 +37814,7 @@ var require_client = __commonJS({
           });
         });
         if (client.destroyed) {
-          util3.destroy(socket.on("error", () => {
+          util2.destroy(socket.on("error", () => {
           }), new ClientDestroyedError());
           return;
         }
@@ -37982,7 +37982,7 @@ var require_client = __commonJS({
           }
           client[kServerName] = request.servername;
           if (socket && socket.servername !== request.servername) {
-            util3.destroy(socket, new InformationalError("servername changed"));
+            util2.destroy(socket, new InformationalError("servername changed"));
             return;
           }
         }
@@ -38002,7 +38002,7 @@ var require_client = __commonJS({
         if (client[kRunning] > 0 && (request.upgrade || request.method === "CONNECT")) {
           return;
         }
-        if (client[kRunning] > 0 && util3.bodyLength(request.body) !== 0 && (util3.isStream(request.body) || util3.isAsyncIterable(request.body))) {
+        if (client[kRunning] > 0 && util2.bodyLength(request.body) !== 0 && (util2.isStream(request.body) || util2.isAsyncIterable(request.body))) {
           return;
         }
         if (!request.aborted && write(client, request)) {
@@ -38025,7 +38025,7 @@ var require_client = __commonJS({
       if (body && typeof body.read === "function") {
         body.read(0);
       }
-      const bodyLength = util3.bodyLength(body);
+      const bodyLength = util2.bodyLength(body);
       let contentLength = bodyLength;
       if (contentLength === null) {
         contentLength = request.contentLength;
@@ -38047,7 +38047,7 @@ var require_client = __commonJS({
             return;
           }
           errorRequest(client, request, err || new RequestAbortedError());
-          util3.destroy(socket, new InformationalError("aborted"));
+          util2.destroy(socket, new InformationalError("aborted"));
         });
       } catch (err) {
         errorRequest(client, request, err);
@@ -38104,7 +38104,7 @@ upgrade: ${upgrade}\r
 `, "latin1");
         }
         request.onRequestSent();
-      } else if (util3.isBuffer(body)) {
+      } else if (util2.isBuffer(body)) {
         assert(contentLength === body.byteLength, "buffer body must have content length");
         socket.cork();
         socket.write(`${header}content-length: ${contentLength}\r
@@ -38117,15 +38117,15 @@ upgrade: ${upgrade}\r
         if (!expectsPayload) {
           socket[kReset] = true;
         }
-      } else if (util3.isBlobLike(body)) {
+      } else if (util2.isBlobLike(body)) {
         if (typeof body.stream === "function") {
           writeIterable({ body: body.stream(), client, request, socket, contentLength, header, expectsPayload });
         } else {
           writeBlob({ body, client, request, socket, contentLength, header, expectsPayload });
         }
-      } else if (util3.isStream(body)) {
+      } else if (util2.isStream(body)) {
         writeStream({ body, client, request, socket, contentLength, header, expectsPayload });
-      } else if (util3.isIterable(body)) {
+      } else if (util2.isIterable(body)) {
         writeIterable({ body, client, request, socket, contentLength, header, expectsPayload });
       } else {
         assert(false);
@@ -38182,7 +38182,7 @@ upgrade: ${upgrade}\r
       if (body && typeof body.read === "function") {
         body.read(0);
       }
-      let contentLength = util3.bodyLength(body);
+      let contentLength = util2.bodyLength(body);
       if (contentLength == null) {
         contentLength = request.contentLength;
       }
@@ -38237,7 +38237,7 @@ upgrade: ${upgrade}\r
       stream.once("error", function(err) {
         if (client[kHTTP2Session] && !client[kHTTP2Session].destroyed && !this.closed && !this.destroyed) {
           h2State.streams -= 1;
-          util3.destroy(stream, err);
+          util2.destroy(stream, err);
         }
       });
       stream.once("frameError", (type, code) => {
@@ -38245,14 +38245,14 @@ upgrade: ${upgrade}\r
         errorRequest(client, request, err);
         if (client[kHTTP2Session] && !client[kHTTP2Session].destroyed && !this.closed && !this.destroyed) {
           h2State.streams -= 1;
-          util3.destroy(stream, err);
+          util2.destroy(stream, err);
         }
       });
       return true;
       function writeBodyH2() {
         if (!body) {
           request.onRequestSent();
-        } else if (util3.isBuffer(body)) {
+        } else if (util2.isBuffer(body)) {
           assert(contentLength === body.byteLength, "buffer body must have content length");
           stream.cork();
           stream.write(body);
@@ -38260,7 +38260,7 @@ upgrade: ${upgrade}\r
           stream.end();
           request.onBodySent(body);
           request.onRequestSent();
-        } else if (util3.isBlobLike(body)) {
+        } else if (util2.isBlobLike(body)) {
           if (typeof body.stream === "function") {
             writeIterable({
               client,
@@ -38284,7 +38284,7 @@ upgrade: ${upgrade}\r
               socket: client[kSocket]
             });
           }
-        } else if (util3.isStream(body)) {
+        } else if (util2.isStream(body)) {
           writeStream({
             body,
             client,
@@ -38295,7 +38295,7 @@ upgrade: ${upgrade}\r
             h2stream: stream,
             header: ""
           });
-        } else if (util3.isIterable(body)) {
+        } else if (util2.isIterable(body)) {
           writeIterable({
             body,
             client,
@@ -38322,8 +38322,8 @@ upgrade: ${upgrade}\r
           h2stream,
           (err) => {
             if (err) {
-              util3.destroy(body, err);
-              util3.destroy(h2stream, err);
+              util2.destroy(body, err);
+              util2.destroy(h2stream, err);
             } else {
               request.onRequestSent();
             }
@@ -38332,7 +38332,7 @@ upgrade: ${upgrade}\r
         pipe.on("data", onPipeData);
         pipe.once("end", () => {
           pipe.removeListener("data", onPipeData);
-          util3.destroy(pipe);
+          util2.destroy(pipe);
         });
         return;
       }
@@ -38347,7 +38347,7 @@ upgrade: ${upgrade}\r
             this.pause();
           }
         } catch (err) {
-          util3.destroy(this, err);
+          util2.destroy(this, err);
         }
       };
       const onDrain = function() {
@@ -38382,9 +38382,9 @@ upgrade: ${upgrade}\r
         }
         writer.destroy(err);
         if (err && (err.code !== "UND_ERR_INFO" || err.message !== "reset")) {
-          util3.destroy(body, err);
+          util2.destroy(body, err);
         } else {
-          util3.destroy(body);
+          util2.destroy(body);
         }
       };
       body.on("data", onData).on("end", onFinished).on("error", onFinished).on("close", onAbort);
@@ -38420,7 +38420,7 @@ upgrade: ${upgrade}\r
         }
         resume2(client);
       } catch (err) {
-        util3.destroy(isH2 ? h2stream : socket, err);
+        util2.destroy(isH2 ? h2stream : socket, err);
       }
     }
     async function writeIterable({ h2stream, body, client, request, socket, contentLength, header, expectsPayload }) {
@@ -38583,7 +38583,7 @@ ${len.toString(16)}\r
         socket[kWriting] = false;
         if (err) {
           assert(client[kRunning] <= 1, "pipeline should only contain this request");
-          util3.destroy(socket, err);
+          util2.destroy(socket, err);
         }
       }
     };
@@ -38858,7 +38858,7 @@ var require_pool = __commonJS({
     var {
       InvalidArgumentError
     } = require_errors();
-    var util3 = require_util();
+    var util2 = require_util();
     var { kUrl, kInterceptors } = require_symbols2();
     var buildConnector = require_connect();
     var kOptions = Symbol("options");
@@ -38898,14 +38898,14 @@ var require_pool = __commonJS({
             allowH2,
             socketPath,
             timeout: connectTimeout,
-            ...util3.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : void 0,
+            ...util2.nodeHasAutoSelectFamily && autoSelectFamily ? { autoSelectFamily, autoSelectFamilyAttemptTimeout } : void 0,
             ...connect3
           });
         }
         this[kInterceptors] = options.interceptors && options.interceptors.Pool && Array.isArray(options.interceptors.Pool) ? options.interceptors.Pool : [];
         this[kConnections] = connections || null;
-        this[kUrl] = util3.parseOrigin(origin);
-        this[kOptions] = { ...util3.deepClone(options), connect: connect3, allowH2 };
+        this[kUrl] = util2.parseOrigin(origin);
+        this[kOptions] = { ...util2.deepClone(options), connect: connect3, allowH2 };
         this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
         this[kFactory] = factory;
         this.on("connectionError", (origin2, targets, error) => {
@@ -39119,7 +39119,7 @@ var require_agent = __commonJS({
     var DispatcherBase = require_dispatcher_base();
     var Pool = require_pool();
     var Client2 = require_client();
-    var util3 = require_util();
+    var util2 = require_util();
     var createRedirectInterceptor = require_redirectInterceptor();
     var { WeakRef: WeakRef2, FinalizationRegistry } = require_dispatcher_weakref()();
     var kOnConnect = Symbol("onConnect");
@@ -39149,7 +39149,7 @@ var require_agent = __commonJS({
           connect3 = { ...connect3 };
         }
         this[kInterceptors] = options.interceptors && options.interceptors.Agent && Array.isArray(options.interceptors.Agent) ? options.interceptors.Agent : [createRedirectInterceptor({ maxRedirections })];
-        this[kOptions] = { ...util3.deepClone(options), connect: connect3 };
+        this[kOptions] = { ...util2.deepClone(options), connect: connect3 };
         this[kOptions].interceptors = options.interceptors ? { ...options.interceptors } : void 0;
         this[kMaxRedirections] = maxRedirections;
         this[kFactory] = factory;
@@ -39235,7 +39235,7 @@ var require_readable = __commonJS({
     var assert = require("assert");
     var { Readable: Readable2 } = require("stream");
     var { RequestAbortedError, NotSupportedError, InvalidArgumentError } = require_errors();
-    var util3 = require_util();
+    var util2 = require_util();
     var { ReadableStreamFrom, toUSVString } = require_util();
     var Blob2;
     var kConsume = Symbol("kConsume");
@@ -39333,7 +39333,7 @@ var require_readable = __commonJS({
       }
       // https://fetch.spec.whatwg.org/#dom-body-bodyused
       get bodyUsed() {
-        return util3.isDisturbed(this);
+        return util2.isDisturbed(this);
       }
       // https://fetch.spec.whatwg.org/#dom-body-body
       get body() {
@@ -39354,7 +39354,7 @@ var require_readable = __commonJS({
             if (typeof signal !== "object" || !("aborted" in signal)) {
               throw new InvalidArgumentError("signal must be an AbortSignal");
             }
-            util3.throwIfAborted(signal);
+            util2.throwIfAborted(signal);
           } catch (err) {
             return Promise.reject(err);
           }
@@ -39363,7 +39363,7 @@ var require_readable = __commonJS({
           return Promise.resolve(null);
         }
         return new Promise((resolve2, reject) => {
-          const signalListenerCleanup = signal ? util3.addAbortListener(signal, () => {
+          const signalListenerCleanup = signal ? util2.addAbortListener(signal, () => {
             this.destroy();
           }) : noop;
           this.on("close", function() {
@@ -39386,7 +39386,7 @@ var require_readable = __commonJS({
       return self[kBody] && self[kBody].locked === true || self[kConsume];
     }
     function isUnusable(self) {
-      return util3.isDisturbed(self) || isLocked(self);
+      return util2.isDisturbed(self) || isLocked(self);
     }
     async function consume(stream, type) {
       if (isUnusable(stream)) {
@@ -39581,7 +39581,7 @@ var require_api_request = __commonJS({
       InvalidArgumentError,
       RequestAbortedError
     } = require_errors();
-    var util3 = require_util();
+    var util2 = require_util();
     var { getResolveErrorBodyCallback } = require_util3();
     var { AsyncResource } = require("async_hooks");
     var { addSignal, removeSignal } = require_abort_signal();
@@ -39609,8 +39609,8 @@ var require_api_request = __commonJS({
           }
           super("UNDICI_REQUEST");
         } catch (err) {
-          if (util3.isStream(body)) {
-            util3.destroy(body.on("error", util3.nop), err);
+          if (util2.isStream(body)) {
+            util2.destroy(body.on("error", util2.nop), err);
           }
           throw err;
         }
@@ -39625,7 +39625,7 @@ var require_api_request = __commonJS({
         this.onInfo = onInfo || null;
         this.throwOnError = throwOnError;
         this.highWaterMark = highWaterMark;
-        if (util3.isStream(body)) {
+        if (util2.isStream(body)) {
           body.on("error", (err) => {
             this.onError(err);
           });
@@ -39641,14 +39641,14 @@ var require_api_request = __commonJS({
       }
       onHeaders(statusCode, rawHeaders, resume2, statusMessage) {
         const { callback, opaque, abort, context: context3, responseHeaders, highWaterMark } = this;
-        const headers = responseHeaders === "raw" ? util3.parseRawHeaders(rawHeaders) : util3.parseHeaders(rawHeaders);
+        const headers = responseHeaders === "raw" ? util2.parseRawHeaders(rawHeaders) : util2.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
             this.onInfo({ statusCode, headers });
           }
           return;
         }
-        const parsedHeaders = responseHeaders === "raw" ? util3.parseHeaders(rawHeaders) : headers;
+        const parsedHeaders = responseHeaders === "raw" ? util2.parseHeaders(rawHeaders) : headers;
         const contentType = parsedHeaders["content-type"];
         const body = new Readable2({ resume: resume2, abort, contentType, highWaterMark });
         this.callback = null;
@@ -39679,7 +39679,7 @@ var require_api_request = __commonJS({
       onComplete(trailers) {
         const { res } = this;
         removeSignal(this);
-        util3.parseHeaders(trailers, this.trailers);
+        util2.parseHeaders(trailers, this.trailers);
         res.push(null);
       }
       onError(err) {
@@ -39694,12 +39694,12 @@ var require_api_request = __commonJS({
         if (res) {
           this.res = null;
           queueMicrotask(() => {
-            util3.destroy(res, err);
+            util2.destroy(res, err);
           });
         }
         if (body) {
           this.body = null;
-          util3.destroy(body, err);
+          util2.destroy(body, err);
         }
       }
     };
@@ -39736,7 +39736,7 @@ var require_api_stream = __commonJS({
       InvalidReturnValueError,
       RequestAbortedError
     } = require_errors();
-    var util3 = require_util();
+    var util2 = require_util();
     var { getResolveErrorBodyCallback } = require_util3();
     var { AsyncResource } = require("async_hooks");
     var { addSignal, removeSignal } = require_abort_signal();
@@ -39764,8 +39764,8 @@ var require_api_stream = __commonJS({
           }
           super("UNDICI_STREAM");
         } catch (err) {
-          if (util3.isStream(body)) {
-            util3.destroy(body.on("error", util3.nop), err);
+          if (util2.isStream(body)) {
+            util2.destroy(body.on("error", util2.nop), err);
           }
           throw err;
         }
@@ -39780,7 +39780,7 @@ var require_api_stream = __commonJS({
         this.body = body;
         this.onInfo = onInfo || null;
         this.throwOnError = throwOnError || false;
-        if (util3.isStream(body)) {
+        if (util2.isStream(body)) {
           body.on("error", (err) => {
             this.onError(err);
           });
@@ -39796,7 +39796,7 @@ var require_api_stream = __commonJS({
       }
       onHeaders(statusCode, rawHeaders, resume2, statusMessage) {
         const { factory, opaque, context: context3, callback, responseHeaders } = this;
-        const headers = responseHeaders === "raw" ? util3.parseRawHeaders(rawHeaders) : util3.parseHeaders(rawHeaders);
+        const headers = responseHeaders === "raw" ? util2.parseRawHeaders(rawHeaders) : util2.parseHeaders(rawHeaders);
         if (statusCode < 200) {
           if (this.onInfo) {
             this.onInfo({ statusCode, headers });
@@ -39806,7 +39806,7 @@ var require_api_stream = __commonJS({
         this.factory = null;
         let res;
         if (this.throwOnError && statusCode >= 400) {
-          const parsedHeaders = responseHeaders === "raw" ? util3.parseHeaders(rawHeaders) : headers;
+          const parsedHeaders = responseHeaders === "raw" ? util2.parseHeaders(rawHeaders) : headers;
           const contentType = parsedHeaders["content-type"];
           res = new PassThrough();
           this.callback = null;
@@ -39832,7 +39832,7 @@ var require_api_stream = __commonJS({
             const { callback: callback2, res: res2, opaque: opaque2, trailers, abort } = this;
             this.res = null;
             if (err || !res2.readable) {
-              util3.destroy(res2, err);
+              util2.destroy(res2, err);
             }
             this.callback = null;
             this.runInAsyncScope(callback2, null, err || null, { opaque: opaque2, trailers });
@@ -39856,7 +39856,7 @@ var require_api_stream = __commonJS({
         if (!res) {
           return;
         }
-        this.trailers = util3.parseHeaders(trailers);
+        this.trailers = util2.parseHeaders(trailers);
         res.end();
       }
       onError(err) {
@@ -39865,7 +39865,7 @@ var require_api_stream = __commonJS({
         this.factory = null;
         if (res) {
           this.res = null;
-          util3.destroy(res, err);
+          util2.destroy(res, err);
         } else if (callback) {
           this.callback = null;
           queueMicrotask(() => {
@@ -39874,7 +39874,7 @@ var require_api_stream = __commonJS({
         }
         if (body) {
           this.body = null;
-          util3.destroy(body, err);
+          util2.destroy(body, err);
         }
       }
     };
@@ -39914,7 +39914,7 @@ var require_api_pipeline = __commonJS({
       InvalidReturnValueError,
       RequestAbortedError
     } = require_errors();
-    var util3 = require_util();
+    var util2 = require_util();
     var { AsyncResource } = require("async_hooks");
     var { addSignal, removeSignal } = require_abort_signal();
     var assert = require("assert");
@@ -39976,7 +39976,7 @@ var require_api_pipeline = __commonJS({
         this.abort = null;
         this.context = null;
         this.onInfo = onInfo || null;
-        this.req = new PipelineRequest().on("error", util3.nop);
+        this.req = new PipelineRequest().on("error", util2.nop);
         this.ret = new Duplex({
           readableObjectMode: opts.objectMode,
           autoDestroy: true,
@@ -40002,9 +40002,9 @@ var require_api_pipeline = __commonJS({
             if (abort && err) {
               abort();
             }
-            util3.destroy(body, err);
-            util3.destroy(req, err);
-            util3.destroy(res, err);
+            util2.destroy(body, err);
+            util2.destroy(req, err);
+            util2.destroy(res, err);
             removeSignal(this);
             callback(err);
           }
@@ -40028,7 +40028,7 @@ var require_api_pipeline = __commonJS({
         const { opaque, handler, context: context3 } = this;
         if (statusCode < 200) {
           if (this.onInfo) {
-            const headers = this.responseHeaders === "raw" ? util3.parseRawHeaders(rawHeaders) : util3.parseHeaders(rawHeaders);
+            const headers = this.responseHeaders === "raw" ? util2.parseRawHeaders(rawHeaders) : util2.parseHeaders(rawHeaders);
             this.onInfo({ statusCode, headers });
           }
           return;
@@ -40037,7 +40037,7 @@ var require_api_pipeline = __commonJS({
         let body;
         try {
           this.handler = null;
-          const headers = this.responseHeaders === "raw" ? util3.parseRawHeaders(rawHeaders) : util3.parseHeaders(rawHeaders);
+          const headers = this.responseHeaders === "raw" ? util2.parseRawHeaders(rawHeaders) : util2.parseHeaders(rawHeaders);
           body = this.runInAsyncScope(handler, null, {
             statusCode,
             headers,
@@ -40046,7 +40046,7 @@ var require_api_pipeline = __commonJS({
             context: context3
           });
         } catch (err) {
-          this.res.on("error", util3.nop);
+          this.res.on("error", util2.nop);
           throw err;
         }
         if (!body || typeof body.on !== "function") {
@@ -40059,14 +40059,14 @@ var require_api_pipeline = __commonJS({
           }
         }).on("error", (err) => {
           const { ret } = this;
-          util3.destroy(ret, err);
+          util2.destroy(ret, err);
         }).on("end", () => {
           const { ret } = this;
           ret.push(null);
         }).on("close", () => {
           const { ret } = this;
           if (!ret._readableState.ended) {
-            util3.destroy(ret, new RequestAbortedError());
+            util2.destroy(ret, new RequestAbortedError());
           }
         });
         this.body = body;
@@ -40082,7 +40082,7 @@ var require_api_pipeline = __commonJS({
       onError(err) {
         const { ret } = this;
         this.handler = null;
-        util3.destroy(ret, err);
+        util2.destroy(ret, err);
       }
     };
     function pipeline(opts, handler) {
@@ -40104,7 +40104,7 @@ var require_api_upgrade = __commonJS({
     "use strict";
     var { InvalidArgumentError, RequestAbortedError, SocketError } = require_errors();
     var { AsyncResource } = require("async_hooks");
-    var util3 = require_util();
+    var util2 = require_util();
     var { addSignal, removeSignal } = require_abort_signal();
     var assert = require("assert");
     var UpgradeHandler = class extends AsyncResource {
@@ -40142,7 +40142,7 @@ var require_api_upgrade = __commonJS({
         assert.strictEqual(statusCode, 101);
         removeSignal(this);
         this.callback = null;
-        const headers = this.responseHeaders === "raw" ? util3.parseRawHeaders(rawHeaders) : util3.parseHeaders(rawHeaders);
+        const headers = this.responseHeaders === "raw" ? util2.parseRawHeaders(rawHeaders) : util2.parseHeaders(rawHeaders);
         this.runInAsyncScope(callback, null, null, {
           headers,
           socket,
@@ -40194,7 +40194,7 @@ var require_api_connect = __commonJS({
     "use strict";
     var { AsyncResource } = require("async_hooks");
     var { InvalidArgumentError, RequestAbortedError, SocketError } = require_errors();
-    var util3 = require_util();
+    var util2 = require_util();
     var { addSignal, removeSignal } = require_abort_signal();
     var ConnectHandler = class extends AsyncResource {
       constructor(opts, callback) {
@@ -40231,7 +40231,7 @@ var require_api_connect = __commonJS({
         this.callback = null;
         let headers = rawHeaders;
         if (headers != null) {
-          headers = this.responseHeaders === "raw" ? util3.parseRawHeaders(rawHeaders) : util3.parseHeaders(rawHeaders);
+          headers = this.responseHeaders === "raw" ? util2.parseRawHeaders(rawHeaders) : util2.parseHeaders(rawHeaders);
         }
         this.runInAsyncScope(callback, null, null, {
           statusCode,
@@ -41586,7 +41586,7 @@ var require_headers = __commonJS({
       isValidHeaderName,
       isValidHeaderValue
     } = require_util2();
-    var util3 = require("util");
+    var util2 = require("util");
     var { webidl } = require_webidl();
     var assert = require("assert");
     var kHeadersMap = Symbol("headers map");
@@ -41939,7 +41939,7 @@ var require_headers = __commonJS({
         value: "Headers",
         configurable: true
       },
-      [util3.inspect.custom]: {
+      [util2.inspect.custom]: {
         enumerable: false
       }
     });
@@ -41970,8 +41970,8 @@ var require_response = __commonJS({
     "use strict";
     var { Headers, HeadersList, fill: fill2 } = require_headers();
     var { extractBody, cloneBody, mixinBody } = require_body();
-    var util3 = require_util();
-    var { kEnumerableProperty } = util3;
+    var util2 = require_util();
+    var { kEnumerableProperty } = util2;
     var {
       isValidReasonPhrase,
       isCancelled,
@@ -42117,7 +42117,7 @@ var require_response = __commonJS({
       }
       get bodyUsed() {
         webidl.brandCheck(this, _Response);
-        return !!this[kState].body && util3.isDisturbed(this[kState].body.stream);
+        return !!this[kState].body && util2.isDisturbed(this[kState].body.stream);
       }
       // Returns a clone of response.
       clone() {
@@ -42299,7 +42299,7 @@ var require_response = __commonJS({
       if (types.isArrayBuffer(V) || types.isTypedArray(V) || types.isDataView(V)) {
         return webidl.converters.BufferSource(V);
       }
-      if (util3.isFormDataLike(V)) {
+      if (util2.isFormDataLike(V)) {
         return webidl.converters.FormData(V, { strict: false });
       }
       if (V instanceof URLSearchParams) {
@@ -42350,7 +42350,7 @@ var require_request2 = __commonJS({
     var { extractBody, mixinBody, cloneBody } = require_body();
     var { Headers, fill: fillHeaders, HeadersList } = require_headers();
     var { FinalizationRegistry } = require_dispatcher_weakref()();
-    var util3 = require_util();
+    var util2 = require_util();
     var {
       isValidHTTPToken,
       sameOrigin,
@@ -42368,7 +42368,7 @@ var require_request2 = __commonJS({
       requestCache,
       requestDuplex
     } = require_constants5();
-    var { kEnumerableProperty } = util3;
+    var { kEnumerableProperty } = util2;
     var { kHeaders, kSignal, kState, kGuard, kRealm } = require_symbols3();
     var { webidl } = require_webidl();
     var { getGlobalOrigin } = require_global();
@@ -42588,7 +42588,7 @@ var require_request2 = __commonJS({
               }
             } catch {
             }
-            util3.addAbortListener(signal, abort);
+            util2.addAbortListener(signal, abort);
             requestFinalizer.register(ac, { signal, abort });
           }
         }
@@ -42646,7 +42646,7 @@ var require_request2 = __commonJS({
         }
         let finalBody = inputOrInitBody;
         if (initBody == null && inputBody != null) {
-          if (util3.isDisturbed(inputBody.stream) || inputBody.stream.locked) {
+          if (util2.isDisturbed(inputBody.stream) || inputBody.stream.locked) {
             throw new TypeError(
               "Cannot construct a Request with a Request object that has already been used."
             );
@@ -42775,7 +42775,7 @@ var require_request2 = __commonJS({
       }
       get bodyUsed() {
         webidl.brandCheck(this, _Request);
-        return !!this[kState].body && util3.isDisturbed(this[kState].body.stream);
+        return !!this[kState].body && util2.isDisturbed(this[kState].body.stream);
       }
       get duplex() {
         webidl.brandCheck(this, _Request);
@@ -42799,7 +42799,7 @@ var require_request2 = __commonJS({
         if (this.signal.aborted) {
           ac.abort(this.signal.reason);
         } else {
-          util3.addAbortListener(
+          util2.addAbortListener(
             this.signal,
             () => {
               ac.abort(this.signal.reason);
@@ -47221,7 +47221,7 @@ var require_undici2 = __commonJS({
     var Pool = require_pool();
     var BalancedPool = require_balanced_pool();
     var Agent3 = require_agent();
-    var util3 = require_util();
+    var util2 = require_util();
     var { InvalidArgumentError } = errors;
     var api = require_api();
     var buildConnector = require_connect();
@@ -47275,12 +47275,12 @@ var require_undici2 = __commonJS({
           if (!opts.path.startsWith("/")) {
             path2 = `/${path2}`;
           }
-          url2 = new URL(util3.parseOrigin(url2).origin + path2);
+          url2 = new URL(util2.parseOrigin(url2).origin + path2);
         } else {
           if (!opts) {
             opts = typeof url2 === "object" ? url2 : {};
           }
-          url2 = util3.parseURL(url2);
+          url2 = util2.parseURL(url2);
         }
         const { agent, dispatcher = getGlobalDispatcher() } = opts;
         if (agent) {
@@ -47296,7 +47296,7 @@ var require_undici2 = __commonJS({
     }
     module2.exports.setGlobalDispatcher = setGlobalDispatcher;
     module2.exports.getGlobalDispatcher = getGlobalDispatcher;
-    if (util3.nodeMajor > 16 || util3.nodeMajor === 16 && util3.nodeMinor >= 8) {
+    if (util2.nodeMajor > 16 || util2.nodeMajor === 16 && util2.nodeMinor >= 8) {
       let fetchImpl = null;
       module2.exports.fetch = async function fetch(resource) {
         if (!fetchImpl) {
@@ -47324,7 +47324,7 @@ var require_undici2 = __commonJS({
       const { kConstruct } = require_symbols5();
       module2.exports.caches = new CacheStorage(kConstruct);
     }
-    if (util3.nodeMajor >= 16) {
+    if (util2.nodeMajor >= 16) {
       const { deleteCookie, getCookies, getSetCookies, setCookie } = require_cookies();
       module2.exports.deleteCookie = deleteCookie;
       module2.exports.getCookies = getCookies;
@@ -47334,7 +47334,7 @@ var require_undici2 = __commonJS({
       module2.exports.parseMIMEType = parseMIMEType;
       module2.exports.serializeAMimeType = serializeAMimeType;
     }
-    if (util3.nodeMajor >= 18 && hasCrypto) {
+    if (util2.nodeMajor >= 18 && hasCrypto) {
       const { WebSocket } = require_websocket();
       module2.exports.WebSocket = WebSocket;
     }
@@ -51345,7 +51345,7 @@ var require_tool_cache = __commonJS({
     var httpm = __importStar(require_lib());
     var semver = __importStar(require_semver3());
     var stream = __importStar(require("stream"));
-    var util3 = __importStar(require("util"));
+    var util2 = __importStar(require("util"));
     var assert_1 = require("assert");
     var exec_1 = require_exec();
     var retry_helper_1 = require_retry_helper();
@@ -51404,7 +51404,7 @@ var require_tool_cache = __commonJS({
           core4.debug(`Failed to download from "${url2}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
           throw err;
         }
-        const pipeline = util3.promisify(stream.pipeline);
+        const pipeline = util2.promisify(stream.pipeline);
         const responseMessageFactory = _getGlobal("TEST_DOWNLOAD_TOOL_RESPONSE_MESSAGE_FACTORY", () => response.message);
         const readStream = responseMessageFactory();
         let succeeded = false;
@@ -53597,7 +53597,7 @@ var require_internal_hash_files = __commonJS({
     var core4 = __importStar(require_core4());
     var fs = __importStar(require("fs"));
     var stream = __importStar(require("stream"));
-    var util3 = __importStar(require("util"));
+    var util2 = __importStar(require("util"));
     var path2 = __importStar(require("path"));
     function hashFiles(globber, currentWorkspace, verbose = false) {
       var _a, e_1, _b, _c;
@@ -53623,7 +53623,7 @@ var require_internal_hash_files = __commonJS({
               continue;
             }
             const hash = crypto.createHash("sha256");
-            const pipeline = util3.promisify(stream.pipeline);
+            const pipeline = util2.promisify(stream.pipeline);
             yield pipeline(fs.createReadStream(file), hash);
             result.write(hash.digest());
             count++;
@@ -54314,7 +54314,7 @@ var require_dist_node2 = __commonJS({
       if (!isBinaryRequest) {
         if (options.mediaType.format) {
           headers.accept = headers.accept.split(/,/).map(
-            (format2) => format2.replace(
+            (format) => format.replace(
               /application\/vnd(\.\w+)(\.v3)?(\.\w+)?(\+json)?$/,
               `application/vnd$1$2.${options.mediaType.format}`
             )
@@ -54324,8 +54324,8 @@ var require_dist_node2 = __commonJS({
           if (options.mediaType.previews?.length) {
             const previewsFromAcceptHeader = headers.accept.match(/(?<![\w-])[\w-]+(?=-preview)/g) || [];
             headers.accept = previewsFromAcceptHeader.concat(options.mediaType.previews).map((preview) => {
-              const format2 = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
-              return `application/vnd.github.${preview}-preview${format2}`;
+              const format = options.mediaType.format ? `.${options.mediaType.format}` : "+json";
+              return `application/vnd.github.${preview}-preview${format}`;
             }).join(",");
           }
         }
@@ -57764,21 +57764,14 @@ var require_github = __commonJS({
   }
 });
 
-// node_modules/@sentry/node/build/esm/integrations/http/index.js
-init_esm();
-var import_instrumentation_http = __toESM(require_src5(), 1);
-
 // node_modules/@sentry/core/build/esm/debug-build.js
 var DEBUG_BUILD = typeof __SENTRY_DEBUG__ === "undefined" || __SENTRY_DEBUG__;
 
+// node_modules/@sentry/core/build/esm/utils-hoist/version.js
+var SDK_VERSION = "9.15.0";
+
 // node_modules/@sentry/core/build/esm/utils-hoist/worldwide.js
 var GLOBAL_OBJ = globalThis;
-
-// node_modules/@sentry/core/build/esm/utils-hoist/debug-build.js
-var DEBUG_BUILD2 = typeof __SENTRY_DEBUG__ === "undefined" || __SENTRY_DEBUG__;
-
-// node_modules/@sentry/core/build/esm/utils-hoist/version.js
-var SDK_VERSION = "9.12.0";
 
 // node_modules/@sentry/core/build/esm/carrier.js
 function getMainCarrier() {
@@ -57795,244 +57788,6 @@ function getGlobalSingleton(name, creator, obj = GLOBAL_OBJ) {
   const carrier = __SENTRY__[SDK_VERSION] = __SENTRY__[SDK_VERSION] || {};
   return carrier[name] || (carrier[name] = creator());
 }
-
-// node_modules/@sentry/core/build/esm/utils-hoist/logger.js
-var PREFIX = "Sentry Logger ";
-var CONSOLE_LEVELS = [
-  "debug",
-  "info",
-  "warn",
-  "error",
-  "log",
-  "assert",
-  "trace"
-];
-var originalConsoleMethods = {};
-function consoleSandbox(callback) {
-  if (!("console" in GLOBAL_OBJ)) {
-    return callback();
-  }
-  const console2 = GLOBAL_OBJ.console;
-  const wrappedFuncs = {};
-  const wrappedLevels = Object.keys(originalConsoleMethods);
-  wrappedLevels.forEach((level) => {
-    const originalConsoleMethod = originalConsoleMethods[level];
-    wrappedFuncs[level] = console2[level];
-    console2[level] = originalConsoleMethod;
-  });
-  try {
-    return callback();
-  } finally {
-    wrappedLevels.forEach((level) => {
-      console2[level] = wrappedFuncs[level];
-    });
-  }
-}
-function makeLogger() {
-  let enabled = false;
-  const logger2 = {
-    enable: () => {
-      enabled = true;
-    },
-    disable: () => {
-      enabled = false;
-    },
-    isEnabled: () => enabled
-  };
-  if (DEBUG_BUILD2) {
-    CONSOLE_LEVELS.forEach((name) => {
-      logger2[name] = (...args) => {
-        if (enabled) {
-          consoleSandbox(() => {
-            GLOBAL_OBJ.console[name](`${PREFIX}[${name}]:`, ...args);
-          });
-        }
-      };
-    });
-  } else {
-    CONSOLE_LEVELS.forEach((name) => {
-      logger2[name] = () => void 0;
-    });
-  }
-  return logger2;
-}
-var logger = getGlobalSingleton("logger", makeLogger);
-
-// node_modules/@sentry/core/build/esm/utils-hoist/stacktrace.js
-var STACKTRACE_FRAME_LIMIT = 50;
-var UNKNOWN_FUNCTION = "?";
-var WEBPACK_ERROR_REGEXP = /\(error: (.*)\)/;
-var STRIP_FRAME_REGEXP = /captureMessage|captureException/;
-function createStackParser(...parsers) {
-  const sortedParsers = parsers.sort((a, b) => a[0] - b[0]).map((p) => p[1]);
-  return (stack, skipFirstLines = 0, framesToPop = 0) => {
-    const frames = [];
-    const lines = stack.split("\n");
-    for (let i = skipFirstLines; i < lines.length; i++) {
-      const line = lines[i];
-      if (line.length > 1024) {
-        continue;
-      }
-      const cleanedLine = WEBPACK_ERROR_REGEXP.test(line) ? line.replace(WEBPACK_ERROR_REGEXP, "$1") : line;
-      if (cleanedLine.match(/\S*Error: /)) {
-        continue;
-      }
-      for (const parser of sortedParsers) {
-        const frame = parser(cleanedLine);
-        if (frame) {
-          frames.push(frame);
-          break;
-        }
-      }
-      if (frames.length >= STACKTRACE_FRAME_LIMIT + framesToPop) {
-        break;
-      }
-    }
-    return stripSentryFramesAndReverse(frames.slice(framesToPop));
-  };
-}
-function stackParserFromStackParserOptions(stackParser) {
-  if (Array.isArray(stackParser)) {
-    return createStackParser(...stackParser);
-  }
-  return stackParser;
-}
-function stripSentryFramesAndReverse(stack) {
-  if (!stack.length) {
-    return [];
-  }
-  const localStack = Array.from(stack);
-  if (/sentryWrapped/.test(getLastStackFrame(localStack).function || "")) {
-    localStack.pop();
-  }
-  localStack.reverse();
-  if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || "")) {
-    localStack.pop();
-    if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || "")) {
-      localStack.pop();
-    }
-  }
-  return localStack.slice(0, STACKTRACE_FRAME_LIMIT).map((frame) => ({
-    ...frame,
-    filename: frame.filename || getLastStackFrame(localStack).filename,
-    function: frame.function || UNKNOWN_FUNCTION
-  }));
-}
-function getLastStackFrame(arr) {
-  return arr[arr.length - 1] || {};
-}
-var defaultFunctionName = "<anonymous>";
-function getFunctionName(fn) {
-  try {
-    if (!fn || typeof fn !== "function") {
-      return defaultFunctionName;
-    }
-    return fn.name || defaultFunctionName;
-  } catch (e) {
-    return defaultFunctionName;
-  }
-}
-
-// node_modules/@sentry/core/build/esm/utils-hoist/instrument/handlers.js
-var handlers = {};
-var instrumented = {};
-function addHandler(type, handler) {
-  handlers[type] = handlers[type] || [];
-  handlers[type].push(handler);
-}
-function maybeInstrument(type, instrumentFn) {
-  if (!instrumented[type]) {
-    instrumented[type] = true;
-    try {
-      instrumentFn();
-    } catch (e) {
-      DEBUG_BUILD2 && logger.error(`Error while instrumenting ${type}`, e);
-    }
-  }
-}
-function triggerHandlers(type, data) {
-  const typeHandlers = type && handlers[type];
-  if (!typeHandlers) {
-    return;
-  }
-  for (const handler of typeHandlers) {
-    try {
-      handler(data);
-    } catch (e) {
-      DEBUG_BUILD2 && logger.error(
-        `Error while triggering instrumentation handler.
-Type: ${type}
-Name: ${getFunctionName(handler)}
-Error:`,
-        e
-      );
-    }
-  }
-}
-
-// node_modules/@sentry/core/build/esm/utils-hoist/instrument/globalError.js
-var _oldOnErrorHandler = null;
-function addGlobalErrorInstrumentationHandler(handler) {
-  const type = "error";
-  addHandler(type, handler);
-  maybeInstrument(type, instrumentError);
-}
-function instrumentError() {
-  _oldOnErrorHandler = GLOBAL_OBJ.onerror;
-  GLOBAL_OBJ.onerror = function(msg, url2, line, column, error) {
-    const handlerData = {
-      column,
-      error,
-      line,
-      msg,
-      url: url2
-    };
-    triggerHandlers("error", handlerData);
-    if (_oldOnErrorHandler) {
-      return _oldOnErrorHandler.apply(this, arguments);
-    }
-    return false;
-  };
-  GLOBAL_OBJ.onerror.__SENTRY_INSTRUMENTED__ = true;
-}
-
-// node_modules/@sentry/core/build/esm/utils-hoist/instrument/globalUnhandledRejection.js
-var _oldOnUnhandledRejectionHandler = null;
-function addGlobalUnhandledRejectionInstrumentationHandler(handler) {
-  const type = "unhandledrejection";
-  addHandler(type, handler);
-  maybeInstrument(type, instrumentUnhandledRejection);
-}
-function instrumentUnhandledRejection() {
-  _oldOnUnhandledRejectionHandler = GLOBAL_OBJ.onunhandledrejection;
-  GLOBAL_OBJ.onunhandledrejection = function(e) {
-    const handlerData = e;
-    triggerHandlers("unhandledrejection", handlerData);
-    if (_oldOnUnhandledRejectionHandler) {
-      return _oldOnUnhandledRejectionHandler.apply(this, arguments);
-    }
-    return true;
-  };
-  GLOBAL_OBJ.onunhandledrejection.__SENTRY_INSTRUMENTED__ = true;
-}
-
-// node_modules/@sentry/core/build/esm/utils-hoist/time.js
-var ONE_SECOND_IN_MS = 1e3;
-function dateTimestampInSeconds() {
-  return Date.now() / ONE_SECOND_IN_MS;
-}
-function createUnixTimestampInSecondsFunc() {
-  const { performance: performance2 } = GLOBAL_OBJ;
-  if (!performance2?.now) {
-    return dateTimestampInSeconds;
-  }
-  const approxStartingTimeOrigin = Date.now() - performance2.now();
-  const timeOrigin = performance2.timeOrigin == void 0 ? approxStartingTimeOrigin : performance2.timeOrigin;
-  return () => {
-    return (timeOrigin + performance2.now()) / ONE_SECOND_IN_MS;
-  };
-}
-var timestampInSeconds = createUnixTimestampInSecondsFunc();
 
 // node_modules/@sentry/core/build/esm/utils-hoist/is.js
 var objectToString = Object.prototype.toString;
@@ -58167,6 +57922,71 @@ function _htmlElementAsString(el, keyAttrs) {
   return out.join("");
 }
 
+// node_modules/@sentry/core/build/esm/utils-hoist/debug-build.js
+var DEBUG_BUILD2 = typeof __SENTRY_DEBUG__ === "undefined" || __SENTRY_DEBUG__;
+
+// node_modules/@sentry/core/build/esm/utils-hoist/logger.js
+var PREFIX = "Sentry Logger ";
+var CONSOLE_LEVELS = [
+  "debug",
+  "info",
+  "warn",
+  "error",
+  "log",
+  "assert",
+  "trace"
+];
+var originalConsoleMethods = {};
+function consoleSandbox(callback) {
+  if (!("console" in GLOBAL_OBJ)) {
+    return callback();
+  }
+  const console2 = GLOBAL_OBJ.console;
+  const wrappedFuncs = {};
+  const wrappedLevels = Object.keys(originalConsoleMethods);
+  wrappedLevels.forEach((level) => {
+    const originalConsoleMethod = originalConsoleMethods[level];
+    wrappedFuncs[level] = console2[level];
+    console2[level] = originalConsoleMethod;
+  });
+  try {
+    return callback();
+  } finally {
+    wrappedLevels.forEach((level) => {
+      console2[level] = wrappedFuncs[level];
+    });
+  }
+}
+function makeLogger() {
+  let enabled = false;
+  const logger2 = {
+    enable: () => {
+      enabled = true;
+    },
+    disable: () => {
+      enabled = false;
+    },
+    isEnabled: () => enabled
+  };
+  if (DEBUG_BUILD2) {
+    CONSOLE_LEVELS.forEach((name) => {
+      logger2[name] = (...args) => {
+        if (enabled) {
+          consoleSandbox(() => {
+            GLOBAL_OBJ.console[name](`${PREFIX}[${name}]:`, ...args);
+          });
+        }
+      };
+    });
+  } else {
+    CONSOLE_LEVELS.forEach((name) => {
+      logger2[name] = () => void 0;
+    });
+  }
+  return logger2;
+}
+var logger = getGlobalSingleton("logger", makeLogger);
+
 // node_modules/@sentry/core/build/esm/utils-hoist/string.js
 function truncate(str, max = 0) {
   if (typeof str !== "string" || max === 0) {
@@ -58202,6 +58022,25 @@ function snipLine(line, colno) {
     newLine += " {snip}";
   }
   return newLine;
+}
+function safeJoin(input, delimiter) {
+  if (!Array.isArray(input)) {
+    return "";
+  }
+  const output = [];
+  for (let i = 0; i < input.length; i++) {
+    const value = input[i];
+    try {
+      if (isVueViewModel(value)) {
+        output.push("[VueViewModel]");
+      } else {
+        output.push(String(value));
+      }
+    } catch (e) {
+      output.push("[value cannot be serialized]");
+    }
+  }
+  return output.join(delimiter);
 }
 function isMatchingPattern(value, pattern, requireExactStringMatch = false) {
   if (!isString(value)) {
@@ -58430,143 +58269,23 @@ function isAlreadyCaptured(exception) {
   }
 }
 
-// node_modules/@sentry/core/build/esm/utils-hoist/syncpromise.js
-var States;
-(function(States2) {
-  const PENDING = 0;
-  States2[States2["PENDING"] = PENDING] = "PENDING";
-  const RESOLVED = 1;
-  States2[States2["RESOLVED"] = RESOLVED] = "RESOLVED";
-  const REJECTED = 2;
-  States2[States2["REJECTED"] = REJECTED] = "REJECTED";
-})(States || (States = {}));
-function resolvedSyncPromise(value) {
-  return new SyncPromise((resolve2) => {
-    resolve2(value);
-  });
+// node_modules/@sentry/core/build/esm/utils-hoist/time.js
+var ONE_SECOND_IN_MS = 1e3;
+function dateTimestampInSeconds() {
+  return Date.now() / ONE_SECOND_IN_MS;
 }
-function rejectedSyncPromise(reason) {
-  return new SyncPromise((_, reject) => {
-    reject(reason);
-  });
+function createUnixTimestampInSecondsFunc() {
+  const { performance: performance2 } = GLOBAL_OBJ;
+  if (!performance2?.now) {
+    return dateTimestampInSeconds;
+  }
+  const approxStartingTimeOrigin = Date.now() - performance2.now();
+  const timeOrigin = performance2.timeOrigin == void 0 ? approxStartingTimeOrigin : performance2.timeOrigin;
+  return () => {
+    return (timeOrigin + performance2.now()) / ONE_SECOND_IN_MS;
+  };
 }
-var SyncPromise = class _SyncPromise {
-  constructor(executor) {
-    this._state = States.PENDING;
-    this._handlers = [];
-    this._runExecutor(executor);
-  }
-  /** @inheritdoc */
-  then(onfulfilled, onrejected) {
-    return new _SyncPromise((resolve2, reject) => {
-      this._handlers.push([
-        false,
-        (result) => {
-          if (!onfulfilled) {
-            resolve2(result);
-          } else {
-            try {
-              resolve2(onfulfilled(result));
-            } catch (e) {
-              reject(e);
-            }
-          }
-        },
-        (reason) => {
-          if (!onrejected) {
-            reject(reason);
-          } else {
-            try {
-              resolve2(onrejected(reason));
-            } catch (e) {
-              reject(e);
-            }
-          }
-        }
-      ]);
-      this._executeHandlers();
-    });
-  }
-  /** @inheritdoc */
-  catch(onrejected) {
-    return this.then((val) => val, onrejected);
-  }
-  /** @inheritdoc */
-  finally(onfinally) {
-    return new _SyncPromise((resolve2, reject) => {
-      let val;
-      let isRejected;
-      return this.then(
-        (value) => {
-          isRejected = false;
-          val = value;
-          if (onfinally) {
-            onfinally();
-          }
-        },
-        (reason) => {
-          isRejected = true;
-          val = reason;
-          if (onfinally) {
-            onfinally();
-          }
-        }
-      ).then(() => {
-        if (isRejected) {
-          reject(val);
-          return;
-        }
-        resolve2(val);
-      });
-    });
-  }
-  /** Excute the resolve/reject handlers. */
-  _executeHandlers() {
-    if (this._state === States.PENDING) {
-      return;
-    }
-    const cachedHandlers = this._handlers.slice();
-    this._handlers = [];
-    cachedHandlers.forEach((handler) => {
-      if (handler[0]) {
-        return;
-      }
-      if (this._state === States.RESOLVED) {
-        handler[1](this._value);
-      }
-      if (this._state === States.REJECTED) {
-        handler[2](this._value);
-      }
-      handler[0] = true;
-    });
-  }
-  /** Run the executor for the SyncPromise. */
-  _runExecutor(executor) {
-    const setResult = (state, value) => {
-      if (this._state !== States.PENDING) {
-        return;
-      }
-      if (isThenable(value)) {
-        void value.then(resolve2, reject);
-        return;
-      }
-      this._state = state;
-      this._value = value;
-      this._executeHandlers();
-    };
-    const resolve2 = (value) => {
-      setResult(States.RESOLVED, value);
-    };
-    const reject = (reason) => {
-      setResult(States.REJECTED, reason);
-    };
-    try {
-      executor(resolve2, reject);
-    } catch (e) {
-      reject(e);
-    }
-  }
-};
+var timestampInSeconds = createUnixTimestampInSecondsFunc();
 
 // node_modules/@sentry/core/build/esm/session.js
 function makeSession(context3) {
@@ -58672,14 +58391,6 @@ function sessionToJSON(session) {
   };
 }
 
-// node_modules/@sentry/core/build/esm/utils-hoist/propagationContext.js
-function generateTraceId() {
-  return uuid4();
-}
-function generateSpanId() {
-  return uuid4().substring(16);
-}
-
 // node_modules/@sentry/core/build/esm/utils/merge.js
 function merge(initialObj, mergeObj, levels = 2) {
   if (!mergeObj || typeof mergeObj !== "object" || levels <= 0) {
@@ -58708,6 +58419,14 @@ function _setSpanForScope(scope, span) {
 }
 function _getSpanForScope(scope) {
   return scope[SCOPE_SPAN_FIELD];
+}
+
+// node_modules/@sentry/core/build/esm/utils-hoist/propagationContext.js
+function generateTraceId() {
+  return uuid4();
+}
+function generateSpanId() {
+  return uuid4().substring(16);
 }
 
 // node_modules/@sentry/core/build/esm/scope.js
@@ -59746,7 +59465,7 @@ function getSpanDescendants(span) {
 function getRootSpan(span) {
   return span[ROOT_SPAN_FIELD] || span;
 }
-function getActiveSpan2() {
+function getActiveSpan() {
   const carrier = getMainCarrier();
   const acs = getAsyncContextStrategy(carrier);
   if (acs.getActiveSpan) {
@@ -59765,6 +59484,164 @@ function showSpanDropWarning() {
   }
 }
 
+// node_modules/@sentry/core/build/esm/utils-hoist/stacktrace.js
+var STACKTRACE_FRAME_LIMIT = 50;
+var UNKNOWN_FUNCTION = "?";
+var WEBPACK_ERROR_REGEXP = /\(error: (.*)\)/;
+var STRIP_FRAME_REGEXP = /captureMessage|captureException/;
+function createStackParser(...parsers) {
+  const sortedParsers = parsers.sort((a, b) => a[0] - b[0]).map((p) => p[1]);
+  return (stack, skipFirstLines = 0, framesToPop = 0) => {
+    const frames = [];
+    const lines = stack.split("\n");
+    for (let i = skipFirstLines; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.length > 1024) {
+        continue;
+      }
+      const cleanedLine = WEBPACK_ERROR_REGEXP.test(line) ? line.replace(WEBPACK_ERROR_REGEXP, "$1") : line;
+      if (cleanedLine.match(/\S*Error: /)) {
+        continue;
+      }
+      for (const parser of sortedParsers) {
+        const frame = parser(cleanedLine);
+        if (frame) {
+          frames.push(frame);
+          break;
+        }
+      }
+      if (frames.length >= STACKTRACE_FRAME_LIMIT + framesToPop) {
+        break;
+      }
+    }
+    return stripSentryFramesAndReverse(frames.slice(framesToPop));
+  };
+}
+function stackParserFromStackParserOptions(stackParser) {
+  if (Array.isArray(stackParser)) {
+    return createStackParser(...stackParser);
+  }
+  return stackParser;
+}
+function stripSentryFramesAndReverse(stack) {
+  if (!stack.length) {
+    return [];
+  }
+  const localStack = Array.from(stack);
+  if (/sentryWrapped/.test(getLastStackFrame(localStack).function || "")) {
+    localStack.pop();
+  }
+  localStack.reverse();
+  if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || "")) {
+    localStack.pop();
+    if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || "")) {
+      localStack.pop();
+    }
+  }
+  return localStack.slice(0, STACKTRACE_FRAME_LIMIT).map((frame) => ({
+    ...frame,
+    filename: frame.filename || getLastStackFrame(localStack).filename,
+    function: frame.function || UNKNOWN_FUNCTION
+  }));
+}
+function getLastStackFrame(arr) {
+  return arr[arr.length - 1] || {};
+}
+var defaultFunctionName = "<anonymous>";
+function getFunctionName(fn) {
+  try {
+    if (!fn || typeof fn !== "function") {
+      return defaultFunctionName;
+    }
+    return fn.name || defaultFunctionName;
+  } catch (e) {
+    return defaultFunctionName;
+  }
+}
+
+// node_modules/@sentry/core/build/esm/utils-hoist/instrument/handlers.js
+var handlers = {};
+var instrumented = {};
+function addHandler(type, handler) {
+  handlers[type] = handlers[type] || [];
+  handlers[type].push(handler);
+}
+function maybeInstrument(type, instrumentFn) {
+  if (!instrumented[type]) {
+    instrumented[type] = true;
+    try {
+      instrumentFn();
+    } catch (e) {
+      DEBUG_BUILD2 && logger.error(`Error while instrumenting ${type}`, e);
+    }
+  }
+}
+function triggerHandlers(type, data) {
+  const typeHandlers = type && handlers[type];
+  if (!typeHandlers) {
+    return;
+  }
+  for (const handler of typeHandlers) {
+    try {
+      handler(data);
+    } catch (e) {
+      DEBUG_BUILD2 && logger.error(
+        `Error while triggering instrumentation handler.
+Type: ${type}
+Name: ${getFunctionName(handler)}
+Error:`,
+        e
+      );
+    }
+  }
+}
+
+// node_modules/@sentry/core/build/esm/utils-hoist/instrument/globalError.js
+var _oldOnErrorHandler = null;
+function addGlobalErrorInstrumentationHandler(handler) {
+  const type = "error";
+  addHandler(type, handler);
+  maybeInstrument(type, instrumentError);
+}
+function instrumentError() {
+  _oldOnErrorHandler = GLOBAL_OBJ.onerror;
+  GLOBAL_OBJ.onerror = function(msg, url2, line, column, error) {
+    const handlerData = {
+      column,
+      error,
+      line,
+      msg,
+      url: url2
+    };
+    triggerHandlers("error", handlerData);
+    if (_oldOnErrorHandler) {
+      return _oldOnErrorHandler.apply(this, arguments);
+    }
+    return false;
+  };
+  GLOBAL_OBJ.onerror.__SENTRY_INSTRUMENTED__ = true;
+}
+
+// node_modules/@sentry/core/build/esm/utils-hoist/instrument/globalUnhandledRejection.js
+var _oldOnUnhandledRejectionHandler = null;
+function addGlobalUnhandledRejectionInstrumentationHandler(handler) {
+  const type = "unhandledrejection";
+  addHandler(type, handler);
+  maybeInstrument(type, instrumentUnhandledRejection);
+}
+function instrumentUnhandledRejection() {
+  _oldOnUnhandledRejectionHandler = GLOBAL_OBJ.onunhandledrejection;
+  GLOBAL_OBJ.onunhandledrejection = function(e) {
+    const handlerData = e;
+    triggerHandlers("unhandledrejection", handlerData);
+    if (_oldOnUnhandledRejectionHandler) {
+      return _oldOnUnhandledRejectionHandler.apply(this, arguments);
+    }
+    return true;
+  };
+  GLOBAL_OBJ.onunhandledrejection.__SENTRY_INSTRUMENTED__ = true;
+}
+
 // node_modules/@sentry/core/build/esm/tracing/errors.js
 var errorsInstrumented = false;
 function registerSpanErrorInstrumentation() {
@@ -59776,7 +59653,7 @@ function registerSpanErrorInstrumentation() {
   addGlobalUnhandledRejectionInstrumentationHandler(errorCallback);
 }
 function errorCallback() {
-  const activeSpan = getActiveSpan2();
+  const activeSpan = getActiveSpan();
   const rootSpan = activeSpan && getRootSpan(activeSpan);
   if (rootSpan) {
     const message = "internal_error";
@@ -60962,6 +60839,144 @@ function getActiveSpanWrapper(parentSpan) {
   } : (callback) => callback();
 }
 
+// node_modules/@sentry/core/build/esm/utils-hoist/syncpromise.js
+var States;
+(function(States2) {
+  const PENDING = 0;
+  States2[States2["PENDING"] = PENDING] = "PENDING";
+  const RESOLVED = 1;
+  States2[States2["RESOLVED"] = RESOLVED] = "RESOLVED";
+  const REJECTED = 2;
+  States2[States2["REJECTED"] = REJECTED] = "REJECTED";
+})(States || (States = {}));
+function resolvedSyncPromise(value) {
+  return new SyncPromise((resolve2) => {
+    resolve2(value);
+  });
+}
+function rejectedSyncPromise(reason) {
+  return new SyncPromise((_, reject) => {
+    reject(reason);
+  });
+}
+var SyncPromise = class _SyncPromise {
+  constructor(executor) {
+    this._state = States.PENDING;
+    this._handlers = [];
+    this._runExecutor(executor);
+  }
+  /** @inheritdoc */
+  then(onfulfilled, onrejected) {
+    return new _SyncPromise((resolve2, reject) => {
+      this._handlers.push([
+        false,
+        (result) => {
+          if (!onfulfilled) {
+            resolve2(result);
+          } else {
+            try {
+              resolve2(onfulfilled(result));
+            } catch (e) {
+              reject(e);
+            }
+          }
+        },
+        (reason) => {
+          if (!onrejected) {
+            reject(reason);
+          } else {
+            try {
+              resolve2(onrejected(reason));
+            } catch (e) {
+              reject(e);
+            }
+          }
+        }
+      ]);
+      this._executeHandlers();
+    });
+  }
+  /** @inheritdoc */
+  catch(onrejected) {
+    return this.then((val) => val, onrejected);
+  }
+  /** @inheritdoc */
+  finally(onfinally) {
+    return new _SyncPromise((resolve2, reject) => {
+      let val;
+      let isRejected;
+      return this.then(
+        (value) => {
+          isRejected = false;
+          val = value;
+          if (onfinally) {
+            onfinally();
+          }
+        },
+        (reason) => {
+          isRejected = true;
+          val = reason;
+          if (onfinally) {
+            onfinally();
+          }
+        }
+      ).then(() => {
+        if (isRejected) {
+          reject(val);
+          return;
+        }
+        resolve2(val);
+      });
+    });
+  }
+  /** Excute the resolve/reject handlers. */
+  _executeHandlers() {
+    if (this._state === States.PENDING) {
+      return;
+    }
+    const cachedHandlers = this._handlers.slice();
+    this._handlers = [];
+    cachedHandlers.forEach((handler) => {
+      if (handler[0]) {
+        return;
+      }
+      if (this._state === States.RESOLVED) {
+        handler[1](this._value);
+      }
+      if (this._state === States.REJECTED) {
+        handler[2](this._value);
+      }
+      handler[0] = true;
+    });
+  }
+  /** Run the executor for the SyncPromise. */
+  _runExecutor(executor) {
+    const setResult = (state, value) => {
+      if (this._state !== States.PENDING) {
+        return;
+      }
+      if (isThenable(value)) {
+        void value.then(resolve2, reject);
+        return;
+      }
+      this._state = state;
+      this._value = value;
+      this._executeHandlers();
+    };
+    const resolve2 = (value) => {
+      setResult(States.RESOLVED, value);
+    };
+    const reject = (reason) => {
+      setResult(States.REJECTED, reason);
+    };
+    try {
+      executor(resolve2, reject);
+    } catch (e) {
+      reject(e);
+    }
+  }
+};
+
 // node_modules/@sentry/core/build/esm/eventProcessors.js
 function notifyEventProcessors(processors, event, hint, index = 0) {
   return new SyncPromise((resolve2, reject) => {
@@ -61498,18 +61513,6 @@ function defineIntegration(fn) {
   return fn;
 }
 
-// node_modules/@sentry/core/build/esm/utils-hoist/clientreport.js
-function createClientReportEnvelope(discarded_events, dsn, timestamp) {
-  const clientReportItem = [
-    { type: "client_report" },
-    {
-      timestamp: timestamp || dateTimestampInSeconds(),
-      discarded_events
-    }
-  ];
-  return createEnvelope(dsn ? { dsn } : {}, [clientReportItem]);
-}
-
 // node_modules/@sentry/core/build/esm/utils/eventUtils.js
 function getPossibleEventMessages(event) {
   const possibleMessages = [];
@@ -61572,6 +61575,18 @@ function convertSpanJsonToTransactionEvent(span) {
     },
     measurements: span.measurements
   };
+}
+
+// node_modules/@sentry/core/build/esm/utils-hoist/clientreport.js
+function createClientReportEnvelope(discarded_events, dsn, timestamp) {
+  const clientReportItem = [
+    { type: "client_report" },
+    {
+      timestamp: timestamp || dateTimestampInSeconds(),
+      discarded_events
+    }
+  ];
+  return createEnvelope(dsn ? { dsn } : {}, [clientReportItem]);
 }
 
 // node_modules/@sentry/core/build/esm/client.js
@@ -62290,6 +62305,43 @@ function createCheckInEnvelopeItem(checkIn) {
   return [checkInHeaders, checkIn];
 }
 
+// node_modules/@sentry/core/build/esm/logs/envelope.js
+function createOtelLogEnvelopeItem(log2) {
+  return [
+    {
+      type: "otel_log"
+    },
+    log2
+  ];
+}
+function createOtelLogEnvelope(logs, metadata, tunnel, dsn) {
+  const headers = {};
+  if (metadata?.sdk) {
+    headers.sdk = {
+      name: metadata.sdk.name,
+      version: metadata.sdk.version
+    };
+  }
+  if (!!tunnel && !!dsn) {
+    headers.dsn = dsnToString(dsn);
+  }
+  return createEnvelope(headers, logs.map(createOtelLogEnvelopeItem));
+}
+
+// node_modules/@sentry/core/build/esm/logs/exports.js
+var CLIENT_TO_LOG_BUFFER_MAP = /* @__PURE__ */ new WeakMap();
+function _INTERNAL_flushLogsBuffer(client, maybeLogBuffer) {
+  const logBuffer = maybeLogBuffer ?? CLIENT_TO_LOG_BUFFER_MAP.get(client) ?? [];
+  if (logBuffer.length === 0) {
+    return;
+  }
+  const clientOptions = client.getOptions();
+  const envelope = createOtelLogEnvelope(logBuffer, clientOptions._metadata, clientOptions.tunnel, client.getDsn());
+  logBuffer.length = 0;
+  client.emit("flushLogs");
+  client.sendEnvelope(envelope);
+}
+
 // node_modules/@sentry/core/build/esm/utils-hoist/eventbuilder.js
 function parseStackFrames(stackParser, error) {
   return stackParser(error.stack || "", 1);
@@ -62412,43 +62464,6 @@ function eventFromMessage(stackParser, message, level = "info", hint, attachStac
   }
   event.message = message;
   return event;
-}
-
-// node_modules/@sentry/core/build/esm/logs/envelope.js
-function createOtelLogEnvelopeItem(log2) {
-  return [
-    {
-      type: "otel_log"
-    },
-    log2
-  ];
-}
-function createOtelLogEnvelope(logs, metadata, tunnel, dsn) {
-  const headers = {};
-  if (metadata?.sdk) {
-    headers.sdk = {
-      name: metadata.sdk.name,
-      version: metadata.sdk.version
-    };
-  }
-  if (!!tunnel && !!dsn) {
-    headers.dsn = dsnToString(dsn);
-  }
-  return createEnvelope(headers, logs.map(createOtelLogEnvelopeItem));
-}
-
-// node_modules/@sentry/core/build/esm/logs/exports.js
-var CLIENT_TO_LOG_BUFFER_MAP = /* @__PURE__ */ new WeakMap();
-function _INTERNAL_flushLogsBuffer(client, maybeLogBuffer) {
-  const logBuffer = maybeLogBuffer ?? CLIENT_TO_LOG_BUFFER_MAP.get(client) ?? [];
-  if (logBuffer.length === 0) {
-    return;
-  }
-  const clientOptions = client.getOptions();
-  const envelope = createOtelLogEnvelope(logBuffer, clientOptions._metadata, clientOptions.tunnel, client.getDsn());
-  logBuffer.length = 0;
-  client.emit("flushLogs");
-  client.sendEnvelope(envelope);
 }
 
 // node_modules/@sentry/core/build/esm/server-runtime-client.js
@@ -62816,7 +62831,7 @@ function getTraceData(options = {}) {
     return acs.getTraceData(options);
   }
   const scope = getCurrentScope();
-  const span = options.span || getActiveSpan2();
+  const span = options.span || getActiveSpan();
   const sentryTrace = span ? spanToTraceHeader(span) : scopeToTraceHeader(scope);
   const dsc = span ? getDynamicSamplingContextFromSpan(span) : getDynamicSamplingContextFromScope(client, scope);
   const baggage = dynamicSamplingContextToSentryBaggageHeader(dsc);
@@ -63410,6 +63425,50 @@ function dirname(path2) {
   return root + dir;
 }
 
+// node_modules/@sentry/core/build/esm/integrations/console.js
+var INTEGRATION_NAME5 = "Console";
+var consoleIntegration = defineIntegration((options = {}) => {
+  const levels = new Set(options.levels || CONSOLE_LEVELS);
+  return {
+    name: INTEGRATION_NAME5,
+    setup(client) {
+      addConsoleInstrumentationHandler(({ args, level }) => {
+        if (getClient() !== client || !levels.has(level)) {
+          return;
+        }
+        addConsoleBreadcrumb(level, args);
+      });
+    }
+  };
+});
+function addConsoleBreadcrumb(level, args) {
+  const breadcrumb = {
+    category: "console",
+    data: {
+      arguments: args,
+      logger: "console"
+    },
+    level: severityLevelFromString(level),
+    message: formatConsoleArgs(args)
+  };
+  if (level === "assert") {
+    if (args[0] === false) {
+      const assertionArgs = args.slice(1);
+      breadcrumb.message = assertionArgs.length > 0 ? `Assertion failed: ${formatConsoleArgs(assertionArgs)}` : "Assertion failed";
+      breadcrumb.data.arguments = assertionArgs;
+    } else {
+      return;
+    }
+  }
+  addBreadcrumb(breadcrumb, {
+    input: args,
+    level
+  });
+}
+function formatConsoleArgs(values) {
+  return "util" in GLOBAL_OBJ && typeof GLOBAL_OBJ.util.format === "function" ? GLOBAL_OBJ.util.format(...values) : safeJoin(values, " ");
+}
+
 // node_modules/@sentry/core/build/esm/utils-hoist/url.js
 function parseUrl(url2) {
   if (!url2) {
@@ -63597,10 +63656,24 @@ function vercelWaitUntil(task) {
   }
 }
 
+// node_modules/@sentry/node/build/esm/integrations/http/index.js
+init_esm();
+var import_instrumentation_http = __toESM(require_src5(), 1);
+
 // node_modules/@sentry/node/build/esm/otel/instrument.js
 var import_instrumentation = __toESM(require_src4(), 1);
 var INSTRUMENTED = {};
-function generateInstrumentOnce(name, creator) {
+function generateInstrumentOnce(name, creatorOrClass, optionsCallback) {
+  if (optionsCallback) {
+    return _generateInstrumentOnceWithOptions(
+      name,
+      creatorOrClass,
+      optionsCallback
+    );
+  }
+  return _generateInstrumentOnce(name, creatorOrClass);
+}
+function _generateInstrumentOnce(name, creator) {
   return Object.assign(
     (options) => {
       const instrumented2 = INSTRUMENTED[name];
@@ -63611,6 +63684,25 @@ function generateInstrumentOnce(name, creator) {
         return instrumented2;
       }
       const instrumentation = creator(options);
+      INSTRUMENTED[name] = instrumentation;
+      (0, import_instrumentation.registerInstrumentations)({
+        instrumentations: [instrumentation]
+      });
+      return instrumentation;
+    },
+    { id: name }
+  );
+}
+function _generateInstrumentOnceWithOptions(name, instrumentationClass, optionsCallback) {
+  return Object.assign(
+    (_options) => {
+      const options = optionsCallback(_options);
+      const instrumented2 = INSTRUMENTED[name];
+      if (instrumented2) {
+        instrumented2.setConfig(options);
+        return instrumented2;
+      }
+      const instrumentation = new instrumentationClass(options);
       INSTRUMENTED[name] = instrumentation;
       (0, import_instrumentation.registerInstrumentations)({
         instrumentations: [instrumentation]
@@ -63772,10 +63864,11 @@ function stringUrlToHttpOptions(stringUrl) {
 }
 
 // node_modules/@sentry/node/build/esm/integrations/http/SentryHttpInstrumentation.js
+var INSTRUMENTATION_NAME = "@sentry/instrumentation-http";
 var MAX_BODY_BYTE_LENGTH = 1024 * 1024;
 var SentryHttpInstrumentation = class extends import_instrumentation2.InstrumentationBase {
   constructor(config2 = {}) {
-    super("@sentry/instrumentation-http", import_core2.VERSION, config2);
+    super(INSTRUMENTATION_NAME, import_core2.VERSION, config2);
   }
   /** @inheritdoc */
   init() {
@@ -63937,42 +64030,33 @@ function getBreadcrumbData(request) {
   }
 }
 function patchRequestToCaptureBody(req, isolationScope) {
+  let bodyByteLength = 0;
   const chunks = [];
-  function getChunksSize() {
-    return chunks.reduce((acc, chunk) => acc + chunk.byteLength, 0);
-  }
   const callbackMap = /* @__PURE__ */ new WeakMap();
   try {
     req.on = new Proxy(req.on, {
       apply: (target, thisArg, args) => {
         const [event, listener, ...restArgs] = args;
+        if (DEBUG_BUILD3) {
+          logger.log(INSTRUMENTATION_NAME, "Patching request.on", event);
+        }
         if (event === "data") {
           const callback = new Proxy(listener, {
             apply: (target2, thisArg2, args2) => {
-              if (getChunksSize() < MAX_BODY_BYTE_LENGTH) {
-                const chunk = args2[0];
-                chunks.push(chunk);
-              } else if (DEBUG_BUILD3) {
-                logger.log(
-                  `Dropping request body chunk because it maximum body length of ${MAX_BODY_BYTE_LENGTH}b is exceeded.`
-                );
-              }
-              return Reflect.apply(target2, thisArg2, args2);
-            }
-          });
-          callbackMap.set(listener, callback);
-          return Reflect.apply(target, thisArg, [event, callback, ...restArgs]);
-        }
-        if (event === "end") {
-          const callback = new Proxy(listener, {
-            apply: (target2, thisArg2, args2) => {
               try {
-                const body = Buffer.concat(chunks).toString("utf-8");
-                if (body) {
-                  const normalizedRequest = { data: body };
-                  isolationScope.setSDKProcessingMetadata({ normalizedRequest });
+                const chunk = args2[0];
+                const bufferifiedChunk = Buffer.from(chunk);
+                if (bodyByteLength < MAX_BODY_BYTE_LENGTH) {
+                  chunks.push(bufferifiedChunk);
+                  bodyByteLength += bufferifiedChunk.byteLength;
+                } else if (DEBUG_BUILD3) {
+                  logger.log(
+                    INSTRUMENTATION_NAME,
+                    `Dropping request body chunk because maximum body length of ${MAX_BODY_BYTE_LENGTH}b is exceeded.`
+                  );
                 }
-              } catch {
+              } catch (err) {
+                DEBUG_BUILD3 && logger.error(INSTRUMENTATION_NAME, "Encountered error while storing body chunk.");
               }
               return Reflect.apply(target2, thisArg2, args2);
             }
@@ -63996,7 +64080,22 @@ function patchRequestToCaptureBody(req, isolationScope) {
         return Reflect.apply(target, thisArg, args);
       }
     });
-  } catch {
+    req.on("end", () => {
+      try {
+        const body = Buffer.concat(chunks).toString("utf-8");
+        if (body) {
+          isolationScope.setSDKProcessingMetadata({ normalizedRequest: { data: body } });
+        }
+      } catch (error) {
+        if (DEBUG_BUILD3) {
+          logger.error(INSTRUMENTATION_NAME, "Error building captured request body", error);
+        }
+      }
+    });
+  } catch (error) {
+    if (DEBUG_BUILD3) {
+      logger.error(INSTRUMENTATION_NAME, "Error patching request to capture body", error);
+    }
   }
 }
 function recordRequestSession({
@@ -64134,24 +64233,24 @@ function patchResponseToFlushOnServerlessPlatforms(res) {
 }
 
 // node_modules/@sentry/node/build/esm/integrations/http/index.js
-var INTEGRATION_NAME5 = "Http";
-var INSTRUMENTATION_NAME = "@opentelemetry_sentry-patched/instrumentation-http";
-var instrumentSentryHttpBeforeOtel = generateInstrumentOnce(`${INTEGRATION_NAME5}.sentry-before-otel`, () => {
+var INTEGRATION_NAME6 = "Http";
+var INSTRUMENTATION_NAME2 = "@opentelemetry_sentry-patched/instrumentation-http";
+var instrumentSentryHttpBeforeOtel = generateInstrumentOnce(`${INTEGRATION_NAME6}.sentry-before-otel`, () => {
   return new SentryHttpInstrumentationBeforeOtel();
 });
 var instrumentSentryHttp = generateInstrumentOnce(
-  `${INTEGRATION_NAME5}.sentry`,
+  `${INTEGRATION_NAME6}.sentry`,
   (options) => {
     return new SentryHttpInstrumentation(options);
   }
 );
-var instrumentOtelHttp = generateInstrumentOnce(INTEGRATION_NAME5, (config2) => {
+var instrumentOtelHttp = generateInstrumentOnce(INTEGRATION_NAME6, (config2) => {
   const instrumentation = new import_instrumentation_http.HttpInstrumentation(config2);
   try {
     instrumentation["_diag"] = diag2.createComponentLogger({
-      namespace: INSTRUMENTATION_NAME
+      namespace: INSTRUMENTATION_NAME2
     });
-    instrumentation.instrumentationName = INSTRUMENTATION_NAME;
+    instrumentation.instrumentationName = INSTRUMENTATION_NAME2;
   } catch {
   }
   return instrumentation;
@@ -64161,7 +64260,7 @@ function _shouldInstrumentSpans(options, clientOptions = {}) {
 }
 var httpIntegration = defineIntegration((options = {}) => {
   return {
-    name: INTEGRATION_NAME5,
+    name: INTEGRATION_NAME6,
     setupOnce() {
       if (process.env.VERCEL) {
         instrumentSentryHttpBeforeOtel();
@@ -65755,14 +65854,19 @@ function getAbsoluteUrl2(origin, path2 = "/") {
 }
 
 // node_modules/@sentry/node/build/esm/integrations/node-fetch/index.js
-var INTEGRATION_NAME6 = "NodeFetch";
-var instrumentOtelNodeFetch = generateInstrumentOnce(INTEGRATION_NAME6, (config2) => {
-  return new import_instrumentation_undici.UndiciInstrumentation(config2);
-});
+var INTEGRATION_NAME7 = "NodeFetch";
+var instrumentOtelNodeFetch = generateInstrumentOnce(
+  INTEGRATION_NAME7,
+  import_instrumentation_undici.UndiciInstrumentation,
+  (options) => {
+    return getConfigWithDefaults2(options);
+  }
+);
 var instrumentSentryNodeFetch = generateInstrumentOnce(
-  `${INTEGRATION_NAME6}.sentry`,
-  (config2) => {
-    return new SentryNodeFetchInstrumentation(config2);
+  `${INTEGRATION_NAME7}.sentry`,
+  SentryNodeFetchInstrumentation,
+  (options) => {
+    return options;
   }
 );
 var _nativeNodeFetchIntegration = (options = {}) => {
@@ -65771,8 +65875,7 @@ var _nativeNodeFetchIntegration = (options = {}) => {
     setupOnce() {
       const instrumentSpans = _shouldInstrumentSpans2(options, getClient()?.getOptions());
       if (instrumentSpans) {
-        const instrumentationConfig = getConfigWithDefaults2(options);
-        instrumentOtelNodeFetch(instrumentationConfig);
+        instrumentOtelNodeFetch(options);
       }
       instrumentSentryNodeFetch(options);
     }
@@ -65809,33 +65912,6 @@ function getConfigWithDefaults2(options = {}) {
   };
   return instrumentationConfig;
 }
-
-// node_modules/@sentry/node/build/esm/integrations/console.js
-var util = __toESM(require("node:util"), 1);
-var INTEGRATION_NAME7 = "Console";
-var consoleIntegration = defineIntegration(() => {
-  return {
-    name: INTEGRATION_NAME7,
-    setup(client) {
-      addConsoleInstrumentationHandler(({ args, level }) => {
-        if (getClient() !== client) {
-          return;
-        }
-        addBreadcrumb(
-          {
-            category: "console",
-            level: severityLevelFromString(level),
-            message: util.format.apply(void 0, args)
-          },
-          {
-            input: [...args],
-            level
-          }
-        );
-      });
-    }
-  };
-});
 
 // node_modules/@sentry/node/build/esm/integrations/context.js
 var import_node_child_process = require("node:child_process");
@@ -66418,7 +66494,7 @@ function functionNamesMatch(a, b) {
 }
 
 // node_modules/@sentry/node/build/esm/integrations/local-variables/local-variables-async.js
-var base64WorkerScript = "LyohIEBzZW50cnkvbm9kZSA5LjEyLjAgKDRlYjc4ZTUpIHwgaHR0cHM6Ly9naXRodWIuY29tL2dldHNlbnRyeS9zZW50cnktamF2YXNjcmlwdCAqLwppbXBvcnR7U2Vzc2lvbiBhcyBlfWZyb20ibm9kZTppbnNwZWN0b3IvcHJvbWlzZXMiO2ltcG9ydHt3b3JrZXJEYXRhIGFzIHR9ZnJvbSJub2RlOndvcmtlcl90aHJlYWRzIjtjb25zdCBuPWdsb2JhbFRoaXMsbz0idW5kZWZpbmVkIj09dHlwZW9mIF9fU0VOVFJZX0RFQlVHX198fF9fU0VOVFJZX0RFQlVHX18saT0iOS4xMi4wIjtjb25zdCBhPVsiZGVidWciLCJpbmZvIiwid2FybiIsImVycm9yIiwibG9nIiwiYXNzZXJ0IiwidHJhY2UiXSxzPXt9O2Z1bmN0aW9uIGMoZSl7aWYoISgiY29uc29sZSJpbiBuKSlyZXR1cm4gZSgpO2NvbnN0IHQ9bi5jb25zb2xlLG89e30saT1PYmplY3Qua2V5cyhzKTtpLmZvckVhY2goKGU9Pntjb25zdCBuPXNbZV07b1tlXT10W2VdLHRbZV09bn0pKTt0cnl7cmV0dXJuIGUoKX1maW5hbGx5e2kuZm9yRWFjaCgoZT0+e3RbZV09b1tlXX0pKX19IWZ1bmN0aW9uKGUsdCxvPW4pe2NvbnN0IGE9by5fX1NFTlRSWV9fPW8uX19TRU5UUllfX3x8e30scz1hW2ldPWFbaV18fHt9O3NbZV18fChzW2VdPXQoKSl9KCJsb2dnZXIiLChmdW5jdGlvbigpe2xldCBlPSExO2NvbnN0IHQ9e2VuYWJsZTooKT0+e2U9ITB9LGRpc2FibGU6KCk9PntlPSExfSxpc0VuYWJsZWQ6KCk9PmV9O3JldHVybiBvP2EuZm9yRWFjaCgobz0+e3Rbb109KC4uLnQpPT57ZSYmYygoKCk9PntuLmNvbnNvbGVbb10oYFNlbnRyeSBMb2dnZXIgWyR7b31dOmAsLi4udCl9KSl9fSkpOmEuZm9yRWFjaCgoZT0+e3RbZV09KCk9Pnt9fSkpLHR9KSk7Y29uc3Qgcj0iX19TRU5UUllfRVJST1JfTE9DQUxfVkFSSUFCTEVTX18iO2NvbnN0IHU9dDtmdW5jdGlvbiBsKC4uLmUpe3UuZGVidWcmJmMoKCgpPT5jb25zb2xlLmxvZygiW0xvY2FsVmFyaWFibGVzIFdvcmtlcl0iLC4uLmUpKSl9YXN5bmMgZnVuY3Rpb24gZihlLHQsbixvKXtjb25zdCBpPWF3YWl0IGUucG9zdCgiUnVudGltZS5nZXRQcm9wZXJ0aWVzIix7b2JqZWN0SWQ6dCxvd25Qcm9wZXJ0aWVzOiEwfSk7b1tuXT1pLnJlc3VsdC5maWx0ZXIoKGU9PiJsZW5ndGgiIT09ZS5uYW1lJiYhaXNOYU4ocGFyc2VJbnQoZS5uYW1lLDEwKSkpKS5zb3J0KCgoZSx0KT0+cGFyc2VJbnQoZS5uYW1lLDEwKS1wYXJzZUludCh0Lm5hbWUsMTApKSkubWFwKChlPT5lLnZhbHVlPy52YWx1ZSkpfWFzeW5jIGZ1bmN0aW9uIGcoZSx0LG4sbyl7Y29uc3QgaT1hd2FpdCBlLnBvc3QoIlJ1bnRpbWUuZ2V0UHJvcGVydGllcyIse29iamVjdElkOnQsb3duUHJvcGVydGllczohMH0pO29bbl09aS5yZXN1bHQubWFwKChlPT5bZS5uYW1lLGUudmFsdWU/LnZhbHVlXSkpLnJlZHVjZSgoKGUsW3Qsbl0pPT4oZVt0XT1uLGUpKSx7fSl9ZnVuY3Rpb24gZChlLHQpe2UudmFsdWUmJigidmFsdWUiaW4gZS52YWx1ZT92b2lkIDA9PT1lLnZhbHVlLnZhbHVlfHxudWxsPT09ZS52YWx1ZS52YWx1ZT90W2UubmFtZV09YDwke2UudmFsdWUudmFsdWV9PmA6dFtlLm5hbWVdPWUudmFsdWUudmFsdWU6ImRlc2NyaXB0aW9uImluIGUudmFsdWUmJiJmdW5jdGlvbiIhPT1lLnZhbHVlLnR5cGU/dFtlLm5hbWVdPWA8JHtlLnZhbHVlLmRlc2NyaXB0aW9ufT5gOiJ1bmRlZmluZWQiPT09ZS52YWx1ZS50eXBlJiYodFtlLm5hbWVdPSI8dW5kZWZpbmVkPiIpKX1hc3luYyBmdW5jdGlvbiBiKGUsdCl7Y29uc3Qgbj1hd2FpdCBlLnBvc3QoIlJ1bnRpbWUuZ2V0UHJvcGVydGllcyIse29iamVjdElkOnQsb3duUHJvcGVydGllczohMH0pLG89e307Zm9yKGNvbnN0IHQgb2Ygbi5yZXN1bHQpaWYodC52YWx1ZT8ub2JqZWN0SWQmJiJBcnJheSI9PT10LnZhbHVlLmNsYXNzTmFtZSl7Y29uc3Qgbj10LnZhbHVlLm9iamVjdElkO2F3YWl0IGYoZSxuLHQubmFtZSxvKX1lbHNlIGlmKHQudmFsdWU/Lm9iamVjdElkJiYiT2JqZWN0Ij09PXQudmFsdWUuY2xhc3NOYW1lKXtjb25zdCBuPXQudmFsdWUub2JqZWN0SWQ7YXdhaXQgZyhlLG4sdC5uYW1lLG8pfWVsc2UgdC52YWx1ZSYmZCh0LG8pO3JldHVybiBvfWxldCBwOyhhc3luYyBmdW5jdGlvbigpe2NvbnN0IHQ9bmV3IGU7dC5jb25uZWN0VG9NYWluVGhyZWFkKCksbCgiQ29ubmVjdGVkIHRvIG1haW4gdGhyZWFkIik7bGV0IG49ITE7dC5vbigiRGVidWdnZXIucmVzdW1lZCIsKCgpPT57bj0hMX0pKSx0Lm9uKCJEZWJ1Z2dlci5wYXVzZWQiLChlPT57bj0hMCxhc3luYyBmdW5jdGlvbihlLHtyZWFzb246dCxkYXRhOntvYmplY3RJZDpufSxjYWxsRnJhbWVzOm99KXtpZigiZXhjZXB0aW9uIiE9PXQmJiJwcm9taXNlUmVqZWN0aW9uIiE9PXQpcmV0dXJuO2lmKHA/LigpLG51bGw9PW4pcmV0dXJuO2NvbnN0IGk9W107Zm9yKGxldCB0PTA7dDxvLmxlbmd0aDt0Kyspe2NvbnN0e3Njb3BlQ2hhaW46bixmdW5jdGlvbk5hbWU6YSx0aGlzOnN9PW9bdF0sYz1uLmZpbmQoKGU9PiJsb2NhbCI9PT1lLnR5cGUpKSxyPSJnbG9iYWwiIT09cy5jbGFzc05hbWUmJnMuY2xhc3NOYW1lP2Ake3MuY2xhc3NOYW1lfS4ke2F9YDphO2lmKHZvaWQgMD09PWM/Lm9iamVjdC5vYmplY3RJZClpW3RdPXtmdW5jdGlvbjpyfTtlbHNle2NvbnN0IG49YXdhaXQgYihlLGMub2JqZWN0Lm9iamVjdElkKTtpW3RdPXtmdW5jdGlvbjpyLHZhcnM6bn19fWF3YWl0IGUucG9zdCgiUnVudGltZS5jYWxsRnVuY3Rpb25PbiIse2Z1bmN0aW9uRGVjbGFyYXRpb246YGZ1bmN0aW9uKCkgeyB0aGlzLiR7cn0gPSB0aGlzLiR7cn0gfHwgJHtKU09OLnN0cmluZ2lmeShpKX07IH1gLHNpbGVudDohMCxvYmplY3RJZDpufSksYXdhaXQgZS5wb3N0KCJSdW50aW1lLnJlbGVhc2VPYmplY3QiLHtvYmplY3RJZDpufSl9KHQsZS5wYXJhbXMpLnRoZW4oKGFzeW5jKCk9PntuJiZhd2FpdCB0LnBvc3QoIkRlYnVnZ2VyLnJlc3VtZSIpfSksKGFzeW5jIGU9PntuJiZhd2FpdCB0LnBvc3QoIkRlYnVnZ2VyLnJlc3VtZSIpfSkpfSkpLGF3YWl0IHQucG9zdCgiRGVidWdnZXIuZW5hYmxlIik7Y29uc3Qgbz0hMSE9PXUuY2FwdHVyZUFsbEV4Y2VwdGlvbnM7aWYoYXdhaXQgdC5wb3N0KCJEZWJ1Z2dlci5zZXRQYXVzZU9uRXhjZXB0aW9ucyIse3N0YXRlOm8/ImFsbCI6InVuY2F1Z2h0In0pLG8pe2NvbnN0IGU9dS5tYXhFeGNlcHRpb25zUGVyU2Vjb25kfHw1MDtwPWZ1bmN0aW9uKGUsdCxuKXtsZXQgbz0wLGk9NSxhPTA7cmV0dXJuIHNldEludGVydmFsKCgoKT0+ezA9PT1hP28+ZSYmKGkqPTIsbihpKSxpPjg2NDAwJiYoaT04NjQwMCksYT1pKTooYS09MSwwPT09YSYmdCgpKSxvPTB9KSwxZTMpLnVucmVmKCksKCk9PntvKz0xfX0oZSwoYXN5bmMoKT0+e2woIlJhdGUtbGltaXQgbGlmdGVkLiIpLGF3YWl0IHQucG9zdCgiRGVidWdnZXIuc2V0UGF1c2VPbkV4Y2VwdGlvbnMiLHtzdGF0ZToiYWxsIn0pfSksKGFzeW5jIGU9PntsKGBSYXRlLWxpbWl0IGV4Y2VlZGVkLiBEaXNhYmxpbmcgY2FwdHVyaW5nIG9mIGNhdWdodCBleGNlcHRpb25zIGZvciAke2V9IHNlY29uZHMuYCksYXdhaXQgdC5wb3N0KCJEZWJ1Z2dlci5zZXRQYXVzZU9uRXhjZXB0aW9ucyIse3N0YXRlOiJ1bmNhdWdodCJ9KX0pKX19KSgpLmNhdGNoKChlPT57bCgiRmFpbGVkIHRvIHN0YXJ0IGRlYnVnZ2VyIixlKX0pKSxzZXRJbnRlcnZhbCgoKCk9Pnt9KSwxZTQpOw==";
+var base64WorkerScript = "LyohIEBzZW50cnkvbm9kZSA5LjE1LjAgKGI0ZWE2NTMpIHwgaHR0cHM6Ly9naXRodWIuY29tL2dldHNlbnRyeS9zZW50cnktamF2YXNjcmlwdCAqLwppbXBvcnR7U2Vzc2lvbiBhcyBlfWZyb20ibm9kZTppbnNwZWN0b3IvcHJvbWlzZXMiO2ltcG9ydHt3b3JrZXJEYXRhIGFzIHR9ZnJvbSJub2RlOndvcmtlcl90aHJlYWRzIjtjb25zdCBuPSI5LjE1LjAiLG89Z2xvYmFsVGhpcztjb25zdCBpPSJ1bmRlZmluZWQiPT10eXBlb2YgX19TRU5UUllfREVCVUdfX3x8X19TRU5UUllfREVCVUdfXyxhPVsiZGVidWciLCJpbmZvIiwid2FybiIsImVycm9yIiwibG9nIiwiYXNzZXJ0IiwidHJhY2UiXSxzPXt9O2Z1bmN0aW9uIGMoZSl7aWYoISgiY29uc29sZSJpbiBvKSlyZXR1cm4gZSgpO2NvbnN0IHQ9by5jb25zb2xlLG49e30saT1PYmplY3Qua2V5cyhzKTtpLmZvckVhY2goKGU9Pntjb25zdCBvPXNbZV07bltlXT10W2VdLHRbZV09b30pKTt0cnl7cmV0dXJuIGUoKX1maW5hbGx5e2kuZm9yRWFjaCgoZT0+e3RbZV09bltlXX0pKX19IWZ1bmN0aW9uKGUsdCxpPW8pe2NvbnN0IGE9aS5fX1NFTlRSWV9fPWkuX19TRU5UUllfX3x8e30scz1hW25dPWFbbl18fHt9O3NbZV18fChzW2VdPXQoKSl9KCJsb2dnZXIiLChmdW5jdGlvbigpe2xldCBlPSExO2NvbnN0IHQ9e2VuYWJsZTooKT0+e2U9ITB9LGRpc2FibGU6KCk9PntlPSExfSxpc0VuYWJsZWQ6KCk9PmV9O3JldHVybiBpP2EuZm9yRWFjaCgobj0+e3Rbbl09KC4uLnQpPT57ZSYmYygoKCk9PntvLmNvbnNvbGVbbl0oYFNlbnRyeSBMb2dnZXIgWyR7bn1dOmAsLi4udCl9KSl9fSkpOmEuZm9yRWFjaCgoZT0+e3RbZV09KCk9Pnt9fSkpLHR9KSk7Y29uc3Qgcj0iX19TRU5UUllfRVJST1JfTE9DQUxfVkFSSUFCTEVTX18iO2NvbnN0IHU9dDtmdW5jdGlvbiBsKC4uLmUpe3UuZGVidWcmJmMoKCgpPT5jb25zb2xlLmxvZygiW0xvY2FsVmFyaWFibGVzIFdvcmtlcl0iLC4uLmUpKSl9YXN5bmMgZnVuY3Rpb24gZihlLHQsbixvKXtjb25zdCBpPWF3YWl0IGUucG9zdCgiUnVudGltZS5nZXRQcm9wZXJ0aWVzIix7b2JqZWN0SWQ6dCxvd25Qcm9wZXJ0aWVzOiEwfSk7b1tuXT1pLnJlc3VsdC5maWx0ZXIoKGU9PiJsZW5ndGgiIT09ZS5uYW1lJiYhaXNOYU4ocGFyc2VJbnQoZS5uYW1lLDEwKSkpKS5zb3J0KCgoZSx0KT0+cGFyc2VJbnQoZS5uYW1lLDEwKS1wYXJzZUludCh0Lm5hbWUsMTApKSkubWFwKChlPT5lLnZhbHVlPy52YWx1ZSkpfWFzeW5jIGZ1bmN0aW9uIGcoZSx0LG4sbyl7Y29uc3QgaT1hd2FpdCBlLnBvc3QoIlJ1bnRpbWUuZ2V0UHJvcGVydGllcyIse29iamVjdElkOnQsb3duUHJvcGVydGllczohMH0pO29bbl09aS5yZXN1bHQubWFwKChlPT5bZS5uYW1lLGUudmFsdWU/LnZhbHVlXSkpLnJlZHVjZSgoKGUsW3Qsbl0pPT4oZVt0XT1uLGUpKSx7fSl9ZnVuY3Rpb24gZChlLHQpe2UudmFsdWUmJigidmFsdWUiaW4gZS52YWx1ZT92b2lkIDA9PT1lLnZhbHVlLnZhbHVlfHxudWxsPT09ZS52YWx1ZS52YWx1ZT90W2UubmFtZV09YDwke2UudmFsdWUudmFsdWV9PmA6dFtlLm5hbWVdPWUudmFsdWUudmFsdWU6ImRlc2NyaXB0aW9uImluIGUudmFsdWUmJiJmdW5jdGlvbiIhPT1lLnZhbHVlLnR5cGU/dFtlLm5hbWVdPWA8JHtlLnZhbHVlLmRlc2NyaXB0aW9ufT5gOiJ1bmRlZmluZWQiPT09ZS52YWx1ZS50eXBlJiYodFtlLm5hbWVdPSI8dW5kZWZpbmVkPiIpKX1hc3luYyBmdW5jdGlvbiBiKGUsdCl7Y29uc3Qgbj1hd2FpdCBlLnBvc3QoIlJ1bnRpbWUuZ2V0UHJvcGVydGllcyIse29iamVjdElkOnQsb3duUHJvcGVydGllczohMH0pLG89e307Zm9yKGNvbnN0IHQgb2Ygbi5yZXN1bHQpaWYodC52YWx1ZT8ub2JqZWN0SWQmJiJBcnJheSI9PT10LnZhbHVlLmNsYXNzTmFtZSl7Y29uc3Qgbj10LnZhbHVlLm9iamVjdElkO2F3YWl0IGYoZSxuLHQubmFtZSxvKX1lbHNlIGlmKHQudmFsdWU/Lm9iamVjdElkJiYiT2JqZWN0Ij09PXQudmFsdWUuY2xhc3NOYW1lKXtjb25zdCBuPXQudmFsdWUub2JqZWN0SWQ7YXdhaXQgZyhlLG4sdC5uYW1lLG8pfWVsc2UgdC52YWx1ZSYmZCh0LG8pO3JldHVybiBvfWxldCBwOyhhc3luYyBmdW5jdGlvbigpe2NvbnN0IHQ9bmV3IGU7dC5jb25uZWN0VG9NYWluVGhyZWFkKCksbCgiQ29ubmVjdGVkIHRvIG1haW4gdGhyZWFkIik7bGV0IG49ITE7dC5vbigiRGVidWdnZXIucmVzdW1lZCIsKCgpPT57bj0hMX0pKSx0Lm9uKCJEZWJ1Z2dlci5wYXVzZWQiLChlPT57bj0hMCxhc3luYyBmdW5jdGlvbihlLHtyZWFzb246dCxkYXRhOntvYmplY3RJZDpufSxjYWxsRnJhbWVzOm99KXtpZigiZXhjZXB0aW9uIiE9PXQmJiJwcm9taXNlUmVqZWN0aW9uIiE9PXQpcmV0dXJuO2lmKHA/LigpLG51bGw9PW4pcmV0dXJuO2NvbnN0IGk9W107Zm9yKGxldCB0PTA7dDxvLmxlbmd0aDt0Kyspe2NvbnN0e3Njb3BlQ2hhaW46bixmdW5jdGlvbk5hbWU6YSx0aGlzOnN9PW9bdF0sYz1uLmZpbmQoKGU9PiJsb2NhbCI9PT1lLnR5cGUpKSxyPSJnbG9iYWwiIT09cy5jbGFzc05hbWUmJnMuY2xhc3NOYW1lP2Ake3MuY2xhc3NOYW1lfS4ke2F9YDphO2lmKHZvaWQgMD09PWM/Lm9iamVjdC5vYmplY3RJZClpW3RdPXtmdW5jdGlvbjpyfTtlbHNle2NvbnN0IG49YXdhaXQgYihlLGMub2JqZWN0Lm9iamVjdElkKTtpW3RdPXtmdW5jdGlvbjpyLHZhcnM6bn19fWF3YWl0IGUucG9zdCgiUnVudGltZS5jYWxsRnVuY3Rpb25PbiIse2Z1bmN0aW9uRGVjbGFyYXRpb246YGZ1bmN0aW9uKCkgeyB0aGlzLiR7cn0gPSB0aGlzLiR7cn0gfHwgJHtKU09OLnN0cmluZ2lmeShpKX07IH1gLHNpbGVudDohMCxvYmplY3RJZDpufSksYXdhaXQgZS5wb3N0KCJSdW50aW1lLnJlbGVhc2VPYmplY3QiLHtvYmplY3RJZDpufSl9KHQsZS5wYXJhbXMpLnRoZW4oKGFzeW5jKCk9PntuJiZhd2FpdCB0LnBvc3QoIkRlYnVnZ2VyLnJlc3VtZSIpfSksKGFzeW5jIGU9PntuJiZhd2FpdCB0LnBvc3QoIkRlYnVnZ2VyLnJlc3VtZSIpfSkpfSkpLGF3YWl0IHQucG9zdCgiRGVidWdnZXIuZW5hYmxlIik7Y29uc3Qgbz0hMSE9PXUuY2FwdHVyZUFsbEV4Y2VwdGlvbnM7aWYoYXdhaXQgdC5wb3N0KCJEZWJ1Z2dlci5zZXRQYXVzZU9uRXhjZXB0aW9ucyIse3N0YXRlOm8/ImFsbCI6InVuY2F1Z2h0In0pLG8pe2NvbnN0IGU9dS5tYXhFeGNlcHRpb25zUGVyU2Vjb25kfHw1MDtwPWZ1bmN0aW9uKGUsdCxuKXtsZXQgbz0wLGk9NSxhPTA7cmV0dXJuIHNldEludGVydmFsKCgoKT0+ezA9PT1hP28+ZSYmKGkqPTIsbihpKSxpPjg2NDAwJiYoaT04NjQwMCksYT1pKTooYS09MSwwPT09YSYmdCgpKSxvPTB9KSwxZTMpLnVucmVmKCksKCk9PntvKz0xfX0oZSwoYXN5bmMoKT0+e2woIlJhdGUtbGltaXQgbGlmdGVkLiIpLGF3YWl0IHQucG9zdCgiRGVidWdnZXIuc2V0UGF1c2VPbkV4Y2VwdGlvbnMiLHtzdGF0ZToiYWxsIn0pfSksKGFzeW5jIGU9PntsKGBSYXRlLWxpbWl0IGV4Y2VlZGVkLiBEaXNhYmxpbmcgY2FwdHVyaW5nIG9mIGNhdWdodCBleGNlcHRpb25zIGZvciAke2V9IHNlY29uZHMuYCksYXdhaXQgdC5wb3N0KCJEZWJ1Z2dlci5zZXRQYXVzZU9uRXhjZXB0aW9ucyIse3N0YXRlOiJ1bmNhdWdodCJ9KX0pKX19KSgpLmNhdGNoKChlPT57bCgiRmFpbGVkIHRvIHN0YXJ0IGRlYnVnZ2VyIixlKX0pKSxzZXRJbnRlcnZhbCgoKCk9Pnt9KSwxZTQpOw==";
 function log(...args) {
   logger.log("[LocalVariables]", ...args);
 }
@@ -67043,7 +67119,7 @@ var import_instrumentation_express = __toESM(require_src9(), 1);
 
 // node_modules/@sentry/node/build/esm/integrations/tracing/express-v5/instrumentation.js
 init_esm();
-var import_core23 = __toESM(require_src(), 1);
+var import_core22 = __toESM(require_src(), 1);
 var import_instrumentation5 = __toESM(require_src4(), 1);
 init_esm4();
 
@@ -67266,8 +67342,8 @@ var ExpressInstrumentationV5 = class extends import_instrumentation5.Instrumenta
         };
         const metadata = getLayerMetadata(route, layer, layerPath);
         const type = metadata.attributes[AttributeNames.EXPRESS_TYPE];
-        const rpcMetadata = (0, import_core23.getRPCMetadata)(context.active());
-        if (rpcMetadata?.type === import_core23.RPCType.HTTP) {
+        const rpcMetadata = (0, import_core22.getRPCMetadata)(context.active());
+        if (rpcMetadata?.type === import_core22.RPCType.HTTP) {
           rpcMetadata.route = route || "/";
         }
         if (isLayerIgnored(metadata.name, type, instrumentation.getConfig())) {
@@ -67482,9 +67558,10 @@ var import_instrumentation_graphql = __toESM(require_src11(), 1);
 var INTEGRATION_NAME16 = "Graphql";
 var instrumentGraphql = generateInstrumentOnce(
   INTEGRATION_NAME16,
-  (_options = {}) => {
+  import_instrumentation_graphql.GraphQLInstrumentation,
+  (_options) => {
     const options = getOptionsWithDefaults(_options);
-    return new import_instrumentation_graphql.GraphQLInstrumentation({
+    return {
       ...options,
       responseHook(span) {
         addOriginToSpan(span, "auto.graphql.otel.graphql");
@@ -67504,9 +67581,17 @@ var instrumentGraphql = generateInstrumentOnce(
           } else {
             rootSpan.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_GRAPHQL_OPERATION, newOperation);
           }
+          if (!spanToJSON(rootSpan).data["original-description"]) {
+            rootSpan.setAttribute("original-description", spanToJSON(rootSpan).description);
+          }
+          rootSpan.updateName(
+            `${spanToJSON(rootSpan).data["original-description"]} (${getGraphqlOperationNamesFromAttribute2(
+              existingOperations
+            )})`
+          );
         }
       }
-    });
+    };
   }
 );
 var _graphqlIntegration = (options = {}) => {
@@ -67525,6 +67610,17 @@ function getOptionsWithDefaults(options) {
     useOperationNameForRootSpan: true,
     ...options
   };
+}
+function getGraphqlOperationNamesFromAttribute2(attr) {
+  if (Array.isArray(attr)) {
+    const sorted = attr.slice().sort();
+    if (sorted.length <= 5) {
+      return sorted.join(", ");
+    } else {
+      return `${sorted.slice(0, 5).join(", ")}, +${sorted.length - 5}`;
+    }
+  }
+  return `${attr}`;
 }
 
 // node_modules/@sentry/node/build/esm/integrations/tracing/kafka.js
@@ -68129,7 +68225,7 @@ var SentryVercelAiInstrumentation = class _SentryVercelAiInstrumentation extends
     this._isPatched = true;
     this._callbacks.forEach((callback) => callback());
     this._callbacks = [];
-    function generatePatch(name) {
+    function generatePatch(originalMethod) {
       return (...args) => {
         const existingExperimentalTelemetry = args[0].experimental_telemetry || {};
         const isEnabled2 = existingExperimentalTelemetry.isEnabled;
@@ -68141,14 +68237,21 @@ var SentryVercelAiInstrumentation = class _SentryVercelAiInstrumentation extends
             ...existingExperimentalTelemetry
           };
         }
-        return moduleExports[name].apply(this, args);
+        return originalMethod.apply(this, args);
       };
     }
-    const patchedModuleExports = INSTRUMENTED_METHODS.reduce((acc, curr) => {
-      acc[curr] = generatePatch(curr);
-      return acc;
-    }, {});
-    return { ...moduleExports, ...patchedModuleExports };
+    if (Object.prototype.toString.call(moduleExports) === "[object Module]") {
+      for (const method of INSTRUMENTED_METHODS) {
+        moduleExports[method] = generatePatch(moduleExports[method]);
+      }
+      return moduleExports;
+    } else {
+      const patchedModuleExports = INSTRUMENTED_METHODS.reduce((acc, curr) => {
+        acc[curr] = generatePatch(moduleExports[curr]);
+        return acc;
+      }, {});
+      return { ...moduleExports, ...patchedModuleExports };
+    }
   }
 };
 
@@ -68972,12 +69075,12 @@ var NodeClient = class extends ServerRuntimeClient {
 };
 
 // node_modules/@sentry/node/build/esm/sdk/initOtel.js
-var import_module2 = __toESM(require("module"), 1);
 init_esm();
 var import_resources = __toESM(require_src7(), 1);
 var import_sdk_trace_base2 = __toESM(require_src8(), 1);
 init_esm4();
 var import_import_in_the_middle = __toESM(require_import_in_the_middle(), 1);
+var import_module2 = __toESM(require("module"), 1);
 var import_meta = {};
 var MAX_MAX_SPAN_WAIT_DURATION = 1e6;
 function initOpenTelemetry(client, options = {}) {
@@ -68989,7 +69092,7 @@ function initOpenTelemetry(client, options = {}) {
 }
 function maybeInitializeEsmLoader() {
   const [nodeMajor = 0, nodeMinor = 0] = process.versions.node.split(".").map(Number);
-  if (nodeMajor >= 22 || nodeMajor === 20 && nodeMinor >= 6 || nodeMajor === 18 && nodeMinor >= 19) {
+  if (nodeMajor >= 21 || nodeMajor === 20 && nodeMinor >= 6 || nodeMajor === 18 && nodeMinor >= 19) {
     if (!GLOBAL_OBJ._sentryEsmLoaderHookRegistered) {
       try {
         const { addHookMessagePort } = (0, import_import_in_the_middle.createAddHookMessageChannel)();
@@ -69370,37 +69473,37 @@ var StubbedToolCache = class {
 };
 
 // node_modules/zod/lib/index.mjs
-var util2;
-(function(util3) {
-  util3.assertEqual = (val) => val;
+var util;
+(function(util2) {
+  util2.assertEqual = (val) => val;
   function assertIs(_arg) {
   }
-  util3.assertIs = assertIs;
+  util2.assertIs = assertIs;
   function assertNever(_x) {
     throw new Error();
   }
-  util3.assertNever = assertNever;
-  util3.arrayToEnum = (items) => {
+  util2.assertNever = assertNever;
+  util2.arrayToEnum = (items) => {
     const obj = {};
     for (const item of items) {
       obj[item] = item;
     }
     return obj;
   };
-  util3.getValidEnumValues = (obj) => {
-    const validKeys = util3.objectKeys(obj).filter((k) => typeof obj[obj[k]] !== "number");
+  util2.getValidEnumValues = (obj) => {
+    const validKeys = util2.objectKeys(obj).filter((k) => typeof obj[obj[k]] !== "number");
     const filtered = {};
     for (const k of validKeys) {
       filtered[k] = obj[k];
     }
-    return util3.objectValues(filtered);
+    return util2.objectValues(filtered);
   };
-  util3.objectValues = (obj) => {
-    return util3.objectKeys(obj).map(function(e) {
+  util2.objectValues = (obj) => {
+    return util2.objectKeys(obj).map(function(e) {
       return obj[e];
     });
   };
-  util3.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object) => {
+  util2.objectKeys = typeof Object.keys === "function" ? (obj) => Object.keys(obj) : (object) => {
     const keys = [];
     for (const key in object) {
       if (Object.prototype.hasOwnProperty.call(object, key)) {
@@ -69409,25 +69512,25 @@ var util2;
     }
     return keys;
   };
-  util3.find = (arr, checker) => {
+  util2.find = (arr, checker) => {
     for (const item of arr) {
       if (checker(item))
         return item;
     }
     return void 0;
   };
-  util3.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && isFinite(val) && Math.floor(val) === val;
+  util2.isInteger = typeof Number.isInteger === "function" ? (val) => Number.isInteger(val) : (val) => typeof val === "number" && isFinite(val) && Math.floor(val) === val;
   function joinValues(array, separator = " | ") {
     return array.map((val) => typeof val === "string" ? `'${val}'` : val).join(separator);
   }
-  util3.joinValues = joinValues;
-  util3.jsonStringifyReplacer = (_, value) => {
+  util2.joinValues = joinValues;
+  util2.jsonStringifyReplacer = (_, value) => {
     if (typeof value === "bigint") {
       return value.toString();
     }
     return value;
   };
-})(util2 || (util2 = {}));
+})(util || (util = {}));
 var objectUtil;
 (function(objectUtil2) {
   objectUtil2.mergeShapes = (first, second) => {
@@ -69438,7 +69541,7 @@ var objectUtil;
     };
   };
 })(objectUtil || (objectUtil = {}));
-var ZodParsedType = util2.arrayToEnum([
+var ZodParsedType = util.arrayToEnum([
   "string",
   "nan",
   "number",
@@ -69501,7 +69604,7 @@ var getParsedType = (data) => {
       return ZodParsedType.unknown;
   }
 };
-var ZodIssueCode = util2.arrayToEnum([
+var ZodIssueCode = util.arrayToEnum([
   "invalid_type",
   "invalid_literal",
   "custom",
@@ -69590,7 +69693,7 @@ var ZodError = class _ZodError extends Error {
     return this.message;
   }
   get message() {
-    return JSON.stringify(this.issues, util2.jsonStringifyReplacer, 2);
+    return JSON.stringify(this.issues, util.jsonStringifyReplacer, 2);
   }
   get isEmpty() {
     return this.issues.length === 0;
@@ -69627,19 +69730,19 @@ var errorMap = (issue, _ctx) => {
       }
       break;
     case ZodIssueCode.invalid_literal:
-      message = `Invalid literal value, expected ${JSON.stringify(issue.expected, util2.jsonStringifyReplacer)}`;
+      message = `Invalid literal value, expected ${JSON.stringify(issue.expected, util.jsonStringifyReplacer)}`;
       break;
     case ZodIssueCode.unrecognized_keys:
-      message = `Unrecognized key(s) in object: ${util2.joinValues(issue.keys, ", ")}`;
+      message = `Unrecognized key(s) in object: ${util.joinValues(issue.keys, ", ")}`;
       break;
     case ZodIssueCode.invalid_union:
       message = `Invalid input`;
       break;
     case ZodIssueCode.invalid_union_discriminator:
-      message = `Invalid discriminator value. Expected ${util2.joinValues(issue.options)}`;
+      message = `Invalid discriminator value. Expected ${util.joinValues(issue.options)}`;
       break;
     case ZodIssueCode.invalid_enum_value:
-      message = `Invalid enum value. Expected ${util2.joinValues(issue.options)}, received '${issue.received}'`;
+      message = `Invalid enum value. Expected ${util.joinValues(issue.options)}, received '${issue.received}'`;
       break;
     case ZodIssueCode.invalid_arguments:
       message = `Invalid function arguments`;
@@ -69662,7 +69765,7 @@ var errorMap = (issue, _ctx) => {
         } else if ("endsWith" in issue.validation) {
           message = `Invalid input: must end with "${issue.validation.endsWith}"`;
         } else {
-          util2.assertNever(issue.validation);
+          util.assertNever(issue.validation);
         }
       } else if (issue.validation !== "regex") {
         message = `Invalid ${issue.validation}`;
@@ -69710,7 +69813,7 @@ var errorMap = (issue, _ctx) => {
       break;
     default:
       message = _ctx.defaultError;
-      util2.assertNever(issue);
+      util.assertNever(issue);
   }
   return { message };
 };
@@ -70566,7 +70669,7 @@ var ZodString = class _ZodString extends ZodType {
           status.dirty();
         }
       } else {
-        util2.assertNever(check);
+        util.assertNever(check);
       }
     }
     return { status: status.value, value: input.data };
@@ -70850,7 +70953,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
     const status = new ParseStatus();
     for (const check of this._def.checks) {
       if (check.kind === "int") {
-        if (!util2.isInteger(input.data)) {
+        if (!util.isInteger(input.data)) {
           ctx = this._getOrReturnCtx(input, ctx);
           addIssueToContext(ctx, {
             code: ZodIssueCode.invalid_type,
@@ -70908,7 +71011,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
           status.dirty();
         }
       } else {
-        util2.assertNever(check);
+        util.assertNever(check);
       }
     }
     return { status: status.value, value: input.data };
@@ -71030,7 +71133,7 @@ var ZodNumber = class _ZodNumber extends ZodType {
     return max;
   }
   get isInt() {
-    return !!this._def.checks.find((ch) => ch.kind === "int" || ch.kind === "multipleOf" && util2.isInteger(ch.value));
+    return !!this._def.checks.find((ch) => ch.kind === "int" || ch.kind === "multipleOf" && util.isInteger(ch.value));
   }
   get isFinite() {
     let max = null, min = null;
@@ -71114,7 +71217,7 @@ var ZodBigInt = class _ZodBigInt extends ZodType {
           status.dirty();
         }
       } else {
-        util2.assertNever(check);
+        util.assertNever(check);
       }
     }
     return { status: status.value, value: input.data };
@@ -71306,7 +71409,7 @@ var ZodDate = class _ZodDate extends ZodType {
           status.dirty();
         }
       } else {
-        util2.assertNever(check);
+        util.assertNever(check);
       }
     }
     return {
@@ -71632,7 +71735,7 @@ var ZodObject = class _ZodObject extends ZodType {
     if (this._cached !== null)
       return this._cached;
     const shape = this._def.shape();
-    const keys = util2.objectKeys(shape);
+    const keys = util.objectKeys(shape);
     return this._cached = { shape, keys };
   }
   _parse(input) {
@@ -71866,7 +71969,7 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   pick(mask) {
     const shape = {};
-    util2.objectKeys(mask).forEach((key) => {
+    util.objectKeys(mask).forEach((key) => {
       if (mask[key] && this.shape[key]) {
         shape[key] = this.shape[key];
       }
@@ -71878,7 +71981,7 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   omit(mask) {
     const shape = {};
-    util2.objectKeys(this.shape).forEach((key) => {
+    util.objectKeys(this.shape).forEach((key) => {
       if (!mask[key]) {
         shape[key] = this.shape[key];
       }
@@ -71896,7 +71999,7 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   partial(mask) {
     const newShape = {};
-    util2.objectKeys(this.shape).forEach((key) => {
+    util.objectKeys(this.shape).forEach((key) => {
       const fieldSchema = this.shape[key];
       if (mask && !mask[key]) {
         newShape[key] = fieldSchema;
@@ -71911,7 +72014,7 @@ var ZodObject = class _ZodObject extends ZodType {
   }
   required(mask) {
     const newShape = {};
-    util2.objectKeys(this.shape).forEach((key) => {
+    util.objectKeys(this.shape).forEach((key) => {
       if (mask && !mask[key]) {
         newShape[key] = this.shape[key];
       } else {
@@ -71929,7 +72032,7 @@ var ZodObject = class _ZodObject extends ZodType {
     });
   }
   keyof() {
-    return createZodEnum(util2.objectKeys(this.shape));
+    return createZodEnum(util.objectKeys(this.shape));
   }
 };
 ZodObject.create = (shape, params) => {
@@ -72060,7 +72163,7 @@ var getDiscriminator = (type) => {
   } else if (type instanceof ZodEnum) {
     return type.options;
   } else if (type instanceof ZodNativeEnum) {
-    return util2.objectValues(type.enum);
+    return util.objectValues(type.enum);
   } else if (type instanceof ZodDefault) {
     return getDiscriminator(type._def.innerType);
   } else if (type instanceof ZodUndefined) {
@@ -72163,8 +72266,8 @@ function mergeValues(a, b) {
   if (a === b) {
     return { valid: true, data: a };
   } else if (aType === ZodParsedType.object && bType === ZodParsedType.object) {
-    const bKeys = util2.objectKeys(b);
-    const sharedKeys = util2.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
+    const bKeys = util.objectKeys(b);
+    const sharedKeys = util.objectKeys(a).filter((key) => bKeys.indexOf(key) !== -1);
     const newObj = { ...a, ...b };
     for (const key of sharedKeys) {
       const sharedValue = mergeValues(a[key], b[key]);
@@ -72692,7 +72795,7 @@ var ZodEnum = class _ZodEnum extends ZodType {
       const ctx = this._getOrReturnCtx(input);
       const expectedValues = this._def.values;
       addIssueToContext(ctx, {
-        expected: util2.joinValues(expectedValues),
+        expected: util.joinValues(expectedValues),
         received: ctx.parsedType,
         code: ZodIssueCode.invalid_type
       });
@@ -72758,22 +72861,22 @@ var ZodNativeEnum = class extends ZodType {
     _ZodNativeEnum_cache.set(this, void 0);
   }
   _parse(input) {
-    const nativeEnumValues = util2.getValidEnumValues(this._def.values);
+    const nativeEnumValues = util.getValidEnumValues(this._def.values);
     const ctx = this._getOrReturnCtx(input);
     if (ctx.parsedType !== ZodParsedType.string && ctx.parsedType !== ZodParsedType.number) {
-      const expectedValues = util2.objectValues(nativeEnumValues);
+      const expectedValues = util.objectValues(nativeEnumValues);
       addIssueToContext(ctx, {
-        expected: util2.joinValues(expectedValues),
+        expected: util.joinValues(expectedValues),
         received: ctx.parsedType,
         code: ZodIssueCode.invalid_type
       });
       return INVALID;
     }
     if (!__classPrivateFieldGet(this, _ZodNativeEnum_cache, "f")) {
-      __classPrivateFieldSet(this, _ZodNativeEnum_cache, new Set(util2.getValidEnumValues(this._def.values)), "f");
+      __classPrivateFieldSet(this, _ZodNativeEnum_cache, new Set(util.getValidEnumValues(this._def.values)), "f");
     }
     if (!__classPrivateFieldGet(this, _ZodNativeEnum_cache, "f").has(input.data)) {
-      const expectedValues = util2.objectValues(nativeEnumValues);
+      const expectedValues = util.objectValues(nativeEnumValues);
       addIssueToContext(ctx, {
         received: ctx.data,
         code: ZodIssueCode.invalid_enum_value,
@@ -72942,7 +73045,7 @@ var ZodEffects = class extends ZodType {
         });
       }
     }
-    util2.assertNever(effect);
+    util.assertNever(effect);
   }
 };
 ZodEffects.create = (schema, effect, params) => {
@@ -73329,7 +73432,7 @@ var z = /* @__PURE__ */ Object.freeze({
   isValid,
   isAsync,
   get util() {
-    return util2;
+    return util;
   },
   get objectUtil() {
     return objectUtil;
