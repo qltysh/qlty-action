@@ -1,5 +1,4 @@
 import { Settings } from "src/settings";
-import z from "zod";
 
 describe("Settings", () => {
   test("parses values", () => {
