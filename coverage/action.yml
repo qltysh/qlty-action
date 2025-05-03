@@ -42,6 +42,23 @@ inputs:
     required: false
     default: ""
 
+  format:
+    description: "The format of the coverage data"
+    required: false
+    default: ""
+    type: choice
+    # IMPORTANT: These options need to kept in sync with settings.ts
+    # which in turn needs to be kept in sync with the Qlty CLI
+    options:
+      - ""
+      - "clover"
+      - "cobertura"
+      - "coverprofile"
+      - "jacoco"
+      - "lcov"
+      - "qlty"
+      - "simplecov"
+
   verbose:
     description: "Verbose output for debugging"
     required: false

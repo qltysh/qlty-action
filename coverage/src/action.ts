@@ -173,6 +173,10 @@ export class CoverageAction {
       uploadArgs.push("--strip-prefix", this._settings.input.stripPrefix);
     }
 
+    if (this._settings.input.format) {
+      uploadArgs.push("--format", this._settings.input.format);
+    }
+
     if (this._settings.input.tag) {
       uploadArgs.push("--tag", this._settings.input.tag);
     }

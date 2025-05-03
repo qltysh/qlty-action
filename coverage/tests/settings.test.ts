@@ -14,6 +14,7 @@ describe("Settings", () => {
       oidc: true,
       verbose: true,
       "cli-version": "1.2.3",
+      format: "simplecov",
     });
 
     expect(settings.input).toMatchObject({
@@ -28,6 +29,7 @@ describe("Settings", () => {
       oidc: true,
       verbose: true,
       cliVersion: "1.2.3",
+      format: "simplecov",
     });
   });
 
@@ -48,6 +50,34 @@ describe("Settings", () => {
       addPrefix: undefined,
       stripPrefix: undefined,
       totalPartsCount: undefined,
+      format: undefined,
+    });
+  });
+
+  describe("format", () => {
+    test("allows missing", () => {
+      const settings = Settings.createNull({
+        oidc: true,
+        format: "",
+      });
+      expect(settings.input.format).toBeUndefined();
+    });
+
+    test("allows known values", () => {
+      const settings = Settings.createNull({
+        oidc: true,
+        format: "simplecov",
+      });
+      expect(settings.input.format).toEqual("simplecov");
+    });
+
+    test("rejects unknown values", () => {
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          format: "unknown",
+        });
+      }).toThrow();
     });
   });
 

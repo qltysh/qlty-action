@@ -25,17 +25,34 @@ interface ActionInputKeys {
   "coverage-token": string;
   verbose: boolean;
   "cli-version": string;
+  format: string;
 }
 
+const optionalNormalizedString = z
+  .string()
+  .transform((val) => (val === "" ? undefined : val));
+
+// NOTE: These formats need to be kept in sync with action.yml
+// which in turn needs to be kept in sync with the CLI
+const formatEnum = z.enum([
+  "clover",
+  "cobertura",
+  "coverprofile",
+  "jacoco",
+  "lcov",
+  "qlty",
+  "simplecov",
+]);
+
 const settingsParser = z.object({
-  token: z.string().transform((val) => (val === "" ? undefined : val)),
-  coverageToken: z.string().transform((val) => (val === "" ? undefined : val)),
+  token: optionalNormalizedString,
+  coverageToken: optionalNormalizedString,
   files: z.string().trim(),
-  addPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
-  stripPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
+  addPrefix: optionalNormalizedString,
+  stripPrefix: optionalNormalizedString,
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
-  tag: z.string().transform((val) => (val === "" ? undefined : val)),
+  tag: optionalNormalizedString,
   totalPartsCount: z.string().transform((val) => {
     if (val === "") return undefined;
     const num = Number(val);
@@ -43,7 +60,11 @@ const settingsParser = z.object({
   }),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: z.string().transform((val) => (val === "" ? undefined : val)),
+  cliVersion: optionalNormalizedString,
+  format: z
+    .union([formatEnum, z.literal("")])
+    .transform((val) => (val === "" ? undefined : val))
+    .optional(),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -74,6 +95,7 @@ export class Settings {
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
+        format: input.getInput("format"),
       }),
       input,
       fs,
@@ -221,6 +243,7 @@ export class StubbedInputProvider implements InputProvider {
       token: data.token || "",
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
+      format: data["format"] || "",
     };
   }
 
