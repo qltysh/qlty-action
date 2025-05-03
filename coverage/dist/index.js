@@ -73432,15 +73432,16 @@ var z = /* @__PURE__ */ Object.freeze({
 // src/settings.ts
 var core2 = __toESM(require_core4());
 var glob = __toESM(require_glob());
+var optionalNormalizedString = z.string().transform((val) => val === "" ? void 0 : val);
 var settingsParser = z.object({
-  token: z.string().transform((val) => val === "" ? void 0 : val),
-  coverageToken: z.string().transform((val) => val === "" ? void 0 : val),
+  token: optionalNormalizedString,
+  coverageToken: optionalNormalizedString,
   files: z.string().trim(),
-  addPrefix: z.string().transform((val) => val === "" ? void 0 : val),
-  stripPrefix: z.string().transform((val) => val === "" ? void 0 : val),
+  addPrefix: optionalNormalizedString,
+  stripPrefix: optionalNormalizedString,
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
-  tag: z.string().transform((val) => val === "" ? void 0 : val),
+  tag: optionalNormalizedString,
   totalPartsCount: z.string().transform((val) => {
     if (val === "") return void 0;
     const num = Number(val);
@@ -73448,7 +73449,8 @@ var settingsParser = z.object({
   }),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: z.string().transform((val) => val === "" ? void 0 : val)
+  cliVersion: optionalNormalizedString,
+  format: optionalNormalizedString
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73475,7 +73477,8 @@ var Settings = class _Settings {
         coverageToken: input.getInput("coverage-token"),
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
-        cliVersion: input.getInput("cli-version")
+        cliVersion: input.getInput("cli-version"),
+        format: input.getInput("format")
       }),
       input,
       fs
@@ -73581,7 +73584,8 @@ var StubbedInputProvider = class {
       "coverage-token": data["coverage-token"] || "",
       token: data.token || "",
       verbose: data.verbose || false,
-      "cli-version": data["cli-version"] || ""
+      "cli-version": data["cli-version"] || "",
+      format: data["format"] || ""
     };
   }
   getInput(name, _options) {
@@ -73748,6 +73752,9 @@ var CoverageAction = class _CoverageAction {
         "--transform-strip-prefix",
         this._settings.input.stripPrefix
       );
+    }
+    if (this._settings.input.format) {
+      uploadArgs.push("--format", this._settings.input.format);
     }
     if (this._settings.input.tag) {
       uploadArgs.push("--tag", this._settings.input.tag);

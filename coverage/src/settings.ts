@@ -25,17 +25,22 @@ interface ActionInputKeys {
   "coverage-token": string;
   verbose: boolean;
   "cli-version": string;
+  format: string;
 }
 
+const optionalNormalizedString = z
+  .string()
+  .transform((val) => (val === "" ? undefined : val));
+
 const settingsParser = z.object({
-  token: z.string().transform((val) => (val === "" ? undefined : val)),
-  coverageToken: z.string().transform((val) => (val === "" ? undefined : val)),
+  token: optionalNormalizedString,
+  coverageToken: optionalNormalizedString,
   files: z.string().trim(),
-  addPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
-  stripPrefix: z.string().transform((val) => (val === "" ? undefined : val)),
+  addPrefix: optionalNormalizedString,
+  stripPrefix: optionalNormalizedString,
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
-  tag: z.string().transform((val) => (val === "" ? undefined : val)),
+  tag: optionalNormalizedString,
   totalPartsCount: z.string().transform((val) => {
     if (val === "") return undefined;
     const num = Number(val);
@@ -43,7 +48,8 @@ const settingsParser = z.object({
   }),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: z.string().transform((val) => (val === "" ? undefined : val)),
+  cliVersion: optionalNormalizedString,
+  format: optionalNormalizedString,
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -58,7 +64,7 @@ export class Settings {
 
   static create(
     input: InputProvider = core,
-    fs = FileSystem.create(),
+    fs = FileSystem.create()
   ): Settings {
     return new Settings(
       settingsParser.parse({
@@ -74,15 +80,16 @@ export class Settings {
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
+        format: input.getInput("format"),
       }),
       input,
-      fs,
+      fs
     );
   }
 
   static createNull(
     input: Partial<ActionInputKeys> = {},
-    fs = FileSystem.createNull(),
+    fs = FileSystem.createNull()
   ): Settings {
     return Settings.create(new StubbedInputProvider(input), fs);
   }
@@ -103,13 +110,13 @@ export class Settings {
 
     if (this._data.oidc && coverageToken) {
       errors.push(
-        "Both 'oidc' and 'token' cannot be provided at the same time.",
+        "Both 'oidc' and 'token' cannot be provided at the same time."
       );
     }
 
     if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
       errors.push(
-        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
+        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
       );
     }
 
@@ -221,6 +228,7 @@ export class StubbedInputProvider implements InputProvider {
       token: data.token || "",
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
+      format: data["format"] || "",
     };
   }
 
@@ -230,7 +238,7 @@ export class StubbedInputProvider implements InputProvider {
 
   getBooleanInput(
     name: keyof ActionInputKeys,
-    _options?: GetInputOptions,
+    _options?: GetInputOptions
   ): boolean {
     return this._data[name] === true;
   }

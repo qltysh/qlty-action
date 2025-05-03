@@ -14,6 +14,7 @@ describe("Settings", () => {
       oidc: true,
       verbose: true,
       "cli-version": "1.2.3",
+      format: "simplecov",
     });
 
     expect(settings.input).toMatchObject({
@@ -28,6 +29,7 @@ describe("Settings", () => {
       oidc: true,
       verbose: true,
       cliVersion: "1.2.3",
+      format: "simplecov",
     });
   });
 
@@ -57,14 +59,14 @@ describe("Settings", () => {
         Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           oidc: false,
-        }).validate(),
+        }).validate()
       ).toEqual([]);
 
       expect(
         Settings.createNull({
           token: "qltcp_1234567890",
           oidc: false,
-        }).validate(),
+        }).validate()
       ).toEqual([]);
 
       expect(
@@ -72,7 +74,7 @@ describe("Settings", () => {
           "coverage-token": "",
           token: "",
           oidc: true,
-        }).validate(),
+        }).validate()
       ).toEqual([]);
     });
 
@@ -102,7 +104,7 @@ describe("Settings", () => {
       expect(
         Settings.createNull({
           token: "wrong",
-        }).validate(),
+        }).validate()
       ).toEqual([
         "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
       ]);
@@ -110,7 +112,7 @@ describe("Settings", () => {
       expect(
         Settings.createNull({
           "coverage-token": "wrong",
-        }).validate(),
+        }).validate()
       ).toEqual([
         "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
       ]);
@@ -118,7 +120,7 @@ describe("Settings", () => {
       expect(
         Settings.createNull({
           "coverage-token": "qltcp_1234567890",
-        }).validate(),
+        }).validate()
       ).toEqual([]);
     });
   });
@@ -173,7 +175,7 @@ describe("Settings", () => {
       });
 
       expect(await settings.getToken()).toEqual(
-        "oidc-token:audience=https://qlty.sh",
+        "oidc-token:audience=https://qlty.sh"
       );
     });
 
@@ -185,7 +187,7 @@ describe("Settings", () => {
       });
 
       await expect(settings.getToken()).rejects.toThrow(
-        "'token' is required when 'oidc' is false.",
+        "'token' is required when 'oidc' is false."
       );
     });
   });

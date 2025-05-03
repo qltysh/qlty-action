@@ -42,6 +42,21 @@ inputs:
     required: false
     default: ""
 
+  format:
+    description: "The format of the coverage data"
+    required: false
+    default: ""
+    type: choice
+    options:
+      - ""
+      - "clover"
+      - "cobertura"
+      - "coverprofile"
+      - "jacoco"
+      - "lcov"
+      - "simplecov"
+      - "qlty"
+
   verbose:
     description: "Verbose output for debugging"
     required: false
