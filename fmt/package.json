@@ -1,21 +1,24 @@
 {
   "name": "qlty-action-fmt",
-  "description": "GitHub Actions TypeScript template",
+  "description": "Resuable GitHub Action to auto-format code with Qlty CLI",
   "version": "0.0.0",
-  "author": "",
-  "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "author": "Qlty Software Inc.",
+  "homepage": "https://github.com/qltysh/qlty-action/tree/main/fmt",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "https://github.com/qltysh/qlty-action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/qltysh/qlty-action/issues"
   },
   "keywords": [
-    "actions",
-    "node",
-    "setup"
+    "fmt",
+    "format",
+    "formatter",
+    "auto-formatter",
+    "qlty",
+    "quality",
+    "codeclimate"
   ],
   "exports": {
     ".": "./dist/index.js"
