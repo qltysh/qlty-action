@@ -122,7 +122,13 @@ describe("CoverageAction", () => {
       "--skip-missing-files",
       "info.lcov",
     ]);
-    expect(command?.env["QLTY_COVERAGE_TOKEN"]).toBe("qltcp_DEADBEEF10");
+    expect(command?.env).toMatchObject({
+      QLTY_COVERAGE_TOKEN: "qltcp_DEADBEEF10",
+      QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+    });
+    expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
+      /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+    );
   });
 
   test("uses the payload for the PR head SHA and ref", async () => {
