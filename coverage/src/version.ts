@@ -6,6 +6,8 @@ export default class Version {
     fileSystem?: SyncFileSystem,
     logger: Logger = console,
   ): string | null {
+    // This is coded defensively if there is an error reading the version
+    // because it is non-critical debugging information.
     try {
       const fs = fileSystem ?? nodeFs;
       const packageJsonPath = path.join(__dirname, "../package.json");
