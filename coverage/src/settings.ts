@@ -32,6 +32,18 @@ const optionalNormalizedString = z
   .string()
   .transform((val) => (val === "" ? undefined : val));
 
+// NOTE: These formats need to be kept in sync with action.yml
+// which in turn needs to be kept in sync with the CLI
+const formatEnum = z.enum([
+  "clover",
+  "cobertura",
+  "coverprofile",
+  "jacoco",
+  "lcov",
+  "qlty",
+  "simplecov",
+]);
+
 const settingsParser = z.object({
   token: optionalNormalizedString,
   coverageToken: optionalNormalizedString,
@@ -49,7 +61,10 @@ const settingsParser = z.object({
   oidc: z.boolean(),
   verbose: z.boolean(),
   cliVersion: optionalNormalizedString,
-  format: optionalNormalizedString,
+  format: z
+    .union([formatEnum, z.literal("")])
+    .transform((val) => (val === "" ? undefined : val))
+    .optional(),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -64,7 +79,7 @@ export class Settings {
 
   static create(
     input: InputProvider = core,
-    fs = FileSystem.create()
+    fs = FileSystem.create(),
   ): Settings {
     return new Settings(
       settingsParser.parse({
@@ -83,13 +98,13 @@ export class Settings {
         format: input.getInput("format"),
       }),
       input,
-      fs
+      fs,
     );
   }
 
   static createNull(
     input: Partial<ActionInputKeys> = {},
-    fs = FileSystem.createNull()
+    fs = FileSystem.createNull(),
   ): Settings {
     return Settings.create(new StubbedInputProvider(input), fs);
   }
@@ -110,13 +125,13 @@ export class Settings {
 
     if (this._data.oidc && coverageToken) {
       errors.push(
-        "Both 'oidc' and 'token' cannot be provided at the same time."
+        "Both 'oidc' and 'token' cannot be provided at the same time.",
       );
     }
 
     if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
       errors.push(
-        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
+        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
       );
     }
 
@@ -238,7 +253,7 @@ export class StubbedInputProvider implements InputProvider {
 
   getBooleanInput(
     name: keyof ActionInputKeys,
-    _options?: GetInputOptions
+    _options?: GetInputOptions,
   ): boolean {
     return this._data[name] === true;
   }

@@ -73433,6 +73433,15 @@ var z = /* @__PURE__ */ Object.freeze({
 var core2 = __toESM(require_core4());
 var glob = __toESM(require_glob());
 var optionalNormalizedString = z.string().transform((val) => val === "" ? void 0 : val);
+var formatEnum = z.enum([
+  "clover",
+  "cobertura",
+  "coverprofile",
+  "jacoco",
+  "lcov",
+  "qlty",
+  "simplecov"
+]);
 var settingsParser = z.object({
   token: optionalNormalizedString,
   coverageToken: optionalNormalizedString,
@@ -73450,7 +73459,7 @@ var settingsParser = z.object({
   oidc: z.boolean(),
   verbose: z.boolean(),
   cliVersion: optionalNormalizedString,
-  format: optionalNormalizedString
+  format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional()
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;

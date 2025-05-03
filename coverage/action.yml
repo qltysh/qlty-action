@@ -47,6 +47,8 @@ inputs:
     required: false
     default: ""
     type: choice
+    # IMPORTANT: These options need to kept in sync with settings.ts
+    # which in turn needs to be kept in sync with the Qlty CLI
     options:
       - ""
       - "clover"
@@ -54,8 +56,8 @@ inputs:
       - "coverprofile"
       - "jacoco"
       - "lcov"
-      - "simplecov"
       - "qlty"
+      - "simplecov"
 
   verbose:
     description: "Verbose output for debugging"
