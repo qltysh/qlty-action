@@ -73608,22 +73608,32 @@ var Settings = class _Settings {
   validate() {
     const errors = [];
     const coverageToken = this.getCoverageToken();
-    if (!this._data.oidc && !coverageToken) {
-      errors.push("Either 'oidc' or 'token' must be provided.");
-    }
-    if (this._data.oidc && coverageToken) {
-      errors.push(
-        "Both 'oidc' and 'token' cannot be provided at the same time."
-      );
-    }
-    if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
-      errors.push(
-        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
-      );
+    if (!this._data.dryRun) {
+      if (!this._data.oidc && !coverageToken) {
+        errors.push("Either 'oidc' or 'token' must be provided.");
+      }
+      if (this._data.oidc && coverageToken) {
+        errors.push(
+          "Both 'oidc' and 'token' cannot be provided at the same time."
+        );
+      }
+      if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
+        errors.push(
+          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
+        );
+      }
     }
     return errors;
   }
   async getToken() {
+    if (this._data.dryRun) {
+      if (this._data.oidc) {
+        return await this._input.getIDToken(OIDC_AUDIENCE);
+      } else {
+        const coverageToken = this.getCoverageToken();
+        return coverageToken || null;
+      }
+    }
     if (this._data.oidc) {
       return await this._input.getIDToken(OIDC_AUDIENCE);
     } else {
@@ -73832,15 +73842,19 @@ var CoverageAction = class _CoverageAction {
     }
     uploadArgs = uploadArgs.concat(files);
     const token = await this._settings.getToken();
-    this._output.setSecret(token);
+    if (token) {
+      this._output.setSecret(token);
+    }
     let qlytOutput = "";
     try {
       const env = {
         ...process.env,
-        QLTY_COVERAGE_TOKEN: token,
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || ""
       };
+      if (token) {
+        env["QLTY_COVERAGE_TOKEN"] = token;
+      }
       this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
       this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
       await this._executor.exec("qlty", uploadArgs, {

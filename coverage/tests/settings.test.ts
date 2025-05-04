@@ -162,6 +162,36 @@ describe("Settings", () => {
         }).validate(),
       ).toEqual([]);
     });
+
+    test("allows missing token and OIDC when dry-run is true", () => {
+      const settings = Settings.createNull({
+        token: "",
+        oidc: false,
+        "dry-run": true,
+      });
+
+      expect(settings.validate()).toEqual([]);
+    });
+
+    test("allows invalid token format when dry-run is true", () => {
+      const settings = Settings.createNull({
+        token: "invalid-token",
+        oidc: false,
+        "dry-run": true,
+      });
+
+      expect(settings.validate()).toEqual([]);
+    });
+
+    test("allows both token and OIDC when dry-run is true", () => {
+      const settings = Settings.createNull({
+        token: "qltcp_1234567890",
+        oidc: true,
+        "dry-run": true,
+      });
+
+      expect(settings.validate()).toEqual([]);
+    });
   });
 
   describe("getFiles", () => {
@@ -227,6 +257,40 @@ describe("Settings", () => {
 
       await expect(settings.getToken()).rejects.toThrow(
         "'token' is required when 'oidc' is false.",
+      );
+    });
+
+    test("returns null when in dry-run mode with no token", async () => {
+      const settings = Settings.createNull({
+        "coverage-token": "",
+        token: "",
+        oidc: false,
+        "dry-run": true,
+      });
+
+      expect(await settings.getToken()).toBeNull();
+    });
+
+    test("returns the token when in dry-run mode with a token", async () => {
+      const settings = Settings.createNull({
+        token: "qltcp_1234567890",
+        oidc: false,
+        "dry-run": true,
+      });
+
+      expect(await settings.getToken()).toEqual("qltcp_1234567890");
+    });
+
+    test("returns an ID token when in dry-run mode with oidc enabled", async () => {
+      const settings = Settings.createNull({
+        "coverage-token": "",
+        token: "",
+        oidc: true,
+        "dry-run": true,
+      });
+
+      expect(await settings.getToken()).toEqual(
+        "oidc-token:audience=https://qlty.sh",
       );
     });
   });

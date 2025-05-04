@@ -197,6 +197,27 @@ describe("CoverageAction", () => {
     expect(command?.command).toContain("custom-name");
   });
 
+  test("allows dry-run without token or OIDC", async () => {
+    const { action, commands, output } = createTrackedAction({
+      settings: Settings.createNull({
+        token: "",
+        "coverage-token": "",
+        oidc: false,
+        files: "info.lcov",
+        "dry-run": true,
+      }),
+      context: { payload: {} },
+    });
+    await action.run();
+
+    const executedCommands = commands.clear();
+    expect(executedCommands.length).toBe(1);
+    const command = executedCommands[0];
+    expect(command?.command).toContain("--dry-run");
+    expect(command?.env?.["QLTY_COVERAGE_TOKEN"]).toBeUndefined();
+    expect(output.warnings.length).toBe(0); // No warnings should be generated
+  });
+
   describe("error handling", () => {
     test("throws an error if qlty fails when skip-errors is false", async () => {
       const { action } = createTrackedAction({
