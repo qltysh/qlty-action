@@ -69410,7 +69410,7 @@ var Installer = class _Installer {
       this._output.setFailed(
         `Unsupported platform/architecture: ${this._os.platform()}/${this._os.arch()}`
       );
-      return;
+      return null;
     }
     const tarPath = await this._tc.downloadTool(download.url);
     const extractedFolder = await this._tc.extractTar(tarPath, void 0, "x");
@@ -69422,6 +69422,7 @@ var Installer = class _Installer {
     this._emitter.emit(DOWNLOAD_EVENT, download.url);
     const binPath = `${cachedPath}/qlty-${download.target}`;
     this._output.addPath(binPath);
+    return "qlty";
   }
   planDownload() {
     const platform2 = this._os.platform();
@@ -73810,13 +73811,17 @@ var CoverageAction = class _CoverageAction {
     if (!this.validate()) {
       return;
     }
+    let qltyBinary = null;
     try {
-      await this._installer.install();
+      qltyBinary = await this._installer.install();
     } catch (error) {
       const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
       this.warnOrThrow([
         `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`
       ]);
+      return;
+    }
+    if (!qltyBinary) {
       return;
     }
     let uploadArgs = await this.buildArgs();
@@ -73849,9 +73854,12 @@ var CoverageAction = class _CoverageAction {
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || ""
       };
-      this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
-      this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
-      await this._executor.exec("qlty", uploadArgs, {
+      this._emitter.emit(EXEC_EVENT, {
+        command: [qltyBinary, ...uploadArgs],
+        env
+      });
+      this._output.info(`Running: ${[qltyBinary, ...uploadArgs].join(" ")}`);
+      await this._executor.exec(qltyBinary, uploadArgs, {
         env,
         listeners: {
           stdout: (data) => {

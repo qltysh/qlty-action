@@ -50,14 +50,14 @@ export class Installer {
     return OutputTracker.create<string>(this._emitter, DOWNLOAD_EVENT);
   }
 
-  async install(): Promise<void> {
+  async install(): Promise<string | null> {
     const download = this.planDownload();
 
     if (!download) {
       this._output.setFailed(
         `Unsupported platform/architecture: ${this._os.platform()}/${this._os.arch()}`,
       );
-      return;
+      return null;
     }
 
     const tarPath = await this._tc.downloadTool(download.url);
@@ -71,6 +71,7 @@ export class Installer {
 
     const binPath = `${cachedPath}/qlty-${download.target}`;
     this._output.addPath(binPath);
+    return "qlty";
   }
 
   planDownload(): DownloadPlan | null {
