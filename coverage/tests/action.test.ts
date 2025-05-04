@@ -243,9 +243,10 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toContain(
+      expect(output.warnings).toEqual([
         "Error uploading coverage. Output from the Qlty CLI follows:",
-      );
+        "STDOUT\nSTDERR\n",
+      ]);
     });
 
     test("handles installer error when skip-errors is true", async () => {

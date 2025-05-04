@@ -67,13 +67,19 @@ export class CoverageAction {
       return;
     }
 
+    let qltyBinary = null;
+
     try {
-      await this._installer.install();
+      qltyBinary = await this._installer.install();
     } catch (error) {
       const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
       this.warnOrThrow([
         `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`,
       ]);
+      return;
+    }
+
+    if (!qltyBinary) {
       return;
     }
 
@@ -119,10 +125,13 @@ export class CoverageAction {
         env["QLTY_COVERAGE_TOKEN"] = token;
       }
 
-      this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
-      this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
+      this._emitter.emit(EXEC_EVENT, {
+        command: [qltyBinary, ...uploadArgs],
+        env,
+      });
+      this._output.info(`Running: ${[qltyBinary, ...uploadArgs].join(" ")}`);
 
-      await this._executor.exec("qlty", uploadArgs, {
+      await this._executor.exec(qltyBinary, uploadArgs, {
         env,
         listeners: {
           stdout: (data: Buffer) => {
