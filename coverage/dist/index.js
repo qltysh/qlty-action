@@ -73562,7 +73562,8 @@ var settingsParser = z.object({
   oidc: z.boolean(),
   verbose: z.boolean(),
   cliVersion: optionalNormalizedString,
-  format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional()
+  format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional(),
+  incomplete: z.boolean()
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73590,7 +73591,8 @@ var Settings = class _Settings {
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
-        format: input.getInput("format")
+        format: input.getInput("format"),
+        incomplete: input.getBooleanInput("incomplete")
       }),
       input,
       fs
@@ -73697,7 +73699,8 @@ var StubbedInputProvider = class {
       token: data.token || "",
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
-      format: data["format"] || ""
+      format: data["format"] || "",
+      incomplete: data.incomplete || false
     };
   }
   getInput(name, _options) {
@@ -73906,6 +73909,9 @@ var CoverageAction = class _CoverageAction {
     }
     if (this._settings.input.skipMissingFiles) {
       uploadArgs.push("--skip-missing-files");
+    }
+    if (this._settings.input.incomplete) {
+      uploadArgs.push("--incomplete");
     }
     return uploadArgs;
   }

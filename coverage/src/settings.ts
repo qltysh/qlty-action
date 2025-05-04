@@ -26,6 +26,7 @@ interface ActionInputKeys {
   verbose: boolean;
   "cli-version": string;
   format: string;
+  incomplete: boolean;
 }
 
 const optionalNormalizedString = z
@@ -65,6 +66,7 @@ const settingsParser = z.object({
     .union([formatEnum, z.literal("")])
     .transform((val) => (val === "" ? undefined : val))
     .optional(),
+  incomplete: z.boolean(),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -96,6 +98,7 @@ export class Settings {
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
         format: input.getInput("format"),
+        incomplete: input.getBooleanInput("incomplete"),
       }),
       input,
       fs,
@@ -244,6 +247,7 @@ export class StubbedInputProvider implements InputProvider {
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
       format: data["format"] || "",
+      incomplete: data.incomplete || false,
     };
   }
 

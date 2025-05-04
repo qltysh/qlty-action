@@ -15,6 +15,7 @@ describe("Settings", () => {
       verbose: true,
       "cli-version": "1.2.3",
       format: "simplecov",
+      incomplete: true,
     });
 
     expect(settings.input).toMatchObject({
@@ -30,6 +31,7 @@ describe("Settings", () => {
       verbose: true,
       cliVersion: "1.2.3",
       format: "simplecov",
+      incomplete: true,
     });
   });
 
@@ -41,6 +43,7 @@ describe("Settings", () => {
       "strip-prefix": "",
       tag: "",
       "total-parts-count": "",
+      incomplete: false,
     });
 
     expect(settings.input).toMatchObject({
@@ -51,6 +54,7 @@ describe("Settings", () => {
       stripPrefix: undefined,
       totalPartsCount: undefined,
       format: undefined,
+      incomplete: false,
     });
   });
 

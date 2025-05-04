@@ -83,6 +83,11 @@ inputs:
     required: false
     default: ""
 
+  incomplete:
+    description: "Mark the coverage data as incomplete"
+    required: false
+    default: false
+
 runs:
   using: node20
   main: dist/index.js
