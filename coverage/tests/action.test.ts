@@ -95,6 +95,7 @@ describe("CoverageAction", () => {
         "strip-prefix": "strip",
         format: "simplecov",
         verbose: true,
+        "dry-run": true,
       }),
       context: { payload: {} },
     });
@@ -109,6 +110,7 @@ describe("CoverageAction", () => {
       "coverage",
       "publish",
       "--print",
+      "--dry-run",
       "--add-prefix",
       "prefix",
       "--strip-prefix",
