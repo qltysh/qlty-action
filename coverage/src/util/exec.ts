@@ -4,7 +4,7 @@ export interface CommandExecutor {
   exec(
     command: string,
     args?: string[],
-    options?: actionsExec.ExecOptions
+    options?: actionsExec.ExecOptions,
   ): Promise<number>;
 }
 
@@ -18,7 +18,7 @@ export class StubbedCommandExecutor implements CommandExecutor {
   async exec(
     _command: string,
     _args?: string[],
-    options?: actionsExec.ExecOptions
+    options?: actionsExec.ExecOptions,
   ): Promise<number> {
     if (this.throwError) {
       if (options?.listeners?.stdout) {

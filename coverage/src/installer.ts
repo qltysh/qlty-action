@@ -30,7 +30,7 @@ export class Installer {
       new StubbedOperatingSystem(),
       new StubbedOutput(),
       new StubbedToolCache(raiseDownloadError),
-      version
+      version,
     );
   }
 
@@ -38,7 +38,7 @@ export class Installer {
     os: OperatingSystem,
     output: ActionOutput,
     toolCache: ToolCache,
-    version?: string
+    version?: string,
   ) {
     this._os = os;
     this._output = output;
@@ -55,7 +55,7 @@ export class Installer {
 
     if (!download) {
       this._output.setFailed(
-        `Unsupported platform/architecture: ${this._os.platform()}/${this._os.arch()}`
+        `Unsupported platform/architecture: ${this._os.platform()}/${this._os.arch()}`,
       );
       return;
     }
@@ -65,7 +65,7 @@ export class Installer {
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
-      download.version
+      download.version,
     );
     this._emitter.emit(DOWNLOAD_EVENT, download.url);
 
@@ -151,7 +151,7 @@ export class StubbedToolCache implements ToolCache {
   async extractTar(
     file: string,
     _dest?: string,
-    _options?: string
+    _options?: string,
   ): Promise<string> {
     return `extracted[${file} dest=${_dest} options=${_options}]`;
   }
@@ -159,7 +159,7 @@ export class StubbedToolCache implements ToolCache {
   async cacheDir(
     folder: string,
     _tool: string,
-    _version: string
+    _version: string,
   ): Promise<string> {
     return `cached[${folder}]`;
   }

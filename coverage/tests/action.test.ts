@@ -127,7 +127,7 @@ describe("CoverageAction", () => {
       QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
     });
     expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-      /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
+      /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
     );
   });
 
@@ -210,7 +210,7 @@ describe("CoverageAction", () => {
             files: "file1.lcov file2.lcov",
             "skip-errors": true,
           },
-          new StubbedFileSystem([])
+          new StubbedFileSystem([]),
         ),
       });
 
