@@ -128,26 +128,40 @@ export class Settings {
     const errors = [];
     const coverageToken = this.getCoverageToken();
 
-    if (!this._data.oidc && !coverageToken) {
-      errors.push("Either 'oidc' or 'token' must be provided.");
-    }
+    // Skip token validation when in dry-run mode
+    if (!this._data.dryRun) {
+      if (!this._data.oidc && !coverageToken) {
+        errors.push("Either 'oidc' or 'token' must be provided.");
+      }
 
-    if (this._data.oidc && coverageToken) {
-      errors.push(
-        "Both 'oidc' and 'token' cannot be provided at the same time.",
-      );
-    }
+      if (this._data.oidc && coverageToken) {
+        errors.push(
+          "Both 'oidc' and 'token' cannot be provided at the same time.",
+        );
+      }
 
-    if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
-      errors.push(
-        "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
-      );
+      if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
+        errors.push(
+          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
+        );
+      }
     }
 
     return errors;
   }
 
-  async getToken(): Promise<string> {
+  async getToken(): Promise<string | null> {
+    if (this._data.dryRun) {
+      if (this._data.oidc) {
+        // When running in dry-run mode with oidc, we still generate an OIDC token
+        // This ensures the workflow is authorized to use OIDC.
+        return await this._input.getIDToken(OIDC_AUDIENCE);
+      } else {
+        const coverageToken = this.getCoverageToken();
+        return coverageToken || null;
+      }
+    }
+
     if (this._data.oidc) {
       return await this._input.getIDToken(OIDC_AUDIENCE);
     } else {

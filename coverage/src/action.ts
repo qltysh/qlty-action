@@ -108,17 +108,22 @@ export class CoverageAction {
     uploadArgs = uploadArgs.concat(files);
 
     const token = await this._settings.getToken();
-    this._output.setSecret(token);
+    if (token) {
+      this._output.setSecret(token);
+    }
 
     let qlytOutput = "";
 
     try {
-      const env = {
+      const env: Record<string, string> = {
         ...process.env,
-        QLTY_COVERAGE_TOKEN: token,
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || "",
       };
+
+      if (token) {
+        env["QLTY_COVERAGE_TOKEN"] = token;
+      }
 
       this._emitter.emit(EXEC_EVENT, {
         command: [qltyBinary, ...uploadArgs],
@@ -200,7 +205,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString(),
+        this._settings.input.totalPartsCount.toString()
       );
     }
 
@@ -212,7 +217,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha,
+        payload.pull_request["head"].sha
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
