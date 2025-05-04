@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### New
+
+- Add `cli-version` input to coverage action (#67)
+- Add `format` input to coverage action (#85)
+- Add `dry-run` input to coverage action (#88)
+- Add `incomplete` input to coverage action (#89)
+- Add `name` input to coverage action (#90)
+
+### Improved
+
+- Add support for Windows to coverage action (#87)
+- Set `QLTY_CI_UPLOADER_TOOL` and `QLTY_CI_UPLOADER_VERSION` when running CLI (#86)
+
 ## v1.0.0 (2025-04-17)
 
 ### New
