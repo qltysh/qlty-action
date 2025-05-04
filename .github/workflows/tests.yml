@@ -126,4 +126,4 @@ jobs:
           files: coverage/coverage/clover.xml
           verbose: true
           skip-errors: false
-          dry-run: true
+          oidc: true
