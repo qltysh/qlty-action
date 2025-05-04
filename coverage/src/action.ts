@@ -102,17 +102,22 @@ export class CoverageAction {
     uploadArgs = uploadArgs.concat(files);
 
     const token = await this._settings.getToken();
-    this._output.setSecret(token);
+    if (token) {
+      this._output.setSecret(token);
+    }
 
     let qlytOutput = "";
 
     try {
-      const env = {
+      const env: Record<string, string> = {
         ...process.env,
-        QLTY_COVERAGE_TOKEN: token,
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || "",
       };
+
+      if (token) {
+        env["QLTY_COVERAGE_TOKEN"] = token;
+      }
 
       this._emitter.emit(EXEC_EVENT, { command: ["qlty", ...uploadArgs], env });
       this._output.info(`Running: ${["qlty", ...uploadArgs].join(" ")}`);
