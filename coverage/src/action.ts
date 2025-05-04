@@ -205,7 +205,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString()
+        this._settings.input.totalPartsCount.toString(),
       );
     }
 
@@ -217,7 +217,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha
+        payload.pull_request["head"].sha,
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
