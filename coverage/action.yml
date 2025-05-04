@@ -83,6 +83,11 @@ inputs:
     required: false
     default: ""
 
+  dry-run:
+    description: "Run in dry run mode without uploading coverage data"
+    required: false
+    default: false
+
   incomplete:
     description: "Mark the coverage data as incomplete"
     required: false

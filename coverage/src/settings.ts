@@ -26,6 +26,7 @@ interface ActionInputKeys {
   verbose: boolean;
   "cli-version": string;
   format: string;
+  "dry-run": boolean;
   incomplete: boolean;
 }
 
@@ -66,6 +67,7 @@ const settingsParser = z.object({
     .union([formatEnum, z.literal("")])
     .transform((val) => (val === "" ? undefined : val))
     .optional(),
+  dryRun: z.boolean(),
   incomplete: z.boolean(),
 });
 
@@ -98,6 +100,7 @@ export class Settings {
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
         format: input.getInput("format"),
+        dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
       }),
       input,
@@ -247,6 +250,7 @@ export class StubbedInputProvider implements InputProvider {
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
       format: data["format"] || "",
+      "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
     };
   }

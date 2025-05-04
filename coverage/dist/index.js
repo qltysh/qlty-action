@@ -73563,6 +73563,7 @@ var settingsParser = z.object({
   verbose: z.boolean(),
   cliVersion: optionalNormalizedString,
   format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional(),
+  dryRun: z.boolean(),
   incomplete: z.boolean()
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
@@ -73592,6 +73593,7 @@ var Settings = class _Settings {
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
         format: input.getInput("format"),
+        dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete")
       }),
       input,
@@ -73700,6 +73702,7 @@ var StubbedInputProvider = class {
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
       format: data["format"] || "",
+      "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false
     };
   }
@@ -73880,6 +73883,9 @@ var CoverageAction = class _CoverageAction {
     const uploadArgs = ["coverage", "publish"];
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");
+    }
+    if (this._settings.input.dryRun) {
+      uploadArgs.push("--dry-run");
     }
     if (this._settings.input.addPrefix) {
       uploadArgs.push("--add-prefix", this._settings.input.addPrefix);
