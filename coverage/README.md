@@ -88,6 +88,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 | `tag`                | Tag to associate with the coverage data                                                                                                                                                                                | No       | -       |
 | `cli-version`        | Specific version of the Qlty CLI to use (e.g., '1.0.1'). If not specified, will install the latest version.                                                                                                            | No       |         |
 | `incomplete`         | Mark the coverage data as incomplete                                                                                                                                                                                   | No       | `false` |
+| `name`               | Name to identify this coverage upload                                                                                                                                                                                  | No       | -       |
 
 ---
 

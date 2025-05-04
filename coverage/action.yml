@@ -93,6 +93,11 @@ inputs:
     required: false
     default: false
 
+  name:
+    description: "The name to identify this coverage upload"
+    required: false
+    default: ""
+
 runs:
   using: node20
   main: dist/index.js

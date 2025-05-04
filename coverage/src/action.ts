@@ -216,6 +216,10 @@ export class CoverageAction {
       uploadArgs.push("--incomplete");
     }
 
+    if (this._settings.input.name) {
+      uploadArgs.push("--name", this._settings.input.name);
+    }
+
     return uploadArgs;
   }
 

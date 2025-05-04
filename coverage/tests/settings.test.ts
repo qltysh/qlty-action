@@ -17,6 +17,7 @@ describe("Settings", () => {
       format: "simplecov",
       "dry-run": true,
       incomplete: true,
+      name: "test-name",
     });
 
     expect(settings.input).toMatchObject({
@@ -34,6 +35,7 @@ describe("Settings", () => {
       format: "simplecov",
       dryRun: true,
       incomplete: true,
+      name: "test-name",
     });
   });
 
@@ -46,6 +48,7 @@ describe("Settings", () => {
       tag: "",
       "total-parts-count": "",
       incomplete: false,
+      name: "",
     });
 
     expect(settings.input).toMatchObject({
@@ -58,6 +61,7 @@ describe("Settings", () => {
       format: undefined,
       dryRun: false,
       incomplete: false,
+      name: undefined,
     });
   });
 
