@@ -4,14 +4,19 @@ import os from "os";
 import EventEmitter from "node:events";
 import OutputTracker from "./util/output_tracker";
 import { ActionOutput, StubbedOutput } from "./util/output";
+import path from "node:path";
 
 const DOWNLOAD_EVENT = "download";
 
+type FileType = "tar.xz" | "zip";
+
 interface DownloadPlan {
   url: string;
-  fileType: "tar.xz" | "zip";
+  fileType: FileType;
   target: string;
   version: string;
+  binaryName: string;
+  extractComponent: string | null;
 }
 
 export class Installer {
@@ -61,7 +66,15 @@ export class Installer {
     }
 
     const tarPath = await this._tc.downloadTool(download.url);
-    const extractedFolder = await this._tc.extractTar(tarPath, undefined, "x");
+
+    let extractedFolder;
+
+    if (download.fileType === "zip") {
+      extractedFolder = await this._tc.extractZip(tarPath);
+    } else {
+      extractedFolder = await this._tc.extractTar(tarPath, undefined, "x");
+    }
+
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
@@ -69,9 +82,14 @@ export class Installer {
     );
     this._emitter.emit(DOWNLOAD_EVENT, download.url);
 
-    const binPath = `${cachedPath}/qlty-${download.target}`;
+    let binPath = cachedPath;
+
+    if (download.extractComponent) {
+      binPath = [binPath, path.sep, download.extractComponent].join("");
+    }
+
     this._output.addPath(binPath);
-    return "qlty";
+    return download.binaryName;
   }
 
   planDownload(): DownloadPlan | null {
@@ -79,15 +97,23 @@ export class Installer {
     const arch = this._os.arch();
 
     let target;
+    let fileType: FileType;
 
     if (platform === "linux" && arch === "x64") {
       target = "x86_64-unknown-linux-gnu";
+      fileType = "tar.xz";
     } else if (platform === "linux" && arch === "arm64") {
       target = "aarch64-unknown-linux-gnu";
+      fileType = "tar.xz";
     } else if (platform === "darwin" && arch === "x64") {
       target = "x86_64-apple-darwin";
+      fileType = "tar.xz";
     } else if (platform === "darwin" && arch === "arm64") {
       target = "aarch64-apple-darwin";
+      fileType = "tar.xz";
+    } else if (platform === "win32" && arch === "x64") {
+      target = "x86_64-pc-windows-msvc";
+      fileType = "zip";
     } else {
       return null;
     }
@@ -95,10 +121,12 @@ export class Installer {
     const versionPath = this._version ? `v${this._version}` : "latest";
 
     return {
-      url: `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${target}.tar.xz`,
-      fileType: "tar.xz",
+      url: `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${target}.${fileType}`,
+      fileType,
       target,
       version: versionPath,
+      binaryName: platform === "win32" ? "qlty.exe" : "qlty",
+      extractComponent: platform === "win32" ? null : `qlty-${target}`,
     };
   }
 }
@@ -106,6 +134,7 @@ export class Installer {
 export interface ToolCache {
   downloadTool(url: string): Promise<string>;
   extractTar(file: string, dest?: string, options?: string): Promise<string>;
+  extractZip(file: string, dest?: string, options?: string): Promise<string>;
   cacheDir(folder: string, tool: string, version: string): Promise<string>;
 }
 
@@ -145,7 +174,7 @@ export class StubbedToolCache implements ToolCache {
       throw new Error("download error");
     } else {
       this.downloads.push(url);
-      return `downloaded[${url}]`;
+      return `downloadTool[${url}]`;
     }
   }
 
@@ -154,7 +183,15 @@ export class StubbedToolCache implements ToolCache {
     _dest?: string,
     _options?: string,
   ): Promise<string> {
-    return `extracted[${file} dest=${_dest} options=${_options}]`;
+    return `extractTar[${file} dest=${_dest} options=${_options}]`;
+  }
+
+  async extractZip(
+    file: string,
+    _dest?: string,
+    _options?: string,
+  ): Promise<string> {
+    return `extractZip[${file} dest=${_dest} options=${_options}]`;
   }
 
   async cacheDir(
@@ -162,6 +199,6 @@ export class StubbedToolCache implements ToolCache {
     _tool: string,
     _version: string,
   ): Promise<string> {
-    return `cached[${folder}]`;
+    return `cacheDir[${folder}]`;
   }
 }
