@@ -1,3 +1,4 @@
+import path from "node:path";
 import {
   Installer,
   StubbedOperatingSystem,
@@ -16,7 +17,7 @@ describe("Installer", () => {
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      "cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]/qlty-x86_64-unknown-linux-gnu",
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]${path.sep}qlty-x86_64-unknown-linux-gnu`,
     ]);
   });
 
@@ -30,7 +31,7 @@ describe("Installer", () => {
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      "cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]/qlty-aarch64-unknown-linux-gnu",
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]${path.sep}qlty-aarch64-unknown-linux-gnu`,
     ]);
   });
 
@@ -44,7 +45,7 @@ describe("Installer", () => {
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      "cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-apple-darwin.tar.xz] dest=undefined options=x]]/qlty-x86_64-apple-darwin",
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-apple-darwin.tar.xz] dest=undefined options=x]]${path.sep}qlty-x86_64-apple-darwin`,
     ]);
   });
 
@@ -58,7 +59,7 @@ describe("Installer", () => {
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      "cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-apple-darwin.tar.xz] dest=undefined options=x]]/qlty-aarch64-apple-darwin",
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-apple-darwin.tar.xz] dest=undefined options=x]]${path.sep}qlty-aarch64-apple-darwin`,
     ]);
   });
 
@@ -72,7 +73,7 @@ describe("Installer", () => {
     ]);
     expect(qltyBinary).toEqual("qlty.exe");
     expect(output.paths).toEqual([
-      "cacheDir[extractZip[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-pc-windows-msvc.zip] dest=undefined options=undefined]]",
+      `cacheDir[extractZip[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-pc-windows-msvc.zip] dest=undefined options=undefined]]`,
     ]);
   });
 
