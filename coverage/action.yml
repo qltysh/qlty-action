@@ -83,6 +83,11 @@ inputs:
     required: false
     default: ""
 
+  dry-run:
+    description: "Run in dry run mode without uploading coverage data"
+    required: false
+    default: false
+
 runs:
   using: node20
   main: dist/index.js

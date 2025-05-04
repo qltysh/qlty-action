@@ -177,6 +177,10 @@ export class CoverageAction {
       uploadArgs.push("--print");
     }
 
+    if (this._settings.input.dryRun) {
+      uploadArgs.push("--dry-run");
+    }
+
     if (this._settings.input.addPrefix) {
       uploadArgs.push("--add-prefix", this._settings.input.addPrefix);
     }

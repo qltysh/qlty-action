@@ -15,6 +15,7 @@ describe("Settings", () => {
       verbose: true,
       "cli-version": "1.2.3",
       format: "simplecov",
+      "dry-run": true,
     });
 
     expect(settings.input).toMatchObject({
@@ -30,6 +31,7 @@ describe("Settings", () => {
       verbose: true,
       cliVersion: "1.2.3",
       format: "simplecov",
+      dryRun: true,
     });
   });
 
@@ -51,6 +53,7 @@ describe("Settings", () => {
       stripPrefix: undefined,
       totalPartsCount: undefined,
       format: undefined,
+      dryRun: false,
     });
   });
 
