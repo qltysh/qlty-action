@@ -96,6 +96,7 @@ describe("CoverageAction", () => {
         format: "simplecov",
         verbose: true,
         "dry-run": true,
+        incomplete: true,
       }),
       context: { payload: {} },
     });
@@ -122,6 +123,7 @@ describe("CoverageAction", () => {
       "--total-parts-count",
       "5",
       "--skip-missing-files",
+      "--incomplete",
       "info.lcov",
     ]);
     expect(command?.env).toMatchObject({
@@ -155,6 +157,23 @@ describe("CoverageAction", () => {
       "test-ref",
       "info.lcov",
     ]);
+  });
+
+  test("adds incomplete flag when incomplete is true", async () => {
+    const { action, commands } = createTrackedAction({
+      settings: Settings.createNull({
+        "coverage-token": "qltcp_1234567890",
+        files: "info.lcov",
+        incomplete: true,
+      }),
+      context: { payload: {} },
+    });
+    await action.run();
+
+    const executedCommands = commands.clear();
+    expect(executedCommands.length).toBe(1);
+    const command = executedCommands[0];
+    expect(command?.command).toContain("--incomplete");
   });
 
   describe("error handling", () => {

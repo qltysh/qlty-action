@@ -212,6 +212,10 @@ export class CoverageAction {
       uploadArgs.push("--skip-missing-files");
     }
 
+    if (this._settings.input.incomplete) {
+      uploadArgs.push("--incomplete");
+    }
+
     return uploadArgs;
   }
 

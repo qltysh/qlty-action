@@ -86,8 +86,8 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 | `skip-errors`        | If coverage upload fails, do not fail the CI build occur                                                                                                                                                               | No       | `true`  |
 | `skip-missing-files` | Files not in the directory are skipped                                                                                                                                                                                 | No       | `false` |
 | `tag`                | Tag to associate with the coverage data                                                                                                                                                                                | No       | -       |
-| `dry-run`            | Run in dry run mode without uploading coverage data                                                                                                                                                                    | No       | `false` |
-| `cli-version`        | Specific version of the Qlty CLI to use (e.g., '1.0.1'). If not specified, will install the latest version.s                                                                                                           | No       |         |
+| `cli-version`        | Specific version of the Qlty CLI to use (e.g., '1.0.1'). If not specified, will install the latest version.                                                                                                            | No       |         |
+| `incomplete`         | Mark the coverage data as incomplete                                                                                                                                                                                   | No       | `false` |
 
 ---
 
