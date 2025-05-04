@@ -151,9 +151,10 @@ export class Settings {
   }
 
   async getToken(): Promise<string | null> {
-    // For dry runs, we can return null when no authentication is provided
     if (this._data.dryRun) {
       if (this._data.oidc) {
+        // When running in dry-run mode with oidc, we still generate an OIDC token
+        // This ensures the workflow is authorized to use OIDC.
         return await this._input.getIDToken(OIDC_AUDIENCE);
       } else {
         const coverageToken = this.getCoverageToken();
