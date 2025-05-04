@@ -7,6 +7,13 @@ import { ActionOutput, StubbedOutput } from "./util/output";
 
 const DOWNLOAD_EVENT = "download";
 
+interface DownloadPlan {
+  url: string;
+  fileType: "tar.xz" | "zip";
+  target: string;
+  version: string;
+}
+
 export class Installer {
   private _os: OperatingSystem;
   private _output: ActionOutput;
@@ -23,7 +30,7 @@ export class Installer {
       new StubbedOperatingSystem(),
       new StubbedOutput(),
       new StubbedToolCache(raiseDownloadError),
-      version,
+      version
     );
   }
 
@@ -31,7 +38,7 @@ export class Installer {
     os: OperatingSystem,
     output: ActionOutput,
     toolCache: ToolCache,
-    version?: string,
+    version?: string
   ) {
     this._os = os;
     this._output = output;
@@ -44,39 +51,54 @@ export class Installer {
   }
 
   async install(): Promise<void> {
-    const platform = this._os.platform();
-    const arch = this._os.arch();
+    const download = this.planDownload();
 
-    let platformArch;
-
-    if (platform === "linux" && arch === "x64") {
-      platformArch = "x86_64-unknown-linux-gnu";
-    } else if (platform === "linux" && arch === "arm64") {
-      platformArch = "aarch64-unknown-linux-gnu";
-    } else if (platform === "darwin" && arch === "x64") {
-      platformArch = "x86_64-apple-darwin";
-    } else if (platform === "darwin" && arch === "arm64") {
-      platformArch = "aarch64-apple-darwin";
-    } else {
+    if (!download) {
       this._output.setFailed(
-        `Unsupported platform/architecture: ${platform}/${arch}`,
+        `Unsupported platform/architecture: ${this._os.platform()}/${this._os.arch()}`
       );
       return;
     }
 
-    const versionPath = this._version ? `v${this._version}` : "latest";
-
-    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.tar.xz`;
-    const tarPath = await this._tc.downloadTool(downloadUrl);
+    const tarPath = await this._tc.downloadTool(download.url);
     const extractedFolder = await this._tc.extractTar(tarPath, undefined, "x");
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
-      versionPath,
+      download.version
     );
-    this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
-    const binPath = `${cachedPath}/qlty-${platformArch}`;
+    this._emitter.emit(DOWNLOAD_EVENT, download.url);
+
+    const binPath = `${cachedPath}/qlty-${download.target}`;
     this._output.addPath(binPath);
+  }
+
+  planDownload(): DownloadPlan | null {
+    const platform = this._os.platform();
+    const arch = this._os.arch();
+
+    let target;
+
+    if (platform === "linux" && arch === "x64") {
+      target = "x86_64-unknown-linux-gnu";
+    } else if (platform === "linux" && arch === "arm64") {
+      target = "aarch64-unknown-linux-gnu";
+    } else if (platform === "darwin" && arch === "x64") {
+      target = "x86_64-apple-darwin";
+    } else if (platform === "darwin" && arch === "arm64") {
+      target = "aarch64-apple-darwin";
+    } else {
+      return null;
+    }
+
+    const versionPath = this._version ? `v${this._version}` : "latest";
+
+    return {
+      url: `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${target}.tar.xz`,
+      fileType: "tar.xz",
+      target,
+      version: versionPath,
+    };
   }
 }
 
@@ -129,7 +151,7 @@ export class StubbedToolCache implements ToolCache {
   async extractTar(
     file: string,
     _dest?: string,
-    _options?: string,
+    _options?: string
   ): Promise<string> {
     return `extracted[${file} dest=${_dest} options=${_options}]`;
   }
@@ -137,7 +159,7 @@ export class StubbedToolCache implements ToolCache {
   async cacheDir(
     folder: string,
     _tool: string,
-    _version: string,
+    _version: string
   ): Promise<string> {
     return `cached[${folder}]`;
   }

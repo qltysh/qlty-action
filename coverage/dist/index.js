@@ -69405,35 +69405,46 @@ var Installer = class _Installer {
     return OutputTracker.create(this._emitter, DOWNLOAD_EVENT);
   }
   async install() {
-    const platform2 = this._os.platform();
-    const arch2 = this._os.arch();
-    let platformArch;
-    if (platform2 === "linux" && arch2 === "x64") {
-      platformArch = "x86_64-unknown-linux-gnu";
-    } else if (platform2 === "linux" && arch2 === "arm64") {
-      platformArch = "aarch64-unknown-linux-gnu";
-    } else if (platform2 === "darwin" && arch2 === "x64") {
-      platformArch = "x86_64-apple-darwin";
-    } else if (platform2 === "darwin" && arch2 === "arm64") {
-      platformArch = "aarch64-apple-darwin";
-    } else {
+    const download = this.planDownload();
+    if (!download) {
       this._output.setFailed(
-        `Unsupported platform/architecture: ${platform2}/${arch2}`
+        `Unsupported platform/architecture: ${this._os.platform()}/${this._os.arch()}`
       );
       return;
     }
-    const versionPath = this._version ? `v${this._version}` : "latest";
-    const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${platformArch}.tar.xz`;
-    const tarPath = await this._tc.downloadTool(downloadUrl);
+    const tarPath = await this._tc.downloadTool(download.url);
     const extractedFolder = await this._tc.extractTar(tarPath, void 0, "x");
     const cachedPath = await this._tc.cacheDir(
       extractedFolder,
       "qlty",
-      versionPath
+      download.version
     );
-    this._emitter.emit(DOWNLOAD_EVENT, downloadUrl);
-    const binPath = `${cachedPath}/qlty-${platformArch}`;
+    this._emitter.emit(DOWNLOAD_EVENT, download.url);
+    const binPath = `${cachedPath}/qlty-${download.target}`;
     this._output.addPath(binPath);
+  }
+  planDownload() {
+    const platform2 = this._os.platform();
+    const arch2 = this._os.arch();
+    let target;
+    if (platform2 === "linux" && arch2 === "x64") {
+      target = "x86_64-unknown-linux-gnu";
+    } else if (platform2 === "linux" && arch2 === "arm64") {
+      target = "aarch64-unknown-linux-gnu";
+    } else if (platform2 === "darwin" && arch2 === "x64") {
+      target = "x86_64-apple-darwin";
+    } else if (platform2 === "darwin" && arch2 === "arm64") {
+      target = "aarch64-apple-darwin";
+    } else {
+      return null;
+    }
+    const versionPath = this._version ? `v${this._version}` : "latest";
+    return {
+      url: `https://qlty-releases.s3.amazonaws.com/qlty/${versionPath}/qlty-${target}.tar.xz`,
+      fileType: "tar.xz",
+      target,
+      version: versionPath
+    };
   }
 };
 var StubbedOperatingSystem = class {
@@ -73722,8 +73733,14 @@ var StubbedCommandExecutor = class {
     __publicField(this, "throwError");
     this.throwError = !!throwError;
   }
-  async exec(_command, _args, _options) {
+  async exec(_command, _args, options) {
     if (this.throwError) {
+      if (options?.listeners?.stdout) {
+        options.listeners.stdout(Buffer.from("STDOUT\n"));
+      }
+      if (options?.listeners?.stderr) {
+        options.listeners.stderr(Buffer.from("STDERR\n"));
+      }
       throw new Error("Command execution failed");
     } else {
       return 0;
@@ -73852,6 +73869,23 @@ var CoverageAction = class _CoverageAction {
       ]);
     }
   }
+  // async execQlty(
+  //   args: string[],
+  //   env: Record<string, string> = {},
+  //   ouput: string
+  // ): Promise<void> {
+  //   await this._executor.exec("qlty", args, {
+  //     env,
+  //     listeners: {
+  //       stdout: (data: Buffer) => {
+  //         ouput += data.toString();
+  //       },
+  //       stderr: (data: Buffer) => {
+  //         ouput += data.toString();
+  //       },
+  //     },
+  //   });
+  // }
   validate() {
     const errors = this._settings.validate();
     if (errors.length > 0) {

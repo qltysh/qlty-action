@@ -127,7 +127,7 @@ describe("CoverageAction", () => {
       QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
     });
     expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-      /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+      /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
     );
   });
 
@@ -180,9 +180,10 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toContain(
+      expect(output.warnings).toEqual([
         "Error uploading coverage. Output from the Qlty CLI follows:",
-      );
+        "STDOUT\nSTDERR\n",
+      ]);
     });
 
     test("handles installer error when skip-errors is true", async () => {
@@ -209,7 +210,7 @@ describe("CoverageAction", () => {
             files: "file1.lcov file2.lcov",
             "skip-errors": true,
           },
-          new StubbedFileSystem([]),
+          new StubbedFileSystem([])
         ),
       });
 

@@ -128,6 +128,7 @@ export class CoverageAction {
           },
         },
       });
+      // await this.execQlty(uploadArgs, env, qlytOutput);
     } catch {
       this.warnOrThrow([
         "Error uploading coverage. Output from the Qlty CLI follows:",
@@ -135,6 +136,24 @@ export class CoverageAction {
       ]);
     }
   }
+
+  // async execQlty(
+  //   args: string[],
+  //   env: Record<string, string> = {},
+  //   ouput: string
+  // ): Promise<void> {
+  //   await this._executor.exec("qlty", args, {
+  //     env,
+  //     listeners: {
+  //       stdout: (data: Buffer) => {
+  //         ouput += data.toString();
+  //       },
+  //       stderr: (data: Buffer) => {
+  //         ouput += data.toString();
+  //       },
+  //     },
+  //   });
+  // }
 
   validate(): boolean {
     const errors = this._settings.validate();
@@ -187,7 +206,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString(),
+        this._settings.input.totalPartsCount.toString()
       );
     }
 
@@ -199,7 +218,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha,
+        payload.pull_request["head"].sha
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
