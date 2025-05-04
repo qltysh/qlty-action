@@ -137,7 +137,6 @@ export class CoverageAction {
           },
         },
       });
-      // await this.execQlty(uploadArgs, env, qlytOutput);
     } catch {
       this.warnOrThrow([
         "Error uploading coverage. Output from the Qlty CLI follows:",
@@ -145,24 +144,6 @@ export class CoverageAction {
       ]);
     }
   }
-
-  // async execQlty(
-  //   args: string[],
-  //   env: Record<string, string> = {},
-  //   ouput: string
-  // ): Promise<void> {
-  //   await this._executor.exec("qlty", args, {
-  //     env,
-  //     listeners: {
-  //       stdout: (data: Buffer) => {
-  //         ouput += data.toString();
-  //       },
-  //       stderr: (data: Buffer) => {
-  //         ouput += data.toString();
-  //       },
-  //     },
-  //   });
-  // }
 
   validate(): boolean {
     const errors = this._settings.validate();

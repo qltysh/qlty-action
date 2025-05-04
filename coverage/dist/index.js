@@ -73899,23 +73899,6 @@ var CoverageAction = class _CoverageAction {
       ]);
     }
   }
-  // async execQlty(
-  //   args: string[],
-  //   env: Record<string, string> = {},
-  //   ouput: string
-  // ): Promise<void> {
-  //   await this._executor.exec("qlty", args, {
-  //     env,
-  //     listeners: {
-  //       stdout: (data: Buffer) => {
-  //         ouput += data.toString();
-  //       },
-  //       stderr: (data: Buffer) => {
-  //         ouput += data.toString();
-  //       },
-  //     },
-  //   });
-  // }
   validate() {
     const errors = this._settings.validate();
     if (errors.length > 0) {
