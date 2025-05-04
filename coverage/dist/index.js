@@ -73562,7 +73562,8 @@ var settingsParser = z.object({
   oidc: z.boolean(),
   verbose: z.boolean(),
   cliVersion: optionalNormalizedString,
-  format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional()
+  format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional(),
+  dryRun: z.boolean()
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73590,7 +73591,8 @@ var Settings = class _Settings {
         token: input.getInput("token"),
         verbose: input.getBooleanInput("verbose"),
         cliVersion: input.getInput("cli-version"),
-        format: input.getInput("format")
+        format: input.getInput("format"),
+        dryRun: input.getBooleanInput("dry-run")
       }),
       input,
       fs
@@ -73697,7 +73699,8 @@ var StubbedInputProvider = class {
       token: data.token || "",
       verbose: data.verbose || false,
       "cli-version": data["cli-version"] || "",
-      format: data["format"] || ""
+      format: data["format"] || "",
+      "dry-run": data["dry-run"] || false
     };
   }
   getInput(name, _options) {
@@ -73877,6 +73880,9 @@ var CoverageAction = class _CoverageAction {
     const uploadArgs = ["coverage", "publish"];
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");
+    }
+    if (this._settings.input.dryRun) {
+      uploadArgs.push("--dry-run");
     }
     if (this._settings.input.addPrefix) {
       uploadArgs.push("--add-prefix", this._settings.input.addPrefix);
