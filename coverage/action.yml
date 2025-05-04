@@ -88,6 +88,16 @@ inputs:
     required: false
     default: false
 
+  incomplete:
+    description: "Mark the coverage data as incomplete"
+    required: false
+    default: false
+
+  name:
+    description: "The name to identify this coverage upload"
+    required: false
+    default: ""
+
 runs:
   using: node20
   main: dist/index.js

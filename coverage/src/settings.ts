@@ -27,6 +27,8 @@ interface ActionInputKeys {
   "cli-version": string;
   format: string;
   "dry-run": boolean;
+  incomplete: boolean;
+  name: string;
 }
 
 const optionalNormalizedString = z
@@ -67,6 +69,8 @@ const settingsParser = z.object({
     .transform((val) => (val === "" ? undefined : val))
     .optional(),
   dryRun: z.boolean(),
+  incomplete: z.boolean(),
+  name: optionalNormalizedString,
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -99,6 +103,8 @@ export class Settings {
         cliVersion: input.getInput("cli-version"),
         format: input.getInput("format"),
         dryRun: input.getBooleanInput("dry-run"),
+        incomplete: input.getBooleanInput("incomplete"),
+        name: input.getInput("name"),
       }),
       input,
       fs,
@@ -248,6 +254,8 @@ export class StubbedInputProvider implements InputProvider {
       "cli-version": data["cli-version"] || "",
       format: data["format"] || "",
       "dry-run": data["dry-run"] || false,
+      incomplete: data.incomplete || false,
+      name: data.name || "",
     };
   }
 
