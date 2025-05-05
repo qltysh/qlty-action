@@ -73599,7 +73599,8 @@ var settingsParser = z.object({
   format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional(),
   dryRun: z.boolean(),
   incomplete: z.boolean(),
-  name: optionalNormalizedString
+  name: optionalNormalizedString,
+  validate: z.boolean()
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73630,7 +73631,8 @@ var Settings = class _Settings {
         format: input.getInput("format"),
         dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
-        name: input.getInput("name")
+        name: input.getInput("name"),
+        validate: input.getBooleanInput("validate")
       }),
       input,
       fs
@@ -73750,7 +73752,8 @@ var StubbedInputProvider = class {
       format: data["format"] || "",
       "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
-      name: data.name || ""
+      name: data.name || "",
+      validate: data.validate || false
     };
   }
   getInput(name, _options) {
@@ -73985,6 +73988,9 @@ var CoverageAction = class _CoverageAction {
     }
     if (this._settings.input.name) {
       uploadArgs.push("--name", this._settings.input.name);
+    }
+    if (this._settings.input.validate) {
+      uploadArgs.push("--validate");
     }
     return uploadArgs;
   }

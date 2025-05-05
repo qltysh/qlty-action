@@ -29,6 +29,7 @@ interface ActionInputKeys {
   "dry-run": boolean;
   incomplete: boolean;
   name: string;
+  validate: boolean;
 }
 
 const optionalNormalizedString = z
@@ -71,6 +72,7 @@ const settingsParser = z.object({
   dryRun: z.boolean(),
   incomplete: z.boolean(),
   name: optionalNormalizedString,
+  validate: z.boolean(),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -105,6 +107,7 @@ export class Settings {
         dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
         name: input.getInput("name"),
+        validate: input.getBooleanInput("validate"),
       }),
       input,
       fs,
@@ -270,6 +273,7 @@ export class StubbedInputProvider implements InputProvider {
       "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
       name: data.name || "",
+      validate: data.validate || false,
     };
   }
 

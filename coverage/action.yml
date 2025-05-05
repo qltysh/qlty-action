@@ -98,6 +98,11 @@ inputs:
     required: false
     default: ""
 
+  validate:
+    description: "Validate coverage files before uploading"
+    required: false
+    default: false
+
 runs:
   using: node20
   main: dist/index.js
