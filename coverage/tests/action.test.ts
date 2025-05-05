@@ -214,6 +214,45 @@ describe("CoverageAction", () => {
     expect(command?.command).toContain("--validate");
   });
 
+  test("adds validate-file-threshold flag when validate is true and threshold is provided", async () => {
+    const { action, commands } = createTrackedAction({
+      settings: Settings.createNull({
+        "coverage-token": "qltcp_1234567890",
+        files: "info.lcov",
+        validate: true,
+        "validate-file-threshold": "85",
+      }),
+      context: { payload: {} },
+    });
+    await action.run();
+
+    const executedCommands = commands.clear();
+    expect(executedCommands.length).toBe(1);
+    const command = executedCommands[0];
+    expect(command?.command).toContain("--validate");
+    expect(command?.command).toContain("--validate-file-threshold");
+    expect(command?.command).toContain("85");
+  });
+
+  test("does not add validate-file-threshold flag when validate is false", async () => {
+    const { action, commands } = createTrackedAction({
+      settings: Settings.createNull({
+        "coverage-token": "qltcp_1234567890",
+        files: "info.lcov",
+        validate: false,
+        "validate-file-threshold": "85",
+      }),
+      context: { payload: {} },
+    });
+    await action.run();
+
+    const executedCommands = commands.clear();
+    expect(executedCommands.length).toBe(1);
+    const command = executedCommands[0];
+    expect(command?.command).not.toContain("--validate");
+    expect(command?.command).not.toContain("--validate-file-threshold");
+  });
+
   test("allows dry-run without token or OIDC", async () => {
     const { action, commands, output } = createTrackedAction({
       settings: Settings.createNull({

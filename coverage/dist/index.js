@@ -73600,7 +73600,13 @@ var settingsParser = z.object({
   dryRun: z.boolean(),
   incomplete: z.boolean(),
   name: optionalNormalizedString,
-  validate: z.boolean()
+  validate: z.boolean(),
+  validateFileThreshold: z.string().transform((val) => {
+    if (val === "") return void 0;
+    const num = Number(val);
+    if (isNaN(num) || num < 0 || num > 100) return void 0;
+    return num;
+  })
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73632,7 +73638,8 @@ var Settings = class _Settings {
         dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
         name: input.getInput("name"),
-        validate: input.getBooleanInput("validate")
+        validate: input.getBooleanInput("validate"),
+        validateFileThreshold: input.getInput("validate-file-threshold")
       }),
       input,
       fs
@@ -73753,7 +73760,8 @@ var StubbedInputProvider = class {
       "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
       name: data.name || "",
-      validate: data.validate || false
+      validate: data.validate || false,
+      "validate-file-threshold": data["validate-file-threshold"] || ""
     };
   }
   getInput(name, _options) {
@@ -73991,6 +73999,9 @@ var CoverageAction = class _CoverageAction {
     }
     if (this._settings.input.validate) {
       uploadArgs.push("--validate");
+      if (this._settings.input.validateFileThreshold !== void 0) {
+        uploadArgs.push("--validate-file-threshold", this._settings.input.validateFileThreshold.toString());
+      }
     }
     return uploadArgs;
   }

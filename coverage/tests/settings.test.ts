@@ -19,6 +19,7 @@ describe("Settings", () => {
       incomplete: true,
       name: "test-name",
       validate: true,
+      "validate-file-threshold": "95",
     });
 
     expect(settings.input).toMatchObject({
@@ -38,6 +39,7 @@ describe("Settings", () => {
       incomplete: true,
       name: "test-name",
       validate: true,
+      validateFileThreshold: 95,
     });
   });
 
@@ -65,6 +67,7 @@ describe("Settings", () => {
       incomplete: false,
       name: undefined,
       validate: false,
+      validateFileThreshold: undefined,
     });
   });
 
@@ -318,6 +321,41 @@ describe("Settings", () => {
         "cli-version": "v1.2.3",
       });
       expect(settings.getVersion()).toEqual("1.2.3");
+    });
+  });
+
+  describe("validateFileThreshold", () => {
+    test("handles valid threshold", () => {
+      const settings = Settings.createNull({
+        "validate-file-threshold": "75",
+      });
+      expect(settings.input.validateFileThreshold).toEqual(75);
+    });
+
+    test("handles empty threshold", () => {
+      const settings = Settings.createNull({
+        "validate-file-threshold": "",
+      });
+      expect(settings.input.validateFileThreshold).toBeUndefined();
+    });
+
+    test("rejects out of range threshold", () => {
+      const settings = Settings.createNull({
+        "validate-file-threshold": "101",
+      });
+      expect(settings.input.validateFileThreshold).toBeUndefined();
+
+      const settings2 = Settings.createNull({
+        "validate-file-threshold": "-1",
+      });
+      expect(settings2.input.validateFileThreshold).toBeUndefined();
+    });
+
+    test("rejects non-numeric threshold", () => {
+      const settings = Settings.createNull({
+        "validate-file-threshold": "abc",
+      });
+      expect(settings.input.validateFileThreshold).toBeUndefined();
     });
   });
 });

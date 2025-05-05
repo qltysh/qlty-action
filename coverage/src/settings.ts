@@ -30,6 +30,7 @@ interface ActionInputKeys {
   incomplete: boolean;
   name: string;
   validate: boolean;
+  "validate-file-threshold": string;
 }
 
 const optionalNormalizedString = z
@@ -73,6 +74,12 @@ const settingsParser = z.object({
   incomplete: z.boolean(),
   name: optionalNormalizedString,
   validate: z.boolean(),
+  validateFileThreshold: z.string().transform((val) => {
+    if (val === "") return undefined;
+    const num = Number(val);
+    if (isNaN(num) || num < 0 || num > 100) return undefined;
+    return num;
+  }),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -108,6 +115,7 @@ export class Settings {
         incomplete: input.getBooleanInput("incomplete"),
         name: input.getInput("name"),
         validate: input.getBooleanInput("validate"),
+        validateFileThreshold: input.getInput("validate-file-threshold"),
       }),
       input,
       fs,
@@ -274,6 +282,7 @@ export class StubbedInputProvider implements InputProvider {
       incomplete: data.incomplete || false,
       name: data.name || "",
       validate: data.validate || false,
+      "validate-file-threshold": data["validate-file-threshold"] || "",
     };
   }
 

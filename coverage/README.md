@@ -92,6 +92,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 | `incomplete`         | Mark the coverage data as incomplete                                                                                                                                                                                   | No       | `false` |
 | `name`               | Name to identify this coverage upload                                                                                                                                                                                  | No       | -       |
 | `validate`           | Validate coverage files before uploading                                                                                                                                                               | No       | `false` |
+| `validate-file-threshold` | Custom threshold percentage for file validation (0-100, default is 90). Only applies when validate is true.                                                                                        | No       | -       |
 
 ---
 
