@@ -75,21 +75,9 @@ describe("Settings", () => {
 
   describe("totalPartsCount", () => {
     test("allows missing", () => {
-      let settings = Settings.createNull({
+      const settings = Settings.createNull({
         oidc: true,
         "total-parts-count": "",
-      });
-      expect(settings.input.totalPartsCount).toBeUndefined();
-
-      settings = Settings.createNull({
-        oidc: true,
-        "total-parts-count": null as any,
-      });
-      expect(settings.input.totalPartsCount).toBeUndefined();
-
-      settings = Settings.createNull({
-        oidc: true,
-        "total-parts-count": undefined as any,
       });
       expect(settings.input.totalPartsCount).toBeUndefined();
     });

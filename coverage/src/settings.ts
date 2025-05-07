@@ -1,4 +1,4 @@
-import { z, ZodAny, ZodType } from "zod";
+import { z, ZodType } from "zod";
 import * as core from "@actions/core";
 import * as glob from "@actions/glob";
 
