@@ -19,6 +19,7 @@ describe("Settings", () => {
       incomplete: true,
       name: "test-name",
       validate: true,
+      "validate-file-threshold": "75",
     });
 
     expect(settings.input).toMatchObject({
@@ -38,6 +39,7 @@ describe("Settings", () => {
       incomplete: true,
       name: "test-name",
       validate: true,
+      validateFileThreshold: 75,
     });
   });
 
@@ -52,6 +54,7 @@ describe("Settings", () => {
       incomplete: false,
       name: "",
       validate: false,
+      "validate-file-threshold": "",
     });
 
     expect(settings.input).toMatchObject({
@@ -66,6 +69,7 @@ describe("Settings", () => {
       incomplete: false,
       name: undefined,
       validate: false,
+      validateFileThreshold: undefined,
     });
   });
 
@@ -162,6 +166,77 @@ describe("Settings", () => {
     });
   });
 
+  describe("validateFileThreshold", () => {
+    test("allows missing", () => {
+      const settings = Settings.createNull({
+        oidc: true,
+        "validate-file-threshold": "",
+      });
+      expect(settings.input.validateFileThreshold).toBeUndefined();
+    });
+
+    test("parses valid threshold values", () => {
+      let settings = Settings.createNull({
+        oidc: true,
+        "validate-file-threshold": "1",
+      });
+      expect(settings.input.validateFileThreshold).toEqual(1);
+
+      settings = Settings.createNull({
+        oidc: true,
+        "validate-file-threshold": "50",
+      });
+      expect(settings.input.validateFileThreshold).toEqual(50);
+
+      settings = Settings.createNull({
+        oidc: true,
+        "validate-file-threshold": "100",
+      });
+      expect(settings.input.validateFileThreshold).toEqual(100);
+    });
+
+    test("rejects threshold values below 1", () => {
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "validate-file-threshold": "0",
+        });
+      }).toThrow();
+
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "validate-file-threshold": "-10",
+        });
+      }).toThrow();
+    });
+
+    test("rejects threshold values above 100", () => {
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "validate-file-threshold": "101",
+        });
+      }).toThrow();
+
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "validate-file-threshold": "150",
+        });
+      }).toThrow();
+    });
+
+    test("rejects non-numeric threshold values", () => {
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "validate-file-threshold": "abc",
+        });
+      }).toThrow();
+    });
+  });
+
   describe("validation", () => {
     test("allows valid cases", () => {
       expect(
@@ -183,6 +258,16 @@ describe("Settings", () => {
           "coverage-token": "",
           token: "",
           oidc: true,
+        }).validate(),
+      ).toEqual([]);
+
+      // Validate with validate-file-threshold is allowed when validate=true
+      expect(
+        Settings.createNull({
+          token: "qltcp_1234567890",
+          oidc: false,
+          validate: true,
+          "validate-file-threshold": "80",
         }).validate(),
       ).toEqual([]);
     });
@@ -261,6 +346,19 @@ describe("Settings", () => {
       });
 
       expect(settings.validate()).toEqual([]);
+    });
+
+    test("fails when validate-file-threshold is provided without validate", () => {
+      const settings = Settings.createNull({
+        token: "qltcp_1234567890",
+        oidc: false,
+        validate: false,
+        "validate-file-threshold": "80",
+      });
+
+      expect(settings.validate()).toEqual([
+        "'validate-file-threshold' requires 'validate' to be set to true.",
+      ]);
     });
   });
 

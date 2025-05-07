@@ -30,6 +30,7 @@ interface ActionInputKeys {
   incomplete: boolean;
   name: string;
   validate: boolean;
+  "validate-file-threshold": string;
 }
 
 function preprocessBlanks(zType: ZodType): ZodType {
@@ -71,6 +72,9 @@ const settingsParser = z.object({
   incomplete: z.boolean(),
   name: preprocessBlanks(z.string().optional()),
   validate: z.boolean(),
+  validateFileThreshold: preprocessBlanks(
+    z.coerce.number().gte(1).lte(100).optional(),
+  ),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -106,6 +110,7 @@ export class Settings {
         incomplete: input.getBooleanInput("incomplete"),
         name: input.getInput("name"),
         validate: input.getBooleanInput("validate"),
+        validateFileThreshold: input.getInput("validate-file-threshold"),
       }),
       input,
       fs,
@@ -146,6 +151,16 @@ export class Settings {
           "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
         );
       }
+    }
+
+    // Check if validate-file-threshold is provided without enabling validate
+    if (
+      this._data.validateFileThreshold !== undefined &&
+      !this._data.validate
+    ) {
+      errors.push(
+        "'validate-file-threshold' requires 'validate' to be set to true.",
+      );
     }
 
     return errors;
@@ -272,6 +287,7 @@ export class StubbedInputProvider implements InputProvider {
       incomplete: data.incomplete || false,
       name: data.name || "",
       validate: data.validate || false,
+      "validate-file-threshold": data["validate-file-threshold"] || "",
     };
   }
 

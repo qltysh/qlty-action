@@ -103,6 +103,11 @@ inputs:
     required: false
     default: false
 
+  validate-file-threshold:
+    description: "Custom threshold percentage for validation (0-100). Only applies when validate is used."
+    required: false
+    default: ""
+
 runs:
   using: node20
   main: dist/index.js
