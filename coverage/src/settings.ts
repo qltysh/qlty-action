@@ -74,7 +74,7 @@ const settingsParser = z.object({
   name: preprocessBlanks(z.string().optional()),
   validate: z.boolean(),
   validateFileThreshold: preprocessBlanks(
-    z.coerce.number().gte(1).lte(100).optional()
+    z.coerce.number().gte(1).lte(100).optional(),
   ),
   command: preprocessBlanks(z.enum(["publish", "complete"]).default("publish")),
 });
@@ -91,7 +91,7 @@ export class Settings {
 
   static create(
     input: InputProvider = core,
-    fs = FileSystem.create()
+    fs = FileSystem.create(),
   ): Settings {
     return new Settings(
       settingsParser.parse({
@@ -116,13 +116,13 @@ export class Settings {
         command: input.getInput("command"),
       }),
       input,
-      fs
+      fs,
     );
   }
 
   static createNull(
     input: Partial<ActionInputKeys> = {},
-    fs = FileSystem.createNull()
+    fs = FileSystem.createNull(),
   ): Settings {
     return Settings.create(new StubbedInputProvider(input), fs);
   }
@@ -145,13 +145,13 @@ export class Settings {
 
       if (this._data.oidc && coverageToken) {
         errors.push(
-          "Both 'oidc' and 'token' cannot be provided at the same time."
+          "Both 'oidc' and 'token' cannot be provided at the same time.",
         );
       }
 
       if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
         errors.push(
-          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
+          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
         );
       }
     }
@@ -162,7 +162,7 @@ export class Settings {
       !this._data.validate
     ) {
       errors.push(
-        "'validate-file-threshold' requires 'validate' to be set to true."
+        "'validate-file-threshold' requires 'validate' to be set to true.",
       );
     }
 
@@ -191,7 +191,7 @@ export class Settings {
       for (const input of invalidInputsForComplete) {
         if (input.value) {
           errors.push(
-            `'${input.name}' cannot be used when command is 'complete'.`
+            `'${input.name}' cannot be used when command is 'complete'.`,
           );
         }
       }
@@ -332,7 +332,7 @@ export class StubbedInputProvider implements InputProvider {
 
   getBooleanInput(
     name: keyof ActionInputKeys,
-    _options?: GetInputOptions
+    _options?: GetInputOptions,
   ): boolean {
     return this._data[name] === true;
   }
