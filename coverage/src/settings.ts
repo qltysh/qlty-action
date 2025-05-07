@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, ZodAny, ZodType } from "zod";
 import * as core from "@actions/core";
 import * as glob from "@actions/glob";
 
@@ -31,9 +31,14 @@ interface ActionInputKeys {
   name: string;
 }
 
-const optionalNormalizedString = z
-  .string()
-  .transform((val) => (val === "" ? undefined : val));
+function preprocessBlanks(zType: ZodType): ZodType {
+  return z.preprocess((val) => {
+    if (val === "" || val === null) {
+      return undefined;
+    }
+    return val;
+  }, zType);
+}
 
 // NOTE: These formats need to be kept in sync with action.yml
 // which in turn needs to be kept in sync with the CLI
@@ -48,29 +53,25 @@ const formatEnum = z.enum([
 ]);
 
 const settingsParser = z.object({
-  token: optionalNormalizedString,
-  coverageToken: optionalNormalizedString,
+  token: preprocessBlanks(z.string().optional()),
+  coverageToken: preprocessBlanks(z.string().optional()),
   files: z.string().trim(),
-  addPrefix: optionalNormalizedString,
-  stripPrefix: optionalNormalizedString,
+  addPrefix: preprocessBlanks(z.string().optional()),
+  stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
-  tag: optionalNormalizedString,
-  totalPartsCount: z.string().transform((val) => {
-    if (val === "") return undefined;
-    const num = Number(val);
-    return isNaN(num) ? undefined : num;
-  }),
+  tag: preprocessBlanks(z.string().optional()),
+  totalPartsCount: z.preprocess(
+    (val) => (val === "" || val === null ? undefined : val),
+    z.coerce.number().optional()
+  ),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: optionalNormalizedString,
-  format: z
-    .union([formatEnum, z.literal("")])
-    .transform((val) => (val === "" ? undefined : val))
-    .optional(),
+  cliVersion: preprocessBlanks(z.string().optional()),
+  format: preprocessBlanks(formatEnum.optional()),
   dryRun: z.boolean(),
   incomplete: z.boolean(),
-  name: optionalNormalizedString,
+  name: preprocessBlanks(z.string().optional()),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -85,7 +86,7 @@ export class Settings {
 
   static create(
     input: InputProvider = core,
-    fs = FileSystem.create(),
+    fs = FileSystem.create()
   ): Settings {
     return new Settings(
       settingsParser.parse({
@@ -107,13 +108,13 @@ export class Settings {
         name: input.getInput("name"),
       }),
       input,
-      fs,
+      fs
     );
   }
 
   static createNull(
     input: Partial<ActionInputKeys> = {},
-    fs = FileSystem.createNull(),
+    fs = FileSystem.createNull()
   ): Settings {
     return Settings.create(new StubbedInputProvider(input), fs);
   }
@@ -136,13 +137,13 @@ export class Settings {
 
       if (this._data.oidc && coverageToken) {
         errors.push(
-          "Both 'oidc' and 'token' cannot be provided at the same time.",
+          "Both 'oidc' and 'token' cannot be provided at the same time."
         );
       }
 
       if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
         errors.push(
-          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
+          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
         );
       }
     }
@@ -279,7 +280,7 @@ export class StubbedInputProvider implements InputProvider {
 
   getBooleanInput(
     name: keyof ActionInputKeys,
-    _options?: GetInputOptions,
+    _options?: GetInputOptions
   ): boolean {
     return this._data[name] === true;
   }

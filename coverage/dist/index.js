@@ -73569,7 +73569,14 @@ var z = /* @__PURE__ */ Object.freeze({
 // src/settings.ts
 var core2 = __toESM(require_core4());
 var glob = __toESM(require_glob());
-var optionalNormalizedString = z.string().transform((val) => val === "" ? void 0 : val);
+function preprocessBlanks(zType) {
+  return z.preprocess((val) => {
+    if (val === "" || val === null) {
+      return void 0;
+    }
+    return val;
+  }, zType);
+}
 var formatEnum = z.enum([
   "clover",
   "cobertura",
@@ -73580,26 +73587,25 @@ var formatEnum = z.enum([
   "simplecov"
 ]);
 var settingsParser = z.object({
-  token: optionalNormalizedString,
-  coverageToken: optionalNormalizedString,
+  token: preprocessBlanks(z.string().optional()),
+  coverageToken: preprocessBlanks(z.string().optional()),
   files: z.string().trim(),
-  addPrefix: optionalNormalizedString,
-  stripPrefix: optionalNormalizedString,
+  addPrefix: preprocessBlanks(z.string().optional()),
+  stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
-  tag: optionalNormalizedString,
-  totalPartsCount: z.string().transform((val) => {
-    if (val === "") return void 0;
-    const num = Number(val);
-    return isNaN(num) ? void 0 : num;
-  }),
+  tag: preprocessBlanks(z.string().optional()),
+  totalPartsCount: z.preprocess(
+    (val) => val === "" || val === null ? void 0 : val,
+    z.coerce.number().optional()
+  ),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: optionalNormalizedString,
-  format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional(),
+  cliVersion: preprocessBlanks(z.string().optional()),
+  format: preprocessBlanks(formatEnum.optional()),
   dryRun: z.boolean(),
   incomplete: z.boolean(),
-  name: optionalNormalizedString
+  name: preprocessBlanks(z.string().optional())
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
