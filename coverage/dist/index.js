@@ -73606,7 +73606,8 @@ var settingsParser = z.object({
   validate: z.boolean(),
   validateFileThreshold: preprocessBlanks(
     z.coerce.number().gte(1).lte(100).optional()
-  )
+  ),
+  command: preprocessBlanks(z.enum(["publish", "complete"]).default("publish"))
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73639,7 +73640,8 @@ var Settings = class _Settings {
         incomplete: input.getBooleanInput("incomplete"),
         name: input.getInput("name"),
         validate: input.getBooleanInput("validate"),
-        validateFileThreshold: input.getInput("validate-file-threshold")
+        validateFileThreshold: input.getInput("validate-file-threshold"),
+        command: input.getInput("command")
       }),
       input,
       fs
@@ -73670,6 +73672,34 @@ var Settings = class _Settings {
       errors.push(
         "'validate-file-threshold' requires 'validate' to be set to true."
       );
+    }
+    if (this._data.command === "complete") {
+      const invalidInputsForComplete = [
+        { name: "files", value: this._data.files !== "" },
+        { name: "add-prefix", value: this._data.addPrefix !== void 0 },
+        { name: "strip-prefix", value: this._data.stripPrefix !== void 0 },
+        { name: "dry-run", value: this._data.dryRun },
+        { name: "incomplete", value: this._data.incomplete },
+        { name: "name", value: this._data.name !== void 0 },
+        { name: "skip-missing-files", value: this._data.skipMissingFiles },
+        { name: "format", value: this._data.format !== void 0 },
+        { name: "validate", value: this._data.validate },
+        {
+          name: "validate-file-threshold",
+          value: this._data.validateFileThreshold !== void 0
+        },
+        {
+          name: "total-parts-count",
+          value: this._data.totalPartsCount !== void 0
+        }
+      ];
+      for (const input of invalidInputsForComplete) {
+        if (input.value) {
+          errors.push(
+            `'${input.name}' cannot be used when command is 'complete'.`
+          );
+        }
+      }
     }
     return errors;
   }
@@ -73766,7 +73796,8 @@ var StubbedInputProvider = class {
       incomplete: data.incomplete || false,
       name: data.name || "",
       validate: data.validate || false,
-      "validate-file-threshold": data["validate-file-threshold"] || ""
+      "validate-file-threshold": data["validate-file-threshold"] || "",
+      command: data.command || ""
     };
   }
   getInput(name, _options) {
@@ -73881,7 +73912,14 @@ var CoverageAction = class _CoverageAction {
     if (!qltyBinary) {
       return;
     }
-    let uploadArgs = await this.buildArgs();
+    if (this._settings.input.command === "complete") {
+      await this.runComplete(qltyBinary);
+    } else {
+      await this.runPublish(qltyBinary);
+    }
+  }
+  async runPublish(qltyBinary) {
+    let uploadArgs = await this.buildPublishArgs();
     const files = await this._settings.getFiles();
     if (files.length === 0) {
       if (this._settings.input.files.includes(" ")) {
@@ -73938,6 +73976,48 @@ var CoverageAction = class _CoverageAction {
       ]);
     }
   }
+  async runComplete(qltyBinary) {
+    const completeArgs = ["coverage", "complete"];
+    if (this._settings.input.tag) {
+      completeArgs.push("--tag", this._settings.input.tag);
+    }
+    const token = await this._settings.getToken();
+    if (token) {
+      this._output.setSecret(token);
+    }
+    let qlytOutput = "";
+    try {
+      const env = {
+        ...process.env,
+        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+        QLTY_CI_UPLOADER_VERSION: Version.readVersion() || ""
+      };
+      if (token) {
+        env["QLTY_COVERAGE_TOKEN"] = token;
+      }
+      this._emitter.emit(EXEC_EVENT, {
+        command: [qltyBinary, ...completeArgs],
+        env
+      });
+      this._output.info(`Running: ${[qltyBinary, ...completeArgs].join(" ")}`);
+      await this._executor.exec(qltyBinary, completeArgs, {
+        env,
+        listeners: {
+          stdout: (data) => {
+            qlytOutput += data.toString();
+          },
+          stderr: (data) => {
+            qlytOutput += data.toString();
+          }
+        }
+      });
+    } catch {
+      this.warnOrThrow([
+        "Error completing coverage. Output from the Qlty CLI follows:",
+        qlytOutput
+      ]);
+    }
+  }
   validate() {
     const errors = this._settings.validate();
     if (errors.length > 0) {
@@ -73959,7 +74039,7 @@ var CoverageAction = class _CoverageAction {
       throw new CoverageError(messages.join("; "));
     }
   }
-  async buildArgs() {
+  async buildPublishArgs() {
     const uploadArgs = ["coverage", "publish"];
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");

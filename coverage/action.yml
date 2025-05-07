@@ -108,6 +108,15 @@ inputs:
     required: false
     default: ""
 
+  command:
+    description: "The command to execute (publish or complete)"
+    required: false
+    default: "publish"
+    type: choice
+    options:
+      - "publish"
+      - "complete"
+
 runs:
   using: node20
   main: dist/index.js

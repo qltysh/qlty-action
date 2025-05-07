@@ -83,7 +83,15 @@ export class CoverageAction {
       return;
     }
 
-    let uploadArgs = await this.buildArgs();
+    if (this._settings.input.command === "complete") {
+      await this.runComplete(qltyBinary);
+    } else {
+      await this.runPublish(qltyBinary);
+    }
+  }
+
+  async runPublish(qltyBinary: string): Promise<void> {
+    let uploadArgs = await this.buildPublishArgs();
     const files = await this._settings.getFiles();
 
     if (files.length === 0) {
@@ -150,6 +158,56 @@ export class CoverageAction {
     }
   }
 
+  async runComplete(qltyBinary: string): Promise<void> {
+    const completeArgs = ["coverage", "complete"];
+
+    if (this._settings.input.tag) {
+      completeArgs.push("--tag", this._settings.input.tag);
+    }
+
+    const token = await this._settings.getToken();
+    if (token) {
+      this._output.setSecret(token);
+    }
+
+    let qlytOutput = "";
+
+    try {
+      const env: Record<string, string> = {
+        ...process.env,
+        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+        QLTY_CI_UPLOADER_VERSION: Version.readVersion() || "",
+      };
+
+      if (token) {
+        env["QLTY_COVERAGE_TOKEN"] = token;
+      }
+
+      this._emitter.emit(EXEC_EVENT, {
+        command: [qltyBinary, ...completeArgs],
+        env,
+      });
+      this._output.info(`Running: ${[qltyBinary, ...completeArgs].join(" ")}`);
+
+      await this._executor.exec(qltyBinary, completeArgs, {
+        env,
+        listeners: {
+          stdout: (data: Buffer) => {
+            qlytOutput += data.toString();
+          },
+          stderr: (data: Buffer) => {
+            qlytOutput += data.toString();
+          },
+        },
+      });
+    } catch {
+      this.warnOrThrow([
+        "Error completing coverage. Output from the Qlty CLI follows:",
+        qlytOutput,
+      ]);
+    }
+  }
+
   validate(): boolean {
     const errors = this._settings.validate();
 
@@ -175,7 +233,7 @@ export class CoverageAction {
     }
   }
 
-  async buildArgs(): Promise<string[]> {
+  async buildPublishArgs(): Promise<string[]> {
     const uploadArgs = ["coverage", "publish"];
 
     if (this._settings.input.verbose) {
