@@ -73569,7 +73569,14 @@ var z = /* @__PURE__ */ Object.freeze({
 // src/settings.ts
 var core2 = __toESM(require_core4());
 var glob = __toESM(require_glob());
-var optionalNormalizedString = z.string().transform((val) => val === "" ? void 0 : val);
+function preprocessBlanks(zType) {
+  return z.preprocess((val) => {
+    if (val === "" || val === null) {
+      return void 0;
+    }
+    return val;
+  }, zType);
+}
 var formatEnum = z.enum([
   "clover",
   "cobertura",
@@ -73580,26 +73587,26 @@ var formatEnum = z.enum([
   "simplecov"
 ]);
 var settingsParser = z.object({
-  token: optionalNormalizedString,
-  coverageToken: optionalNormalizedString,
+  token: preprocessBlanks(z.string().optional()),
+  coverageToken: preprocessBlanks(z.string().optional()),
   files: z.string().trim(),
-  addPrefix: optionalNormalizedString,
-  stripPrefix: optionalNormalizedString,
+  addPrefix: preprocessBlanks(z.string().optional()),
+  stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
-  tag: optionalNormalizedString,
-  totalPartsCount: z.string().transform((val) => {
-    if (val === "") return void 0;
-    const num = Number(val);
-    return isNaN(num) ? void 0 : num;
-  }),
+  tag: preprocessBlanks(z.string().optional()),
+  totalPartsCount: preprocessBlanks(z.coerce.number().int().gte(1).optional()),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: optionalNormalizedString,
-  format: z.union([formatEnum, z.literal("")]).transform((val) => val === "" ? void 0 : val).optional(),
+  cliVersion: preprocessBlanks(z.string().optional()),
+  format: preprocessBlanks(formatEnum.optional()),
   dryRun: z.boolean(),
   incomplete: z.boolean(),
-  name: optionalNormalizedString
+  name: preprocessBlanks(z.string().optional()),
+  validate: z.boolean(),
+  validateFileThreshold: preprocessBlanks(
+    z.coerce.number().gte(1).lte(100).optional()
+  )
 });
 var OIDC_AUDIENCE = "https://qlty.sh";
 var COVERAGE_TOKEN_REGEX = /^(qltcp_|qltcw_)[a-zA-Z0-9]{10,}$/;
@@ -73630,7 +73637,9 @@ var Settings = class _Settings {
         format: input.getInput("format"),
         dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
-        name: input.getInput("name")
+        name: input.getInput("name"),
+        validate: input.getBooleanInput("validate"),
+        validateFileThreshold: input.getInput("validate-file-threshold")
       }),
       input,
       fs
@@ -73656,6 +73665,11 @@ var Settings = class _Settings {
           "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
         );
       }
+    }
+    if (this._data.validateFileThreshold !== void 0 && !this._data.validate) {
+      errors.push(
+        "'validate-file-threshold' requires 'validate' to be set to true."
+      );
     }
     return errors;
   }
@@ -73750,7 +73764,9 @@ var StubbedInputProvider = class {
       format: data["format"] || "",
       "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
-      name: data.name || ""
+      name: data.name || "",
+      validate: data.validate || false,
+      "validate-file-threshold": data["validate-file-threshold"] || ""
     };
   }
   getInput(name, _options) {
@@ -73985,6 +74001,15 @@ var CoverageAction = class _CoverageAction {
     }
     if (this._settings.input.name) {
       uploadArgs.push("--name", this._settings.input.name);
+    }
+    if (this._settings.input.validate) {
+      uploadArgs.push("--validate");
+      if (this._settings.input.validateFileThreshold) {
+        uploadArgs.push(
+          "--validate-file-threshold",
+          this._settings.input.validateFileThreshold.toString()
+        );
+      }
     }
     return uploadArgs;
   }

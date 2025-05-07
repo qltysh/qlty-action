@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, ZodType } from "zod";
 import * as core from "@actions/core";
 import * as glob from "@actions/glob";
 
@@ -29,11 +29,18 @@ interface ActionInputKeys {
   "dry-run": boolean;
   incomplete: boolean;
   name: string;
+  validate: boolean;
+  "validate-file-threshold": string;
 }
 
-const optionalNormalizedString = z
-  .string()
-  .transform((val) => (val === "" ? undefined : val));
+function preprocessBlanks(zType: ZodType): ZodType {
+  return z.preprocess((val) => {
+    if (val === "" || val === null) {
+      return undefined;
+    }
+    return val;
+  }, zType);
+}
 
 // NOTE: These formats need to be kept in sync with action.yml
 // which in turn needs to be kept in sync with the CLI
@@ -48,29 +55,26 @@ const formatEnum = z.enum([
 ]);
 
 const settingsParser = z.object({
-  token: optionalNormalizedString,
-  coverageToken: optionalNormalizedString,
+  token: preprocessBlanks(z.string().optional()),
+  coverageToken: preprocessBlanks(z.string().optional()),
   files: z.string().trim(),
-  addPrefix: optionalNormalizedString,
-  stripPrefix: optionalNormalizedString,
+  addPrefix: preprocessBlanks(z.string().optional()),
+  stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
-  tag: optionalNormalizedString,
-  totalPartsCount: z.string().transform((val) => {
-    if (val === "") return undefined;
-    const num = Number(val);
-    return isNaN(num) ? undefined : num;
-  }),
+  tag: preprocessBlanks(z.string().optional()),
+  totalPartsCount: preprocessBlanks(z.coerce.number().int().gte(1).optional()),
   oidc: z.boolean(),
   verbose: z.boolean(),
-  cliVersion: optionalNormalizedString,
-  format: z
-    .union([formatEnum, z.literal("")])
-    .transform((val) => (val === "" ? undefined : val))
-    .optional(),
+  cliVersion: preprocessBlanks(z.string().optional()),
+  format: preprocessBlanks(formatEnum.optional()),
   dryRun: z.boolean(),
   incomplete: z.boolean(),
-  name: optionalNormalizedString,
+  name: preprocessBlanks(z.string().optional()),
+  validate: z.boolean(),
+  validateFileThreshold: preprocessBlanks(
+    z.coerce.number().gte(1).lte(100).optional(),
+  ),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -105,6 +109,8 @@ export class Settings {
         dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
         name: input.getInput("name"),
+        validate: input.getBooleanInput("validate"),
+        validateFileThreshold: input.getInput("validate-file-threshold"),
       }),
       input,
       fs,
@@ -145,6 +151,16 @@ export class Settings {
           "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
         );
       }
+    }
+
+    // Check if validate-file-threshold is provided without enabling validate
+    if (
+      this._data.validateFileThreshold !== undefined &&
+      !this._data.validate
+    ) {
+      errors.push(
+        "'validate-file-threshold' requires 'validate' to be set to true.",
+      );
     }
 
     return errors;
@@ -270,6 +286,8 @@ export class StubbedInputProvider implements InputProvider {
       "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
       name: data.name || "",
+      validate: data.validate || false,
+      "validate-file-threshold": data["validate-file-threshold"] || "",
     };
   }
 
