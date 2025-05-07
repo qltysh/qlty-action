@@ -83,6 +83,14 @@ export class CoverageAction {
       return;
     }
 
+    if (this._settings.input.command === "complete") {
+      await this.runComplete(qltyBinary);
+    } else {
+      await this.runPublish(qltyBinary);
+    }
+  }
+
+  async runPublish(qltyBinary: string): Promise<void> {
     let uploadArgs = await this.buildArgs();
     const files = await this._settings.getFiles();
 
@@ -150,6 +158,56 @@ export class CoverageAction {
     }
   }
 
+  async runComplete(qltyBinary: string): Promise<void> {
+    const completeArgs = ["coverage", "complete"];
+
+    if (this._settings.input.tag) {
+      completeArgs.push("--tag", this._settings.input.tag);
+    }
+
+    const token = await this._settings.getToken();
+    if (token) {
+      this._output.setSecret(token);
+    }
+
+    let qlytOutput = "";
+
+    try {
+      const env: Record<string, string> = {
+        ...process.env,
+        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+        QLTY_CI_UPLOADER_VERSION: Version.readVersion() || "",
+      };
+
+      if (token) {
+        env["QLTY_COVERAGE_TOKEN"] = token;
+      }
+
+      this._emitter.emit(EXEC_EVENT, {
+        command: [qltyBinary, ...completeArgs],
+        env,
+      });
+      this._output.info(`Running: ${[qltyBinary, ...completeArgs].join(" ")}`);
+
+      await this._executor.exec(qltyBinary, completeArgs, {
+        env,
+        listeners: {
+          stdout: (data: Buffer) => {
+            qlytOutput += data.toString();
+          },
+          stderr: (data: Buffer) => {
+            qlytOutput += data.toString();
+          },
+        },
+      });
+    } catch {
+      this.warnOrThrow([
+        "Error completing coverage. Output from the Qlty CLI follows:",
+        qlytOutput,
+      ]);
+    }
+  }
+
   validate(): boolean {
     const errors = this._settings.validate();
 
@@ -205,7 +263,7 @@ export class CoverageAction {
     if (this._settings.input.totalPartsCount) {
       uploadArgs.push(
         "--total-parts-count",
-        this._settings.input.totalPartsCount.toString(),
+        this._settings.input.totalPartsCount.toString()
       );
     }
 
@@ -217,7 +275,7 @@ export class CoverageAction {
     if (payload.pull_request) {
       uploadArgs.push(
         "--override-commit-sha",
-        payload.pull_request["head"].sha,
+        payload.pull_request["head"].sha
       );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
@@ -240,7 +298,7 @@ export class CoverageAction {
       if (this._settings.input.validateFileThreshold) {
         uploadArgs.push(
           "--validate-file-threshold",
-          this._settings.input.validateFileThreshold.toString(),
+          this._settings.input.validateFileThreshold.toString()
         );
       }
     }
