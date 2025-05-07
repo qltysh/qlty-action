@@ -20,6 +20,7 @@ describe("Settings", () => {
       name: "test-name",
       validate: true,
       "validate-file-threshold": "75",
+      command: "publish",
     });
 
     expect(settings.input).toMatchObject({
@@ -40,6 +41,7 @@ describe("Settings", () => {
       name: "test-name",
       validate: true,
       validateFileThreshold: 75,
+      command: "publish",
     });
   });
 
@@ -70,6 +72,44 @@ describe("Settings", () => {
       name: undefined,
       validate: false,
       validateFileThreshold: undefined,
+      command: "publish", // Default value
+    });
+  });
+
+  describe("command", () => {
+    test("sets default command to publish", () => {
+      const settings = Settings.createNull({
+        oidc: true,
+        files: "info.lcov",
+        command: "",
+      });
+      expect(settings.input.command).toEqual("publish");
+    });
+
+    test("parses valid commands", () => {
+      let settings = Settings.createNull({
+        oidc: true,
+        files: "info.lcov",
+        command: "publish",
+      });
+      expect(settings.input.command).toEqual("publish");
+
+      settings = Settings.createNull({
+        oidc: true,
+        files: "info.lcov",
+        command: "complete",
+      });
+      expect(settings.input.command).toEqual("complete");
+    });
+
+    test("rejects invalid commands", () => {
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          files: "info.lcov",
+          command: "invalid",
+        });
+      }).toThrow();
     });
   });
 
@@ -347,6 +387,91 @@ describe("Settings", () => {
       expect(settings.validate()).toEqual([
         "'validate-file-threshold' requires 'validate' to be set to true.",
       ]);
+    });
+
+    describe("command=complete validation", () => {
+      test("valid complete command with minimal inputs", () => {
+        const settings = Settings.createNull({
+          token: "qltcp_1234567890",
+          command: "complete",
+          files: "",
+        });
+
+        expect(settings.validate()).toEqual([]);
+      });
+
+      test("fails when complete command has files", () => {
+        const settings = Settings.createNull({
+          token: "qltcp_1234567890",
+          command: "complete",
+          files: "coverage.json",
+        });
+
+        expect(settings.validate()).toContain(
+          "'files' cannot be used when command is 'complete'.",
+        );
+      });
+
+      test("fails when complete command has invalid inputs", () => {
+        const settings = Settings.createNull({
+          token: "qltcp_1234567890",
+          command: "complete",
+          files: "coverage.json",
+          "add-prefix": "src/",
+          "skip-missing-files": true,
+          format: "lcov",
+          "total-parts-count": "5",
+          "dry-run": true,
+          incomplete: true,
+          name: "test",
+          validate: true,
+          "validate-file-threshold": "80",
+        });
+
+        const errors = settings.validate();
+
+        expect(errors).toContain(
+          "'files' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'add-prefix' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'skip-missing-files' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'format' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'total-parts-count' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'dry-run' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'incomplete' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'name' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'validate' cannot be used when command is 'complete'.",
+        );
+        expect(errors).toContain(
+          "'validate-file-threshold' cannot be used when command is 'complete'.",
+        );
+      });
+
+      test("allows tag input with complete command", () => {
+        const settings = Settings.createNull({
+          token: "qltcp_1234567890",
+          command: "complete",
+          files: "",
+          tag: "units",
+        });
+
+        expect(settings.validate()).toEqual([]);
+      });
     });
   });
 
