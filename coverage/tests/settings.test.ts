@@ -18,6 +18,7 @@ describe("Settings", () => {
       "dry-run": true,
       incomplete: true,
       name: "test-name",
+      validate: true,
     });
 
     expect(settings.input).toMatchObject({
@@ -36,6 +37,7 @@ describe("Settings", () => {
       dryRun: true,
       incomplete: true,
       name: "test-name",
+      validate: true,
     });
   });
 
@@ -49,6 +51,7 @@ describe("Settings", () => {
       "total-parts-count": "",
       incomplete: false,
       name: "",
+      validate: false,
     });
 
     expect(settings.input).toMatchObject({
@@ -62,6 +65,7 @@ describe("Settings", () => {
       dryRun: false,
       incomplete: false,
       name: undefined,
+      validate: false,
     });
   });
 

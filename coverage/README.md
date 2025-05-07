@@ -91,6 +91,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 | `dry-run`            | Run in dry run mode without uploading coverage data                                                                                                                                                                    | No       | `false` |
 | `incomplete`         | Mark the coverage data as incomplete                                                                                                                                                                                   | No       | `false` |
 | `name`               | Name to identify this coverage upload                                                                                                                                                                                  | No       | -       |
+| `validate`           | Validate the coverage data                                                                                                                                                                                             | No       | `false` |
 
 ---
 

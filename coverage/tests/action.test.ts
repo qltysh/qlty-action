@@ -197,6 +197,40 @@ describe("CoverageAction", () => {
     expect(command?.command).toContain("custom-name");
   });
 
+  test("adds validate flag when validate is true", async () => {
+    const { action, commands } = createTrackedAction({
+      settings: Settings.createNull({
+        "coverage-token": "qltcp_1234567890",
+        files: "info.lcov",
+        validate: true,
+      }),
+      context: { payload: {} },
+    });
+    await action.run();
+
+    const executedCommands = commands.clear();
+    expect(executedCommands.length).toBe(1);
+    const command = executedCommands[0];
+    expect(command?.command).toContain("--validate");
+  });
+
+  test("doesn't add validate flag when validate is false", async () => {
+    const { action, commands } = createTrackedAction({
+      settings: Settings.createNull({
+        "coverage-token": "qltcp_1234567890",
+        files: "info.lcov",
+        validate: false,
+      }),
+      context: { payload: {} },
+    });
+    await action.run();
+
+    const executedCommands = commands.clear();
+    expect(executedCommands.length).toBe(1);
+    const command = executedCommands[0];
+    expect(command?.command).not.toContain("--validate");
+  });
+
   test("allows dry-run without token or OIDC", async () => {
     const { action, commands, output } = createTrackedAction({
       settings: Settings.createNull({
