@@ -73919,7 +73919,7 @@ var CoverageAction = class _CoverageAction {
     }
   }
   async runPublish(qltyBinary) {
-    let uploadArgs = await this.buildArgs();
+    let uploadArgs = await this.buildPublishArgs();
     const files = await this._settings.getFiles();
     if (files.length === 0) {
       if (this._settings.input.files.includes(" ")) {
@@ -74039,7 +74039,7 @@ var CoverageAction = class _CoverageAction {
       throw new CoverageError(messages.join("; "));
     }
   }
-  async buildArgs() {
+  async buildPublishArgs() {
     const uploadArgs = ["coverage", "publish"];
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");

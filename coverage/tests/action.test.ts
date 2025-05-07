@@ -62,197 +62,310 @@ describe("CoverageAction", () => {
     });
   });
 
-  test("runs qlty coverage publish", async () => {
-    const { action, commands } = createTrackedAction({
-      settings: Settings.createNull({
-        "coverage-token": "qltcp_1234567890",
-        files: "info.lcov",
-      }),
-      context: { payload: {} },
-    });
-    await action.run();
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
+  describe("publish command", () => {
+    test("runs qlty coverage publish", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
 
-    const command = executedCommands[0];
-    expect(command?.command).toEqual([
-      "qlty",
-      "coverage",
-      "publish",
-      "info.lcov",
-    ]);
+      const command = executedCommands[0];
+      expect(command?.command).toEqual([
+        "qlty",
+        "coverage",
+        "publish",
+        "info.lcov",
+      ]);
+    });
+
+    test("adds arguments based on inputs", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_DEADBEEF10",
+          files: "info.lcov",
+          "skip-missing-files": true,
+          "total-parts-count": "5",
+          tag: "test-tag",
+          "add-prefix": "prefix",
+          "strip-prefix": "strip",
+          format: "simplecov",
+          verbose: true,
+          "dry-run": true,
+          incomplete: true,
+          name: "test-name",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+
+      const command = executedCommands[0];
+      expect(command?.command).toEqual([
+        "qlty",
+        "coverage",
+        "publish",
+        "--print",
+        "--dry-run",
+        "--add-prefix",
+        "prefix",
+        "--strip-prefix",
+        "strip",
+        "--format",
+        "simplecov",
+        "--tag",
+        "test-tag",
+        "--total-parts-count",
+        "5",
+        "--skip-missing-files",
+        "--incomplete",
+        "--name",
+        "test-name",
+        "info.lcov",
+      ]);
+      expect(command?.env).toMatchObject({
+        QLTY_COVERAGE_TOKEN: "qltcp_DEADBEEF10",
+        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+      });
+      expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+      );
+    });
+
+    test("uses the payload for the PR head SHA and ref", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+        }),
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toEqual([
+        "qlty",
+        "coverage",
+        "publish",
+        "--override-commit-sha",
+        "test-sha",
+        "--override-branch",
+        "test-ref",
+        "info.lcov",
+      ]);
+    });
+
+    test("adds incomplete flag when incomplete is true", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          incomplete: true,
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--incomplete");
+    });
+
+    test("adds name argument when name is provided", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          name: "custom-name",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--name");
+      expect(command?.command).toContain("custom-name");
+    });
+
+    test("adds validate flag when validate is true", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          validate: true,
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--validate");
+    });
+
+    test("adds validate-file-threshold flag when validate is true and threshold is set", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          validate: true,
+          "validate-file-threshold": "80",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--validate");
+      expect(command?.command).toContain("--validate-file-threshold");
+      expect(command?.command).toContain("80");
+    });
+
+    test("allows dry-run without token or OIDC", async () => {
+      const { action, commands, output } = createTrackedAction({
+        settings: Settings.createNull({
+          token: "",
+          "coverage-token": "",
+          oidc: false,
+          files: "info.lcov",
+          "dry-run": true,
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--dry-run");
+      expect(command?.env?.["QLTY_COVERAGE_TOKEN"]).toBeUndefined();
+      expect(output.warnings.length).toBe(0); // No warnings should be generated
+    });
   });
 
-  test("adds arguments based on inputs", async () => {
-    const { action, commands } = createTrackedAction({
-      settings: Settings.createNull({
-        "coverage-token": "qltcp_DEADBEEF10",
-        files: "info.lcov",
-        "skip-missing-files": true,
-        "total-parts-count": "5",
-        tag: "test-tag",
-        "add-prefix": "prefix",
-        "strip-prefix": "strip",
-        format: "simplecov",
-        verbose: true,
-        "dry-run": true,
-        incomplete: true,
-        name: "test-name",
-      }),
-      context: { payload: {} },
+  describe("complete command", () => {
+    test("runs qlty coverage complete with basic arguments", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+
+      const command = executedCommands[0];
+      expect(command?.command).toEqual(["qlty", "coverage", "complete"]);
     });
-    await action.run();
 
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
+    test("adds tag argument when tag is provided", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+          tag: "test-tag",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
 
-    const command = executedCommands[0];
-    expect(command?.command).toEqual([
-      "qlty",
-      "coverage",
-      "publish",
-      "--print",
-      "--dry-run",
-      "--add-prefix",
-      "prefix",
-      "--strip-prefix",
-      "strip",
-      "--format",
-      "simplecov",
-      "--tag",
-      "test-tag",
-      "--total-parts-count",
-      "5",
-      "--skip-missing-files",
-      "--incomplete",
-      "--name",
-      "test-name",
-      "info.lcov",
-    ]);
-    expect(command?.env).toMatchObject({
-      QLTY_COVERAGE_TOKEN: "qltcp_DEADBEEF10",
-      QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toEqual([
+        "qlty",
+        "coverage",
+        "complete",
+        "--tag",
+        "test-tag",
+      ]);
     });
-    expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-      /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
-    );
-  });
 
-  test("uses the payload for the PR head SHA and ref", async () => {
-    const { action, commands } = createTrackedAction({
-      settings: Settings.createNull({
-        "coverage-token": "qltcp_1234567890",
-        files: "info.lcov",
-      }),
+    test("sets environment variables correctly", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.env).toMatchObject({
+        QLTY_COVERAGE_TOKEN: "qltcp_1234567890",
+        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
+      });
+      expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+      );
     });
-    await action.run();
 
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
-    const command = executedCommands[0];
-    expect(command?.command).toEqual([
-      "qlty",
-      "coverage",
-      "publish",
-      "--override-commit-sha",
-      "test-sha",
-      "--override-branch",
-      "test-ref",
-      "info.lcov",
-    ]);
-  });
+    test("handles token from oidc", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          oidc: true,
+          command: "complete",
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
 
-  test("adds incomplete flag when incomplete is true", async () => {
-    const { action, commands } = createTrackedAction({
-      settings: Settings.createNull({
-        "coverage-token": "qltcp_1234567890",
-        files: "info.lcov",
-        incomplete: true,
-      }),
-      context: { payload: {} },
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.env["QLTY_COVERAGE_TOKEN"]).toBe(
+        "oidc-token:audience=https://qlty.sh",
+      );
     });
-    await action.run();
 
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
-    const command = executedCommands[0];
-    expect(command?.command).toContain("--incomplete");
-  });
+    test("throws an error if qlty fails when skip-errors is false", async () => {
+      const { action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({ throwError: true }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+          "skip-errors": false,
+        }),
+      });
 
-  test("adds name argument when name is provided", async () => {
-    const { action, commands } = createTrackedAction({
-      settings: Settings.createNull({
-        "coverage-token": "qltcp_1234567890",
-        files: "info.lcov",
-        name: "custom-name",
-      }),
-      context: { payload: {} },
+      await expect(action.run()).rejects.toThrow();
     });
-    await action.run();
 
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
-    const command = executedCommands[0];
-    expect(command?.command).toContain("--name");
-    expect(command?.command).toContain("custom-name");
-  });
+    test("logs a warning if qlty fails when skip-errors is true", async () => {
+      const { output, action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({ throwError: true }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+          "skip-errors": true,
+        }),
+      });
 
-  test("adds validate flag when validate is true", async () => {
-    const { action, commands } = createTrackedAction({
-      settings: Settings.createNull({
-        "coverage-token": "qltcp_1234567890",
-        files: "info.lcov",
-        validate: true,
-      }),
-      context: { payload: {} },
+      await action.run();
+      expect(output.warnings).toEqual([
+        "Error completing coverage. Output from the Qlty CLI follows:",
+        "STDOUT\nSTDERR\n",
+      ]);
     });
-    await action.run();
-
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
-    const command = executedCommands[0];
-    expect(command?.command).toContain("--validate");
-  });
-
-  test("adds validate-file-threshold flag when validate is true and threshold is set", async () => {
-    const { action, commands } = createTrackedAction({
-      settings: Settings.createNull({
-        "coverage-token": "qltcp_1234567890",
-        files: "info.lcov",
-        validate: true,
-        "validate-file-threshold": "80",
-      }),
-      context: { payload: {} },
-    });
-    await action.run();
-
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
-    const command = executedCommands[0];
-    expect(command?.command).toContain("--validate");
-    expect(command?.command).toContain("--validate-file-threshold");
-    expect(command?.command).toContain("80");
-  });
-
-  test("allows dry-run without token or OIDC", async () => {
-    const { action, commands, output } = createTrackedAction({
-      settings: Settings.createNull({
-        token: "",
-        "coverage-token": "",
-        oidc: false,
-        files: "info.lcov",
-        "dry-run": true,
-      }),
-      context: { payload: {} },
-    });
-    await action.run();
-
-    const executedCommands = commands.clear();
-    expect(executedCommands.length).toBe(1);
-    const command = executedCommands[0];
-    expect(command?.command).toContain("--dry-run");
-    expect(command?.env?.["QLTY_COVERAGE_TOKEN"]).toBeUndefined();
-    expect(output.warnings.length).toBe(0); // No warnings should be generated
   });
 
   describe("error handling", () => {

@@ -91,7 +91,7 @@ export class CoverageAction {
   }
 
   async runPublish(qltyBinary: string): Promise<void> {
-    let uploadArgs = await this.buildArgs();
+    let uploadArgs = await this.buildPublishArgs();
     const files = await this._settings.getFiles();
 
     if (files.length === 0) {
@@ -233,7 +233,7 @@ export class CoverageAction {
     }
   }
 
-  async buildArgs(): Promise<string[]> {
+  async buildPublishArgs(): Promise<string[]> {
     const uploadArgs = ["coverage", "publish"];
 
     if (this._settings.input.verbose) {
