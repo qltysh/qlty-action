@@ -65,6 +65,72 @@ describe("Settings", () => {
     });
   });
 
+  describe("totalPartsCount", () => {
+    test("allows missing", () => {
+      let settings = Settings.createNull({
+        oidc: true,
+        "total-parts-count": "",
+      });
+      expect(settings.input.totalPartsCount).toBeUndefined();
+
+      settings = Settings.createNull({
+        oidc: true,
+        "total-parts-count": null as any,
+      });
+      expect(settings.input.totalPartsCount).toBeUndefined();
+
+      settings = Settings.createNull({
+        oidc: true,
+        "total-parts-count": undefined as any,
+      });
+      expect(settings.input.totalPartsCount).toBeUndefined();
+    });
+
+    test("parses numbers", () => {
+      let settings = Settings.createNull({
+        oidc: true,
+        "total-parts-count": "1",
+      });
+      expect(settings.input.totalPartsCount).toEqual(1);
+
+      settings = Settings.createNull({
+        oidc: true,
+        "total-parts-count": "2",
+      });
+      expect(settings.input.totalPartsCount).toEqual(2);
+    });
+
+    test("rejects invalid values", () => {
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "total-parts-count": "foo",
+        });
+      }).toThrow();
+
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "total-parts-count": "0",
+        });
+      }).toThrow();
+
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "total-parts-count": "-1",
+        });
+      }).toThrow();
+
+      expect(() => {
+        Settings.createNull({
+          oidc: true,
+          "total-parts-count": "1.1",
+        });
+      }).toThrow();
+    });
+  });
+
   describe("format", () => {
     test("allows missing", () => {
       const settings = Settings.createNull({

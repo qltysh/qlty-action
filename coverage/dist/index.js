@@ -73595,10 +73595,7 @@ var settingsParser = z.object({
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
   tag: preprocessBlanks(z.string().optional()),
-  totalPartsCount: z.preprocess(
-    (val) => val === "" || val === null ? void 0 : val,
-    z.coerce.number().optional()
-  ),
+  totalPartsCount: preprocessBlanks(z.coerce.number().int().gte(1).optional()),
   oidc: z.boolean(),
   verbose: z.boolean(),
   cliVersion: preprocessBlanks(z.string().optional()),

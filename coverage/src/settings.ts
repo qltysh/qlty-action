@@ -61,10 +61,7 @@ const settingsParser = z.object({
   skipErrors: z.boolean(),
   skipMissingFiles: z.boolean(),
   tag: preprocessBlanks(z.string().optional()),
-  totalPartsCount: z.preprocess(
-    (val) => (val === "" || val === null ? undefined : val),
-    z.coerce.number().optional()
-  ),
+  totalPartsCount: preprocessBlanks(z.coerce.number().int().gte(1).optional()),
   oidc: z.boolean(),
   verbose: z.boolean(),
   cliVersion: preprocessBlanks(z.string().optional()),
@@ -86,7 +83,7 @@ export class Settings {
 
   static create(
     input: InputProvider = core,
-    fs = FileSystem.create()
+    fs = FileSystem.create(),
   ): Settings {
     return new Settings(
       settingsParser.parse({
@@ -108,13 +105,13 @@ export class Settings {
         name: input.getInput("name"),
       }),
       input,
-      fs
+      fs,
     );
   }
 
   static createNull(
     input: Partial<ActionInputKeys> = {},
-    fs = FileSystem.createNull()
+    fs = FileSystem.createNull(),
   ): Settings {
     return Settings.create(new StubbedInputProvider(input), fs);
   }
@@ -137,13 +134,13 @@ export class Settings {
 
       if (this._data.oidc && coverageToken) {
         errors.push(
-          "Both 'oidc' and 'token' cannot be provided at the same time."
+          "Both 'oidc' and 'token' cannot be provided at the same time.",
         );
       }
 
       if (coverageToken && !COVERAGE_TOKEN_REGEX.test(coverageToken)) {
         errors.push(
-          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics."
+          "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
         );
       }
     }
@@ -280,7 +277,7 @@ export class StubbedInputProvider implements InputProvider {
 
   getBooleanInput(
     name: keyof ActionInputKeys,
-    _options?: GetInputOptions
+    _options?: GetInputOptions,
   ): boolean {
     return this._data[name] === true;
   }
