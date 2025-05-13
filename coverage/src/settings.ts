@@ -58,7 +58,7 @@ const formatEnum = z.enum([
 const settingsParser = z.object({
   token: preprocessBlanks(z.string().optional()),
   coverageToken: preprocessBlanks(z.string().optional()),
-  files: z.string().trim(),
+  files: preprocessBlanks(z.string().trim().optional()),
   addPrefix: preprocessBlanks(z.string().optional()),
   stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),
@@ -95,7 +95,7 @@ export class Settings {
   ): Settings {
     return new Settings(
       settingsParser.parse({
-        files: input.getInput("files", { required: true }).trim(),
+        files: input.getInput("files"),
         addPrefix: input.getInput("add-prefix"),
         stripPrefix: input.getInput("strip-prefix"),
         skipErrors: input.getBooleanInput("skip-errors"),
@@ -156,6 +156,10 @@ export class Settings {
       }
     }
 
+    if(this._data.command === "publish" && !this._data.files) {
+      errors.push("The 'files' input is required when command is 'publish'.");
+    }
+
     // Check if validate-file-threshold is provided without enabling validate
     if (
       this._data.validateFileThreshold !== undefined &&
@@ -169,7 +173,7 @@ export class Settings {
     // Validate that specific inputs are not used when command is "complete"
     if (this._data.command === "complete") {
       const invalidInputsForComplete = [
-        { name: "files", value: this._data.files !== "" },
+        { name: "files", value: this._data.files !== undefined },
         { name: "add-prefix", value: this._data.addPrefix !== undefined },
         { name: "strip-prefix", value: this._data.stripPrefix !== undefined },
         { name: "dry-run", value: this._data.dryRun },
