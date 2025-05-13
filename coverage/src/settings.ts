@@ -156,7 +156,7 @@ export class Settings {
       }
     }
 
-    if(this._data.command === "publish" && !this._data.files) {
+    if (this._data.command === "publish" && !this._data.files) {
       errors.push("The 'files' input is required when command is 'publish'.");
     }
 

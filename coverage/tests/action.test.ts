@@ -46,13 +46,14 @@ describe("CoverageAction", () => {
     test("logs warnings no paths found", async () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
-        settings: Settings.createNull({
-          oidc: true,
-          files: "some/non-existent/file",
-          "skip-errors": true,
-        },
-        FileSystem.createNull([]) // returns no files
-      ),
+        settings: Settings.createNull(
+          {
+            oidc: true,
+            files: "some/non-existent/file",
+            "skip-errors": true,
+          },
+          FileSystem.createNull([]), // returns no files
+        ),
       });
 
       await action.run();
