@@ -58,7 +58,7 @@ const formatEnum = z.enum([
 const settingsParser = z.object({
   token: preprocessBlanks(z.string().optional()),
   coverageToken: preprocessBlanks(z.string().optional()),
-  files: preprocessBlanks(z.string().optional()),
+  files: preprocessBlanks(z.string().trim().optional()),
   addPrefix: preprocessBlanks(z.string().optional()),
   stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),

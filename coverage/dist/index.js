@@ -73589,7 +73589,7 @@ var formatEnum = z.enum([
 var settingsParser = z.object({
   token: preprocessBlanks(z.string().optional()),
   coverageToken: preprocessBlanks(z.string().optional()),
-  files: z.string().trim(),
+  files: preprocessBlanks(z.string().trim().optional()),
   addPrefix: preprocessBlanks(z.string().optional()),
   stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),
@@ -73623,7 +73623,7 @@ var Settings = class _Settings {
   static create(input = core2, fs = FileSystem.create()) {
     return new _Settings(
       settingsParser.parse({
-        files: input.getInput("files", { required: true }).trim(),
+        files: input.getInput("files"),
         addPrefix: input.getInput("add-prefix"),
         stripPrefix: input.getInput("strip-prefix"),
         skipErrors: input.getBooleanInput("skip-errors"),
@@ -73668,6 +73668,9 @@ var Settings = class _Settings {
         );
       }
     }
+    if (this._data.command === "publish" && !this._data.files) {
+      errors.push("The 'files' input is required when command is 'publish'.");
+    }
     if (this._data.validateFileThreshold !== void 0 && !this._data.validate) {
       errors.push(
         "'validate-file-threshold' requires 'validate' to be set to true."
@@ -73675,7 +73678,7 @@ var Settings = class _Settings {
     }
     if (this._data.command === "complete") {
       const invalidInputsForComplete = [
-        { name: "files", value: this._data.files !== "" },
+        { name: "files", value: this._data.files !== void 0 },
         { name: "add-prefix", value: this._data.addPrefix !== void 0 },
         { name: "strip-prefix", value: this._data.stripPrefix !== void 0 },
         { name: "dry-run", value: this._data.dryRun },
@@ -73730,6 +73733,9 @@ var Settings = class _Settings {
     return this._data.cliVersion.startsWith("v") ? this._data.cliVersion.substring(1) : this._data.cliVersion;
   }
   async getFiles() {
+    if (!this._data.files) {
+      return [];
+    }
     const patterns = this._data.files.split(",").map((file) => file.trim()).filter(Boolean);
     const expandedFiles = await this._fs.globPatterns(patterns.join("\n"));
     return this.sortedUnique(expandedFiles);
@@ -73922,7 +73928,7 @@ var CoverageAction = class _CoverageAction {
     let uploadArgs = await this.buildPublishArgs();
     const files = await this._settings.getFiles();
     if (files.length === 0) {
-      if (this._settings.input.files.includes(" ")) {
+      if (this._settings.input.files?.includes(" ")) {
         this.warnOrThrow([
           "No code coverage data files were found. Please check the action's inputs.",
           "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",
