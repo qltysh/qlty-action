@@ -34,7 +34,7 @@ interface ActionInputKeys {
   command: string;
 }
 
-function preprocessBlanks(zType: ZodType): ZodType {
+function preprocessBlanks<T extends ZodType>(zType: T) {
   return z.preprocess((val) => {
     if (val === "" || val === null) {
       return undefined;
@@ -58,7 +58,7 @@ const formatEnum = z.enum([
 const settingsParser = z.object({
   token: preprocessBlanks(z.string().optional()),
   coverageToken: preprocessBlanks(z.string().optional()),
-  files: preprocessBlanks(z.string().trim().optional()),
+  files: preprocessBlanks(z.string().optional()),
   addPrefix: preprocessBlanks(z.string().optional()),
   stripPrefix: preprocessBlanks(z.string().optional()),
   skipErrors: z.boolean(),
@@ -241,6 +241,9 @@ export class Settings {
   }
 
   async getFiles() {
+    if (!this._data.files) {
+      return [];
+    }
     const patterns: string[] = this._data.files
       .split(",")
       .map((file) => file.trim())
