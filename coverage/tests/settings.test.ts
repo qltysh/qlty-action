@@ -271,6 +271,7 @@ describe("Settings", () => {
         Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           oidc: false,
+          files: "coverage.json",
         }).validate(),
       ).toEqual([]);
 
@@ -278,6 +279,7 @@ describe("Settings", () => {
         Settings.createNull({
           token: "qltcp_1234567890",
           oidc: false,
+          files: "coverage.json",
         }).validate(),
       ).toEqual([]);
 
@@ -286,6 +288,7 @@ describe("Settings", () => {
           "coverage-token": "",
           token: "",
           oidc: true,
+          files: "coverage.json",
         }).validate(),
       ).toEqual([]);
 
@@ -296,14 +299,27 @@ describe("Settings", () => {
           oidc: false,
           validate: true,
           "validate-file-threshold": "80",
+          files: "coverage.json",
         }).validate(),
       ).toEqual([]);
+    });
+
+    test("fails when files is missing", () => {
+      const settings = Settings.createNull({
+        token: "qltcp_1234567890",
+        oidc: false,
+        files: "",
+      });
+      expect(settings.validate()).toEqual([
+        "The 'files' input is required when command is 'publish'.",
+      ]);
     });
 
     test("fails when OIDC and token are both missing", () => {
       const settings = Settings.createNull({
         token: "",
         oidc: false,
+        files: "coverage.json",
       });
 
       expect(settings.validate()).toEqual([
@@ -315,6 +331,7 @@ describe("Settings", () => {
       const settings = Settings.createNull({
         token: "qltcp_1234567890",
         oidc: true,
+        files: "coverage.json",
       });
 
       expect(settings.validate()).toEqual([
@@ -326,6 +343,7 @@ describe("Settings", () => {
       expect(
         Settings.createNull({
           token: "wrong",
+          files: "coverage.json",
         }).validate(),
       ).toEqual([
         "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
@@ -334,6 +352,7 @@ describe("Settings", () => {
       expect(
         Settings.createNull({
           "coverage-token": "wrong",
+          files: "coverage.json",
         }).validate(),
       ).toEqual([
         "The provided token is invalid. It should begin with 'qltcp_' or 'qltcw_' followed by alphanumerics.",
@@ -342,6 +361,7 @@ describe("Settings", () => {
       expect(
         Settings.createNull({
           "coverage-token": "qltcp_1234567890",
+          files: "coverage.json",
         }).validate(),
       ).toEqual([]);
     });
@@ -351,6 +371,7 @@ describe("Settings", () => {
         token: "",
         oidc: false,
         "dry-run": true,
+        files: "coverage.json",
       });
 
       expect(settings.validate()).toEqual([]);
@@ -361,6 +382,7 @@ describe("Settings", () => {
         token: "invalid-token",
         oidc: false,
         "dry-run": true,
+        files: "coverage.json",
       });
 
       expect(settings.validate()).toEqual([]);
@@ -371,6 +393,7 @@ describe("Settings", () => {
         token: "qltcp_1234567890",
         oidc: true,
         "dry-run": true,
+        files: "coverage.json",
       });
 
       expect(settings.validate()).toEqual([]);
@@ -382,6 +405,7 @@ describe("Settings", () => {
         oidc: false,
         validate: false,
         "validate-file-threshold": "80",
+        files: "coverage.json",
       });
 
       expect(settings.validate()).toEqual([

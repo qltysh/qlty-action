@@ -95,7 +95,7 @@ export class CoverageAction {
     const files = await this._settings.getFiles();
 
     if (files.length === 0) {
-      if (this._settings.input.files.includes(" ")) {
+      if (this._settings.input.files?.includes(" ")) {
         this.warnOrThrow([
           "No code coverage data files were found. Please check the action's inputs.",
           "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",

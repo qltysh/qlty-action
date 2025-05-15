@@ -1,6 +1,6 @@
 import { CoverageAction, StubbedActionContext } from "src/action";
 import { Installer } from "src/installer";
-import { Settings, StubbedFileSystem } from "src/settings";
+import { FileSystem, Settings, StubbedFileSystem } from "src/settings";
 import { StubbedCommandExecutor } from "src/util/exec";
 import { StubbedOutput } from "src/util/output";
 
@@ -46,11 +46,14 @@ describe("CoverageAction", () => {
     test("logs warnings no paths found", async () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
-        settings: Settings.createNull({
-          oidc: true,
-          files: "",
-          "skip-errors": true,
-        }),
+        settings: Settings.createNull(
+          {
+            oidc: true,
+            files: "some/non-existent/file",
+            "skip-errors": true,
+          },
+          FileSystem.createNull([]), // returns no files
+        ),
       });
 
       await action.run();
