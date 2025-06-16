@@ -74097,6 +74097,9 @@ var CoverageAction = class _CoverageAction {
         );
       }
     }
+    if (process.env["RUNNER_TEMP"]) {
+      uploadArgs.push("--output-dir", process.env["RUNNER_TEMP"]);
+    }
     return uploadArgs;
   }
   trackOutput() {
