@@ -99,6 +99,14 @@ jobs:
           oidc: true
           files: coverage/coverage/clover.xml
 
+      - name: Verify clean working directory
+        run: |
+          if [ "$(git status --porcelain)" ]; then
+            echo "Working directory is not clean. Please commit or stash your changes."
+            git status
+            exit 1
+          fi
+
   test-windows-coverage:
     runs-on: windows-latest
 
