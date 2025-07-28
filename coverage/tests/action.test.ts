@@ -5,7 +5,7 @@ import { StubbedCommandExecutor } from "src/util/exec";
 import { StubbedOutput } from "src/util/output";
 
 describe("CoverageAction", () => {
-  describe("validaiton errors", async () => {
+  describe("validation errors", async () => {
     test("logs warnings shen skip-errors is true", async () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
@@ -216,6 +216,24 @@ describe("CoverageAction", () => {
       expect(executedCommands.length).toBe(1);
       const command = executedCommands[0];
       expect(command?.command).toContain("--validate");
+    });
+
+    test("adds --output-dir when RUNNER_TEMP env var is present", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+        }),
+        context: { payload: {} },
+        env: { RUNNER_TEMP: "/tmp/runner" },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--output-dir");
+      expect(command?.command).toContain("/tmp/runner");
     });
 
     test("adds validate-file-threshold flag when validate is true and threshold is set", async () => {
@@ -446,6 +464,7 @@ describe("CoverageAction", () => {
     executor = new StubbedCommandExecutor(),
     output = new StubbedOutput(),
     installer = Installer.createNull(undefined),
+    env = process.env,
   } = {}) {
     const action = CoverageAction.createNull({
       output,
@@ -453,6 +472,7 @@ describe("CoverageAction", () => {
       context,
       executor,
       installer,
+      env,
     });
     const commands = action.trackOutput();
     return { commands, action, output };

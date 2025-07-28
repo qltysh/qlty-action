@@ -73872,7 +73872,8 @@ var CoverageAction = class _CoverageAction {
     context: context3 = actionsGithub.context,
     executor = actionsExec,
     installer,
-    settings = Settings.create()
+    settings = Settings.create(),
+    env = process.env
   } = {}) {
     __publicField(this, "_output");
     __publicField(this, "_context");
@@ -73880,25 +73881,29 @@ var CoverageAction = class _CoverageAction {
     __publicField(this, "_installer");
     __publicField(this, "_settings");
     __publicField(this, "_emitter", new import_node_events2.default());
+    __publicField(this, "_env");
     this._output = output;
     this._context = context3;
     this._executor = executor;
     this._installer = installer || Installer.create(settings.getVersion());
     this._settings = settings;
+    this._env = env;
   }
   static createNull({
     output = new StubbedOutput(),
     context: context3 = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
     installer,
-    settings = Settings.createNull()
+    settings = Settings.createNull(),
+    env = process.env
   } = {}) {
     return new _CoverageAction({
       output,
       context: context3,
       executor,
       installer: installer || Installer.createNull(settings.getVersion()),
-      settings
+      settings,
+      env
     });
   }
   async run() {
@@ -73952,7 +73957,7 @@ var CoverageAction = class _CoverageAction {
     let qlytOutput = "";
     try {
       const env = {
-        ...process.env,
+        ...this._env,
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || ""
       };
@@ -73994,7 +73999,7 @@ var CoverageAction = class _CoverageAction {
     let qlytOutput = "";
     try {
       const env = {
-        ...process.env,
+        ...this._env,
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || ""
       };
@@ -74097,8 +74102,8 @@ var CoverageAction = class _CoverageAction {
         );
       }
     }
-    if (process.env["RUNNER_TEMP"]) {
-      uploadArgs.push("--output-dir", process.env["RUNNER_TEMP"]);
+    if (this._env["RUNNER_TEMP"]) {
+      uploadArgs.push("--output-dir", this._env["RUNNER_TEMP"]);
     }
     return uploadArgs;
   }
