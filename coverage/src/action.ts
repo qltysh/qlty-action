@@ -12,6 +12,8 @@ import Version from "./version";
 
 const EXEC_EVENT = "exec";
 
+type ProcessEnv = Record<string, string | undefined>;
+
 export class CoverageAction {
   private _output: ActionOutput;
   private _context: ActionContext;
@@ -19,6 +21,7 @@ export class CoverageAction {
   private _installer: Installer;
   private _settings: Settings;
   private _emitter: EventEmitter = new EventEmitter();
+  private _env: ProcessEnv;
 
   static createNull({
     output = new StubbedOutput(),
@@ -26,12 +29,14 @@ export class CoverageAction {
     executor = new StubbedCommandExecutor(),
     installer,
     settings = Settings.createNull(),
+    env = process.env,
   }: {
     output?: ActionOutput;
     context?: ActionContext;
     executor?: CommandExecutor;
     installer?: Installer;
     settings?: Settings;
+    env?: ProcessEnv;
   } = {}): CoverageAction {
     return new CoverageAction({
       output,
@@ -39,6 +44,7 @@ export class CoverageAction {
       executor,
       installer: installer || Installer.createNull(settings.getVersion()),
       settings,
+      env,
     });
   }
 
@@ -48,18 +54,21 @@ export class CoverageAction {
     executor = actionsExec,
     installer,
     settings = Settings.create(),
+    env = process.env,
   }: {
     output?: ActionOutput;
     context?: ActionContext;
     executor?: CommandExecutor;
     installer?: Installer;
     settings?: Settings;
+    env?: ProcessEnv;
   } = {}) {
     this._output = output;
     this._context = context;
     this._executor = executor;
     this._installer = installer || Installer.create(settings.getVersion());
     this._settings = settings;
+    this._env = env;
   }
 
   async run(): Promise<void> {
@@ -124,7 +133,7 @@ export class CoverageAction {
 
     try {
       const env: Record<string, string> = {
-        ...process.env,
+        ...this._env,
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || "",
       };
@@ -174,7 +183,7 @@ export class CoverageAction {
 
     try {
       const env: Record<string, string> = {
-        ...process.env,
+        ...this._env,
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
         QLTY_CI_UPLOADER_VERSION: Version.readVersion() || "",
       };
@@ -301,6 +310,10 @@ export class CoverageAction {
           this._settings.input.validateFileThreshold.toString(),
         );
       }
+    }
+
+    if (this._env["RUNNER_TEMP"]) {
+      uploadArgs.push("--output-dir", this._env["RUNNER_TEMP"]);
     }
 
     return uploadArgs;

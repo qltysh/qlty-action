@@ -5,7 +5,7 @@ import { StubbedCommandExecutor } from "src/util/exec";
 import { StubbedOutput } from "src/util/output";
 
 describe("CoverageAction", () => {
-  describe("validaiton errors", async () => {
+  describe("validation errors", async () => {
     test("logs warnings shen skip-errors is true", async () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
@@ -52,7 +52,7 @@ describe("CoverageAction", () => {
             files: "some/non-existent/file",
             "skip-errors": true,
           },
-          FileSystem.createNull([]), // returns no files
+          FileSystem.createNull([]) // returns no files
         ),
       });
 
@@ -138,7 +138,7 @@ describe("CoverageAction", () => {
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
       });
       expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
       );
     });
 
@@ -216,6 +216,24 @@ describe("CoverageAction", () => {
       expect(executedCommands.length).toBe(1);
       const command = executedCommands[0];
       expect(command?.command).toContain("--validate");
+    });
+
+    test("adds --output-dir when RUNNER_TEMP env var is present", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+        }),
+        context: { payload: {} },
+        env: { RUNNER_TEMP: "/tmp/runner" },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--output-dir");
+      expect(command?.command).toContain("/tmp/runner");
     });
 
     test("adds validate-file-threshold flag when validate is true and threshold is set", async () => {
@@ -318,7 +336,7 @@ describe("CoverageAction", () => {
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
       });
       expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
       );
     });
 
@@ -336,7 +354,7 @@ describe("CoverageAction", () => {
       expect(executedCommands.length).toBe(1);
       const command = executedCommands[0];
       expect(command?.env["QLTY_COVERAGE_TOKEN"]).toBe(
-        "oidc-token:audience=https://qlty.sh",
+        "oidc-token:audience=https://qlty.sh"
       );
     });
 
@@ -426,7 +444,7 @@ describe("CoverageAction", () => {
             files: "file1.lcov file2.lcov",
             "skip-errors": true,
           },
-          new StubbedFileSystem([]),
+          new StubbedFileSystem([])
         ),
       });
 
@@ -446,6 +464,7 @@ describe("CoverageAction", () => {
     executor = new StubbedCommandExecutor(),
     output = new StubbedOutput(),
     installer = Installer.createNull(undefined),
+    env = {},
   } = {}) {
     const action = CoverageAction.createNull({
       output,
@@ -453,6 +472,7 @@ describe("CoverageAction", () => {
       context,
       executor,
       installer,
+      env,
     });
     const commands = action.trackOutput();
     return { commands, action, output };
