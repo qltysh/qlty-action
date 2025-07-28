@@ -17,6 +17,9 @@
 - Add support for Windows to coverage action (#87)
 - Set `QLTY_CI_UPLOADER_TOOL` and `QLTY_CI_UPLOADER_VERSION` when running CLI (#86)
 - Allow dry-run without authentication (#91)
+- Write coverage archive to RUNNER_TEMP location when available (#110)
+
+Thank you, @enell for your contribution!
 
 ## v1.0.0 (2025-04-17)
 
