@@ -52,7 +52,7 @@ describe("CoverageAction", () => {
             files: "some/non-existent/file",
             "skip-errors": true,
           },
-          FileSystem.createNull([]), // returns no files
+          FileSystem.createNull([]) // returns no files
         ),
       });
 
@@ -138,7 +138,7 @@ describe("CoverageAction", () => {
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
       });
       expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
       );
     });
 
@@ -336,7 +336,7 @@ describe("CoverageAction", () => {
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
       });
       expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
       );
     });
 
@@ -354,7 +354,7 @@ describe("CoverageAction", () => {
       expect(executedCommands.length).toBe(1);
       const command = executedCommands[0];
       expect(command?.env["QLTY_COVERAGE_TOKEN"]).toBe(
-        "oidc-token:audience=https://qlty.sh",
+        "oidc-token:audience=https://qlty.sh"
       );
     });
 
@@ -444,7 +444,7 @@ describe("CoverageAction", () => {
             files: "file1.lcov file2.lcov",
             "skip-errors": true,
           },
-          new StubbedFileSystem([]),
+          new StubbedFileSystem([])
         ),
       });
 
@@ -464,7 +464,7 @@ describe("CoverageAction", () => {
     executor = new StubbedCommandExecutor(),
     output = new StubbedOutput(),
     installer = Installer.createNull(undefined),
-    env = process.env,
+    env = {},
   } = {}) {
     const action = CoverageAction.createNull({
       output,
