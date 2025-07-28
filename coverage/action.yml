@@ -25,7 +25,8 @@ inputs:
 
   files:
     description: "The paths to the coverage reports files"
-    required: true
+    required: false
+    default: ""
 
   add-prefix:
     description: "Add a prefix to the coverage data"
