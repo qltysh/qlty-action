@@ -73824,19 +73824,36 @@ var actionsGithub = __toESM(require_github());
 
 // src/util/exec.ts
 var StubbedCommandExecutor = class {
-  constructor({ throwError } = {}) {
+  constructor({
+    throwError,
+    stdout,
+    stderr,
+    errorMessage
+  } = {}) {
     __publicField(this, "throwError");
+    __publicField(this, "errorMessage", "Command execution failed");
+    __publicField(this, "stdout", "STDOUT\n");
+    __publicField(this, "stderr", "STDERR\n");
     this.throwError = !!throwError;
+    if (stdout !== void 0) {
+      this.stdout = stdout;
+    }
+    if (stderr !== void 0) {
+      this.stderr = stderr;
+    }
+    if (errorMessage !== void 0) {
+      this.errorMessage = errorMessage;
+    }
   }
   async exec(_command, _args, options) {
     if (this.throwError) {
       if (options?.listeners?.stdout) {
-        options.listeners.stdout(Buffer.from("STDOUT\n"));
+        options.listeners.stdout(Buffer.from(this.stdout));
       }
       if (options?.listeners?.stderr) {
-        options.listeners.stderr(Buffer.from("STDERR\n"));
+        options.listeners.stderr(Buffer.from(this.stderr));
       }
-      throw new Error("Command execution failed");
+      throw new Error(this.errorMessage);
     } else {
       return 0;
     }
@@ -73954,7 +73971,7 @@ var CoverageAction = class _CoverageAction {
     if (token) {
       this._output.setSecret(token);
     }
-    let qlytOutput = "";
+    let qltyOutput = "";
     try {
       const env = {
         ...this._env,
@@ -73973,18 +73990,15 @@ var CoverageAction = class _CoverageAction {
         env,
         listeners: {
           stdout: (data) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           },
           stderr: (data) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           }
         }
       });
-    } catch {
-      this.warnOrThrow([
-        "Error uploading coverage. Output from the Qlty CLI follows:",
-        qlytOutput
-      ]);
+    } catch (error) {
+      this.outputCoverageError(qltyOutput, error);
     }
   }
   async runComplete(qltyBinary) {
@@ -73996,7 +74010,7 @@ var CoverageAction = class _CoverageAction {
     if (token) {
       this._output.setSecret(token);
     }
-    let qlytOutput = "";
+    let qltyOutput = "";
     try {
       const env = {
         ...this._env,
@@ -74015,17 +74029,33 @@ var CoverageAction = class _CoverageAction {
         env,
         listeners: {
           stdout: (data) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           },
           stderr: (data) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           }
         }
       });
-    } catch {
+    } catch (error) {
+      this.outputCoverageError(qltyOutput, error);
+    }
+  }
+  outputCoverageError(qltyOutput, error) {
+    if (qltyOutput) {
       this.warnOrThrow([
-        "Error completing coverage. Output from the Qlty CLI follows:",
-        qlytOutput
+        `Error executing coverage command. Output from the Qlty CLI follows:`,
+        qltyOutput
+      ]);
+    } else {
+      let errorMessage = "";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+      this.warnOrThrow([
+        `Unexpected error executing coverage command:`,
+        errorMessage
       ]);
     }
   }
