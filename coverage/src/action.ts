@@ -129,7 +129,7 @@ export class CoverageAction {
       this._output.setSecret(token);
     }
 
-    let qlytOutput = "";
+    let qltyOutput = "";
 
     try {
       const env: Record<string, string> = {
@@ -152,18 +152,15 @@ export class CoverageAction {
         env,
         listeners: {
           stdout: (data: Buffer) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           },
           stderr: (data: Buffer) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           },
         },
       });
-    } catch {
-      this.warnOrThrow([
-        "Error uploading coverage. Output from the Qlty CLI follows:",
-        qlytOutput,
-      ]);
+    } catch (error) {
+      this.outputCoverageError(qltyOutput, error);
     }
   }
 
@@ -179,7 +176,7 @@ export class CoverageAction {
       this._output.setSecret(token);
     }
 
-    let qlytOutput = "";
+    let qltyOutput = "";
 
     try {
       const env: Record<string, string> = {
@@ -202,17 +199,36 @@ export class CoverageAction {
         env,
         listeners: {
           stdout: (data: Buffer) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           },
           stderr: (data: Buffer) => {
-            qlytOutput += data.toString();
+            qltyOutput += data.toString();
           },
         },
       });
-    } catch {
+    } catch (error) {
+      this.outputCoverageError(qltyOutput, error);
+    }
+  }
+
+  outputCoverageError(qltyOutput: string, error: unknown): void {
+    if (qltyOutput) {
       this.warnOrThrow([
-        "Error completing coverage. Output from the Qlty CLI follows:",
-        qlytOutput,
+        `Error executing coverage command. Output from the Qlty CLI follows:`,
+        qltyOutput,
+      ]);
+    } else {
+      let errorMessage = "";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      this.warnOrThrow([
+        `Unexpected error executing coverage command:`,
+        errorMessage,
       ]);
     }
   }

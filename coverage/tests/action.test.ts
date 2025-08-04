@@ -6,7 +6,7 @@ import { StubbedOutput } from "src/util/output";
 
 describe("CoverageAction", () => {
   describe("validation errors", async () => {
-    test("logs warnings shen skip-errors is true", async () => {
+    test("logs warnings when skip-errors is true", async () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
         settings: Settings.createNull({
@@ -27,7 +27,29 @@ describe("CoverageAction", () => {
       ]);
     });
 
-    test("raises errors shen skip-errors is false", async () => {
+    test("logs unknown error when output from execution is empty", async () => {
+      const { output, action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({
+          throwError: true,
+          stdout: "",
+          stderr: "",
+          errorMessage: "Crazy unknown error condition happened",
+        }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+      });
+
+      await action.run();
+      expect(output.warnings).toEqual([
+        "Unexpected error executing coverage command:",
+        "Crazy unknown error condition happened",
+      ]);
+    });
+
+    test("raises errors when skip-errors is false", async () => {
       const { action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
         settings: Settings.createNull({
@@ -52,7 +74,7 @@ describe("CoverageAction", () => {
             files: "some/non-existent/file",
             "skip-errors": true,
           },
-          FileSystem.createNull([]) // returns no files
+          FileSystem.createNull([]), // returns no files
         ),
       });
 
@@ -138,7 +160,7 @@ describe("CoverageAction", () => {
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
       });
       expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
       );
     });
 
@@ -336,7 +358,7 @@ describe("CoverageAction", () => {
         QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
       });
       expect(command?.env["QLTY_CI_UPLOADER_VERSION"]).toMatch(
-        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/
+        /^\d+\.\d+\.\d+(-[0-9A-Za-z-.]+)?$/,
       );
     });
 
@@ -354,7 +376,7 @@ describe("CoverageAction", () => {
       expect(executedCommands.length).toBe(1);
       const command = executedCommands[0];
       expect(command?.env["QLTY_COVERAGE_TOKEN"]).toBe(
-        "oidc-token:audience=https://qlty.sh"
+        "oidc-token:audience=https://qlty.sh",
       );
     });
 
@@ -383,7 +405,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.warnings).toEqual([
-        "Error completing coverage. Output from the Qlty CLI follows:",
+        "Error executing coverage command. Output from the Qlty CLI follows:",
         "STDOUT\nSTDERR\n",
       ]);
     });
@@ -415,7 +437,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.warnings).toEqual([
-        "Error uploading coverage. Output from the Qlty CLI follows:",
+        "Error executing coverage command. Output from the Qlty CLI follows:",
         "STDOUT\nSTDERR\n",
       ]);
     });
@@ -444,7 +466,7 @@ describe("CoverageAction", () => {
             files: "file1.lcov file2.lcov",
             "skip-errors": true,
           },
-          new StubbedFileSystem([])
+          new StubbedFileSystem([]),
         ),
       });
 
