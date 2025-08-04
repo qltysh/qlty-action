@@ -105,6 +105,7 @@ describe("CoverageAction", () => {
         "qlty",
         "coverage",
         "publish",
+        "--no-validate",
         "info.lcov",
       ]);
     });
@@ -153,6 +154,7 @@ describe("CoverageAction", () => {
         "--incomplete",
         "--name",
         "test-name",
+        "--no-validate",
         "info.lcov",
       ]);
       expect(command?.env).toMatchObject({
@@ -184,6 +186,7 @@ describe("CoverageAction", () => {
         "test-sha",
         "--override-branch",
         "test-ref",
+        "--no-validate",
         "info.lcov",
       ]);
     });
