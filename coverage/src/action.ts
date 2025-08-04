@@ -165,7 +165,7 @@ export class CoverageAction {
   }
 
   async runComplete(qltyBinary: string): Promise<void> {
-    let completeArgs = this.buildCompleteArgs();
+    const completeArgs = this.buildCompleteArgs();
 
     const token = await this._settings.getToken();
     if (token) {
