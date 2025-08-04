@@ -100,7 +100,7 @@ export class CoverageAction {
   }
 
   async runPublish(qltyBinary: string): Promise<void> {
-    let uploadArgs = await this.buildPublishArgs();
+    let uploadArgs = this.buildPublishArgs();
     const files = await this._settings.getFiles();
 
     if (files.length === 0) {
@@ -165,11 +165,7 @@ export class CoverageAction {
   }
 
   async runComplete(qltyBinary: string): Promise<void> {
-    const completeArgs = ["coverage", "complete"];
-
-    if (this._settings.input.tag) {
-      completeArgs.push("--tag", this._settings.input.tag);
-    }
+    const completeArgs = this.buildCompleteArgs();
 
     const token = await this._settings.getToken();
     if (token) {
@@ -258,7 +254,19 @@ export class CoverageAction {
     }
   }
 
-  async buildPublishArgs(): Promise<string[]> {
+  buildCompleteArgs(): string[] {
+    const completeArgs = ["coverage", "complete"];
+
+    if (this._settings.input.tag) {
+      completeArgs.push("--tag", this._settings.input.tag);
+    }
+
+    completeArgs.push(...this.getOverrideCommitArgs());
+
+    return completeArgs;
+  }
+
+  buildPublishArgs(): string[] {
     const uploadArgs = ["coverage", "publish"];
 
     if (this._settings.input.verbose) {
@@ -292,16 +300,10 @@ export class CoverageAction {
       );
     }
 
-    const payload = this._context.payload;
+    uploadArgs.push(...this.getOverrideCommitArgs());
 
-    // Github doesn't provide the head's sha for PRs, so we need to extract it from the event's payload
-    // https://github.com/orgs/community/discussions/26325
-    // https://www.kenmuse.com/blog/the-many-shas-of-a-github-pull-request/
+    const payload = this._context.payload;
     if (payload.pull_request) {
-      uploadArgs.push(
-        "--override-commit-sha",
-        payload.pull_request["head"].sha,
-      );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
 
@@ -333,6 +335,18 @@ export class CoverageAction {
     }
 
     return uploadArgs;
+  }
+
+  // Github doesn't provide the head's sha for PRs, so we need to extract it from the event's payload
+  // https://github.com/orgs/community/discussions/26325
+  // https://www.kenmuse.com/blog/the-many-shas-of-a-github-pull-request/
+  private getOverrideCommitArgs(): string[] {
+    const payload = this._context.payload;
+    const args: string[] = [];
+    if (payload.pull_request) {
+      args.push("--override-commit-sha", payload.pull_request["head"].sha);
+    }
+    return args;
   }
 
   trackOutput() {

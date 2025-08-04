@@ -73947,7 +73947,7 @@ var CoverageAction = class _CoverageAction {
     }
   }
   async runPublish(qltyBinary) {
-    let uploadArgs = await this.buildPublishArgs();
+    let uploadArgs = this.buildPublishArgs();
     const files = await this._settings.getFiles();
     if (files.length === 0) {
       if (this._settings.input.files?.includes(" ")) {
@@ -74002,10 +74002,7 @@ var CoverageAction = class _CoverageAction {
     }
   }
   async runComplete(qltyBinary) {
-    const completeArgs = ["coverage", "complete"];
-    if (this._settings.input.tag) {
-      completeArgs.push("--tag", this._settings.input.tag);
-    }
+    const completeArgs = this.buildCompleteArgs();
     const token = await this._settings.getToken();
     if (token) {
       this._output.setSecret(token);
@@ -74080,7 +74077,15 @@ var CoverageAction = class _CoverageAction {
       throw new CoverageError(messages.join("; "));
     }
   }
-  async buildPublishArgs() {
+  buildCompleteArgs() {
+    const completeArgs = ["coverage", "complete"];
+    if (this._settings.input.tag) {
+      completeArgs.push("--tag", this._settings.input.tag);
+    }
+    completeArgs.push(...this.getOverrideCommitArgs());
+    return completeArgs;
+  }
+  buildPublishArgs() {
     const uploadArgs = ["coverage", "publish"];
     if (this._settings.input.verbose) {
       uploadArgs.push("--print");
@@ -74106,12 +74111,9 @@ var CoverageAction = class _CoverageAction {
         this._settings.input.totalPartsCount.toString()
       );
     }
+    uploadArgs.push(...this.getOverrideCommitArgs());
     const payload = this._context.payload;
     if (payload.pull_request) {
-      uploadArgs.push(
-        "--override-commit-sha",
-        payload.pull_request["head"].sha
-      );
       uploadArgs.push("--override-branch", payload.pull_request["head"].ref);
     }
     if (this._settings.input.skipMissingFiles) {
@@ -74136,6 +74138,17 @@ var CoverageAction = class _CoverageAction {
       uploadArgs.push("--output-dir", this._env["RUNNER_TEMP"]);
     }
     return uploadArgs;
+  }
+  // Github doesn't provide the head's sha for PRs, so we need to extract it from the event's payload
+  // https://github.com/orgs/community/discussions/26325
+  // https://www.kenmuse.com/blog/the-many-shas-of-a-github-pull-request/
+  getOverrideCommitArgs() {
+    const payload = this._context.payload;
+    const args = [];
+    if (payload.pull_request) {
+      args.push("--override-commit-sha", payload.pull_request["head"].sha);
+    }
+    return args;
   }
   trackOutput() {
     return OutputTracker.create(this._emitter, EXEC_EVENT);
