@@ -340,6 +340,27 @@ describe("CoverageAction", () => {
       ]);
     });
 
+    test("uses the payload for the PR head SHA", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+        }),
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toEqual([
+        "qlty",
+        "coverage",
+        "complete",
+        "--override-commit-sha",
+        "test-sha",
+      ]);
+    });
+
     test("sets environment variables correctly", async () => {
       const { action, commands } = createTrackedAction({
         settings: Settings.createNull({
