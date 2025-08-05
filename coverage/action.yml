@@ -100,9 +100,9 @@ inputs:
     default: ""
 
   validate:
-    description: "Validate the coverage data"
+    description: "Validate provided coverage data before uploading"
     required: false
-    default: false
+    default: true
 
   validate-file-threshold:
     description: "Custom threshold percentage for validation (0-100). Only applies when validate is used."
