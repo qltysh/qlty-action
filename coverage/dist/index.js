@@ -74133,6 +74133,8 @@ var CoverageAction = class _CoverageAction {
           this._settings.input.validateFileThreshold.toString()
         );
       }
+    } else {
+      uploadArgs.push("--no-validate");
     }
     if (this._env["RUNNER_TEMP"]) {
       uploadArgs.push("--output-dir", this._env["RUNNER_TEMP"]);
