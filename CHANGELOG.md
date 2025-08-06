@@ -1,5 +1,17 @@
 # Changelog
 
+## v2.0.0 (2025-08-05)
+
+This release mirrors the breaking change we introduced in the qlty CLI proper: we now validate coverage data by default instead of uplpoading coverage data to qlty that qlty cannot use. Now you must opt out of this behavior whereas previously opt in.
+
+What This Means for You:
+
+- If coverage reporting is working as expected, you'll experience no impact. If you're uploading valid reports and seeing directory and file-level coverage metrics in Qlty, you don't need to do anything. (If your reports include mismatched paths, you'll see specific path errors listed within your CI output)
+- Potential CI Build Failures: Once this change is implemented, if your current CI/CD pipeline uploads a report with mismatched paths, your builds will begin to fail when executing qlty coverage publish.
+- Quick Fix for Build Failures: If your builds start failing and you need to get them passing immediately, you can temporarily add validate: false to the GitHub Action configuration. This will disable validation and allow your CI build to pass (though your coverage data will remain broken until you've uploaded a valid report).
+
+We believe this change will significantly improve the accuracy and usability of your coverage data within Qlty. If you have any questions or require assistance, please don't hesitate to contact our support team.
+
 ## v1.2.0 (2025-08-04)
 
 ### Fixed
