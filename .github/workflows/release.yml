@@ -13,7 +13,9 @@ on:
           - patch
           - version
       version:
-        description: "The full version to release (first choose 'version' from the 'increment' dropdown)"
+        description: >
+          The full version to release (first choose 'version' from the
+          'increment' dropdown)
         required: false
         type: string
 permissions:
@@ -103,8 +105,9 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
-          # Extract the changelog section for this version
-          # Start from the version header and continue until the next version header or end of file
+          # Extract the changelog section for this version.
+          # Start from the version header and continue until the next version header
+          # or end of file.
           CHANGELOG_CONTENT=$(awk "/^## v${VERSION}/{flag=1; next} /^## v[0-9]/{flag=0} flag" CHANGELOG.md)
 
           if [ -z "$CHANGELOG_CONTENT" ]; then
