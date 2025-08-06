@@ -1,7 +1,7 @@
 {
   "name": "qlty-action-fmt",
   "description": "Resuable GitHub Action to auto-format code with Qlty CLI",
-  "version": "0.0.0",
+  "version": "1.2.0",
   "author": "Qlty Software Inc.",
   "homepage": "https://github.com/qltysh/qlty-action/tree/main/fmt",
   "repository": {
