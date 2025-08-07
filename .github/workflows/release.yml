@@ -142,34 +142,98 @@ jobs:
           # Show the changes
           git diff coverage/package.json fmt/package.json || true
 
-      - name: Commit version changes
+      - name: Commit version changes via GitHub API
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
-          git add coverage/package.json fmt/package.json
-          git commit -m "Release v${VERSION}"
+          # Update coverage/package.json via API
+          COVERAGE_CONTENT=$(base64 < coverage/package.json)
+          gh api \
+            --method PUT \
+            /repos/${{ github.repository }}/contents/coverage/package.json \
+            -f message="Release v${VERSION} - Update coverage package.json" \
+            -f content="$COVERAGE_CONTENT" \
+            -f sha="$(git rev-parse HEAD:coverage/package.json)"
 
-          echo "Committed version changes"
+          echo "Updated coverage/package.json"
 
-      - name: Create and push tags
+          # Update fmt/package.json via API if it exists
+          if [ -f "fmt/package.json" ]; then
+            # Pull latest to get the new SHA after first commit
+            git pull origin ${{ github.ref_name }}
+            
+            FMT_CONTENT=$(base64 < fmt/package.json)
+            gh api \
+              --method PUT \
+              /repos/${{ github.repository }}/contents/fmt/package.json \
+              -f message="Release v${VERSION} - Update fmt package.json" \
+              -f content="$FMT_CONTENT" \
+              -f sha="$(git rev-parse HEAD:fmt/package.json)"
+            
+            echo "Updated fmt/package.json"
+          fi
+
+          # Pull the latest changes
+          git pull origin ${{ github.ref_name }}
+
+          echo "Created signed commits for version ${VERSION}"
+
+      - name: Create and push tags via GitHub API
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           MAJOR_VERSION="${{ steps.version.outputs.major_version }}"
 
-          # Create version tag
-          git tag -a "v${VERSION}" -m "Release v${VERSION}"
-          echo "Created tag v${VERSION}"
+          # Get the current commit SHA
+          COMMIT_SHA=$(git rev-parse HEAD)
 
-          # Force update major version tag to point to this commit
-          git tag -fa "v${MAJOR_VERSION}" -m "Release v${VERSION}"
-          echo "Created/updated major version tag v${MAJOR_VERSION}"
+          # Create annotated tag for the version via API
+          TAG_SHA=$(gh api \
+            --method POST \
+            /repos/${{ github.repository }}/git/tags \
+            -f tag="v${VERSION}" \
+            -f message="Release v${VERSION}" \
+            -f object="$COMMIT_SHA" \
+            -f type="commit" \
+            | jq -r '.sha')
 
-          # Push commit and tags
-          git push origin main
-          git push origin "v${VERSION}"
-          git push origin "v${MAJOR_VERSION}" --force
+          # Create reference for the version tag
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/v${VERSION}" \
+            -f sha="$TAG_SHA" \
+            || echo "Tag v${VERSION} might already exist"
 
-          echo "Pushed tags to origin"
+          echo "Created signed tag v${VERSION}"
+
+          # Create/update annotated tag for major version via API
+          MAJOR_TAG_SHA=$(gh api \
+            --method POST \
+            /repos/${{ github.repository }}/git/tags \
+            -f tag="v${MAJOR_VERSION}" \
+            -f message="Release v${VERSION}" \
+            -f object="$COMMIT_SHA" \
+            -f type="commit" \
+            | jq -r '.sha')
+
+          # Create or update reference for major version tag (force update if exists)
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/v${MAJOR_VERSION}" \
+            -f sha="$MAJOR_TAG_SHA" \
+            2>/dev/null || \
+          gh api \
+            --method PATCH \
+            /repos/${{ github.repository }}/git/refs/tags/v${MAJOR_VERSION} \
+            -f sha="$MAJOR_TAG_SHA" \
+            -f force=true
+
+          echo "Created/updated signed major version tag v${MAJOR_VERSION}"
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
