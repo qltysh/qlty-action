@@ -30,6 +30,7 @@ jobs:
           app-id: ${{ vars.QLTY_APP_ID }}
           private-key: ${{ secrets.QLTY_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
 
       - name: Checkout
         uses: actions/checkout@v4
