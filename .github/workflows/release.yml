@@ -236,12 +236,11 @@ jobs:
           echo "Created/updated signed major version tag v${MAJOR_VERSION}"
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # version 2.3.2
         with:
+          token: ${{ steps.app-token.outputs.token }}
           tag_name: v${{ steps.version.outputs.version }}
-          release_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
           body_path: changelog_content.txt
           draft: false
           prerelease: false
