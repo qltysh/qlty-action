@@ -181,7 +181,6 @@ export class Settings {
         { name: "name", value: this._data.name !== undefined },
         { name: "skip-missing-files", value: this._data.skipMissingFiles },
         { name: "format", value: this._data.format !== undefined },
-        { name: "validate", value: this._data.validate },
         {
           name: "validate-file-threshold",
           value: this._data.validateFileThreshold !== undefined,

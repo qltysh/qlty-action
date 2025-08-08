@@ -73686,7 +73686,6 @@ var Settings = class _Settings {
         { name: "name", value: this._data.name !== void 0 },
         { name: "skip-missing-files", value: this._data.skipMissingFiles },
         { name: "format", value: this._data.format !== void 0 },
-        { name: "validate", value: this._data.validate },
         {
           name: "validate-file-threshold",
           value: this._data.validateFileThreshold !== void 0

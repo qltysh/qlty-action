@@ -404,6 +404,30 @@ describe("CoverageAction", () => {
       );
     });
 
+    test("does not fail when validate flag is true with complete command", async () => {
+      // Since validate defaults to true in action.yml, it should be ignored for complete command
+      // rather than causing a validation error
+      const { action, commands, output } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+          validate: true,
+        }),
+        context: { payload: {} },
+      });
+
+      await action.run();
+
+      expect(output.warnings).toEqual([]);
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toEqual(["qlty", "coverage", "complete"]);
+      expect(command?.command).not.toContain("--validate");
+      expect(command?.command).not.toContain("--no-validate");
+    });
+
     test("throws an error if qlty fails when skip-errors is false", async () => {
       const { action } = createTrackedAction({
         executor: new StubbedCommandExecutor({ throwError: true }),
