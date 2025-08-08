@@ -87,6 +87,7 @@ name = "yamllint"
 name = "eslint"
 package_file = ".qlty/configs/package.json"
 
-[[ignore]]
+[[exclude]]
 file_patterns = ["**/LICENSE.md"]
-rules = ["markdownlint:MD041"]
+plugins = ["markdownlint"]
+rules = ["MD041"]

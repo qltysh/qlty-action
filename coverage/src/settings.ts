@@ -176,12 +176,10 @@ export class Settings {
         { name: "files", value: this._data.files !== undefined },
         { name: "add-prefix", value: this._data.addPrefix !== undefined },
         { name: "strip-prefix", value: this._data.stripPrefix !== undefined },
-        { name: "dry-run", value: this._data.dryRun },
         { name: "incomplete", value: this._data.incomplete },
         { name: "name", value: this._data.name !== undefined },
         { name: "skip-missing-files", value: this._data.skipMissingFiles },
         { name: "format", value: this._data.format !== undefined },
-        { name: "validate", value: this._data.validate },
         {
           name: "validate-file-threshold",
           value: this._data.validateFileThreshold !== undefined,
