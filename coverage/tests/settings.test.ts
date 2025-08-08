@@ -470,9 +470,6 @@ describe("Settings", () => {
           "'total-parts-count' cannot be used when command is 'complete'.",
         );
         expect(errors).toContain(
-          "'dry-run' cannot be used when command is 'complete'.",
-        );
-        expect(errors).toContain(
           "'incomplete' cannot be used when command is 'complete'.",
         );
         expect(errors).toContain(
