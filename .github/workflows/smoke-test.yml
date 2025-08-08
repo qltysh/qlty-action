@@ -1,6 +1,8 @@
 name: Smoke Test
 
 on:
+  workflow_dispatch:
+  pull_request:
   push:
     branches:
       - main
@@ -32,7 +34,7 @@ jobs:
         run: npm run coverage
 
       - name: Upload coverage
-        uses: qltysh/qlty-action/coverage@main
+        uses: ./coverage
         with:
           oidc: true
           files: coverage/coverage/clover.xml
@@ -40,11 +42,11 @@ jobs:
           skip-errors: false
 
       - name: Complete coverage
-        uses: qltysh/qlty-action/coverage@main
+        uses: ./coverage
         with:
           oidc: true
           command: complete
           skip-errors: false
 
       - name: Run fmt action
-        uses: qltysh/qlty-action/fmt@main
+        uses: ./fmt
