@@ -1,5 +1,19 @@
 # Changelog
 
+## v2.1.0 (2025-08-08)
+
+### New
+
+- support "dry-run" option for command `complete`
+
+### Improved
+
+- Use log level "error" instead of "warning" when a catastrophic error occurs but "skip-errors" is true
+
+### Fixed
+
+- Ignore "validate" option when command is "complete" (otherwise errors with invalid option)
+
 ## v2.0.0 (2025-08-05)
 
 This release mirrors the breaking change we introduced in the qlty CLI proper: we now validate coverage data by default instead of uploading coverage data to qlty that qlty cannot use. Now you must opt out of this behavior whereas previously opt in.

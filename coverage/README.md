@@ -51,7 +51,7 @@ This GitHub Action uploads code coverage data from your GitHub Actions workflow 
 ```yaml
 # ... Generate code coverage data from test execution ...
 
-- uses: qltysh/qlty-action/coverage@v1
+- uses: qltysh/qlty-action/coverage@v2
   with:
     oidc: true
     files: lcov.info
@@ -104,7 +104,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 ### Upload using a coverage token
 
 ```yaml
-- uses: qltysh/qlty-action/coverage@v1
+- uses: qltysh/qlty-action/coverage@v2
   with:
     token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
     files: lcov.info
@@ -113,7 +113,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 ### Uploading multiple reports with a glob
 
 ```yaml
-- uses: qltysh/qlty-action/coverage@v1
+- uses: qltysh/qlty-action/coverage@v2
   with:
     oidc: true
     files: path/to/coverage/*.json,other/path/to/coverage/*.json
@@ -122,7 +122,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 ### Upload with tags
 
 ```yaml
-- uses: qltysh/qlty-action/coverage@v1
+- uses: qltysh/qlty-action/coverage@v2
   with:
     oidc: true
     files: lcov.info
@@ -133,7 +133,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 
 ```yaml
 # After uploading all coverage files in separate steps or jobs
-- uses: qltysh/qlty-action/coverage@v1
+- uses: qltysh/qlty-action/coverage@v2
   with:
     oidc: true
     command: complete

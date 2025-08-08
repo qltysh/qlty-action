@@ -470,15 +470,13 @@ describe("Settings", () => {
           "'total-parts-count' cannot be used when command is 'complete'.",
         );
         expect(errors).toContain(
-          "'dry-run' cannot be used when command is 'complete'.",
-        );
-        expect(errors).toContain(
           "'incomplete' cannot be used when command is 'complete'.",
         );
         expect(errors).toContain(
           "'name' cannot be used when command is 'complete'.",
         );
-        expect(errors).toContain(
+        // validate is no longer an error since it defaults to true and is just ignored
+        expect(errors).not.toContain(
           "'validate' cannot be used when command is 'complete'.",
         );
         expect(errors).toContain(

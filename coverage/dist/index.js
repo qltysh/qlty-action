@@ -69357,6 +69357,7 @@ var StubbedOutput = class {
     __publicField(this, "paths", []);
     __publicField(this, "failures", []);
     __publicField(this, "infos", []);
+    __publicField(this, "errors", []);
     __publicField(this, "warnings", []);
   }
   addPath(path3) {
@@ -69373,6 +69374,9 @@ var StubbedOutput = class {
   }
   warning(message) {
     this.warnings.push(message);
+  }
+  error(message) {
+    this.errors.push(message);
   }
 };
 
@@ -73681,12 +73685,10 @@ var Settings = class _Settings {
         { name: "files", value: this._data.files !== void 0 },
         { name: "add-prefix", value: this._data.addPrefix !== void 0 },
         { name: "strip-prefix", value: this._data.stripPrefix !== void 0 },
-        { name: "dry-run", value: this._data.dryRun },
         { name: "incomplete", value: this._data.incomplete },
         { name: "name", value: this._data.name !== void 0 },
         { name: "skip-missing-files", value: this._data.skipMissingFiles },
         { name: "format", value: this._data.format !== void 0 },
-        { name: "validate", value: this._data.validate },
         {
           name: "validate-file-threshold",
           value: this._data.validateFileThreshold !== void 0
@@ -73932,7 +73934,7 @@ var CoverageAction = class _CoverageAction {
       qltyBinary = await this._installer.install();
     } catch (error) {
       const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
-      this.warnOrThrow([
+      this.reportOrFail([
         `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`
       ]);
       return;
@@ -73951,14 +73953,14 @@ var CoverageAction = class _CoverageAction {
     const files = await this._settings.getFiles();
     if (files.length === 0) {
       if (this._settings.input.files?.includes(" ")) {
-        this.warnOrThrow([
+        this.reportOrFail([
           "No code coverage data files were found. Please check the action's inputs.",
           "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",
           "If you are using a pattern, make sure it is correct.",
           "If you are using a file, make sure it exists."
         ]);
       } else {
-        this.warnOrThrow([
+        this.reportOrFail([
           "No code coverage data files were found. Please check the action's inputs.",
           "If you are using a pattern, make sure it is correct.",
           "If you are using a file, make sure it exists."
@@ -74039,7 +74041,7 @@ var CoverageAction = class _CoverageAction {
   }
   outputCoverageError(qltyOutput, error) {
     if (qltyOutput) {
-      this.warnOrThrow([
+      this.reportOrFail([
         `Error executing coverage command. Output from the Qlty CLI follows:`,
         qltyOutput
       ]);
@@ -74050,7 +74052,7 @@ var CoverageAction = class _CoverageAction {
       } else if (typeof error === "string") {
         errorMessage = error;
       }
-      this.warnOrThrow([
+      this.reportOrFail([
         `Unexpected error executing coverage command:`,
         errorMessage
       ]);
@@ -74059,7 +74061,7 @@ var CoverageAction = class _CoverageAction {
   validate() {
     const errors = this._settings.validate();
     if (errors.length > 0) {
-      this.warnOrThrow([
+      this.reportOrFail([
         "Error validating action input:",
         ...errors,
         "Please check the action's inputs."
@@ -74068,10 +74070,10 @@ var CoverageAction = class _CoverageAction {
     }
     return true;
   }
-  warnOrThrow(messages) {
+  reportOrFail(messages) {
     if (this._settings.input.skipErrors) {
       for (const message of messages) {
-        this._output.warning(message);
+        this._output.error(message);
       }
     } else {
       throw new CoverageError(messages.join("; "));
