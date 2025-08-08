@@ -73681,7 +73681,6 @@ var Settings = class _Settings {
         { name: "files", value: this._data.files !== void 0 },
         { name: "add-prefix", value: this._data.addPrefix !== void 0 },
         { name: "strip-prefix", value: this._data.stripPrefix !== void 0 },
-        { name: "dry-run", value: this._data.dryRun },
         { name: "incomplete", value: this._data.incomplete },
         { name: "name", value: this._data.name !== void 0 },
         { name: "skip-missing-files", value: this._data.skipMissingFiles },
