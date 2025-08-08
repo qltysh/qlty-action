@@ -16,7 +16,7 @@
 
 ## v2.0.0 (2025-08-05)
 
-This release mirrors the breaking change we introduced in the qlty CLI proper: we now validate coverage data by default instead of uplpoading coverage data to qlty that qlty cannot use. Now you must opt out of this behavior whereas previously opt in.
+This release mirrors the breaking change we introduced in the qlty CLI proper: we now validate coverage data by default instead of uploading coverage data to qlty that qlty cannot use. Now you must opt out of this behavior whereas previously opt in.
 
 What This Means for You:
 
