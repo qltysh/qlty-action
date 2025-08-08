@@ -43,11 +43,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Git config
-        run: |
-          git config user.name "qlty-bot[bot]"
-          git config user.email "qlty-bot[bot]@users.noreply.github.com"
-
       - name: Determine version
         id: version
         run: |
@@ -65,7 +60,7 @@ jobs:
           else
             # Parse current version
             IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-            
+
             case "${{ inputs.increment }}" in
               major)
                 NEW_VERSION="$((MAJOR + 1)).0.0"
@@ -122,21 +117,39 @@ jobs:
           echo "Extracted changelog content:"
           cat changelog_content.txt
 
+      - name: Validate required package.json files exist
+        run: |
+          # Check that required package.json files exist
+          MISSING_FILES=""
+
+          if [ ! -f "coverage/package.json" ]; then
+            MISSING_FILES="${MISSING_FILES}coverage/package.json "
+          fi
+
+          if [ ! -f "fmt/package.json" ]; then
+            MISSING_FILES="${MISSING_FILES}fmt/package.json "
+          fi
+
+          if [ -n "$MISSING_FILES" ]; then
+            echo "Error: Required package.json files are missing: $MISSING_FILES"
+            exit 1
+          fi
+
+          echo "All required package.json files exist"
+
       - name: Update package.json versions
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
           # Update all package.json files
           for package_file in coverage/package.json fmt/package.json; do
-            if [ -f "$package_file" ]; then
-              echo "Updating version in $package_file to $VERSION"
-              node -e "
-                const fs = require('fs');
-                const pkg = JSON.parse(fs.readFileSync('$package_file', 'utf8'));
-                pkg.version = '$VERSION';
-                fs.writeFileSync('$package_file', JSON.stringify(pkg, null, 2) + '\\n');
-              "
-            fi
+            echo "Updating version in $package_file to $VERSION"
+            node -e "
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('$package_file', 'utf8'));
+              pkg.version = '$VERSION';
+              fs.writeFileSync('$package_file', JSON.stringify(pkg, null, 2) + '\\n');
+            "
           done
 
           # Show the changes
@@ -159,11 +172,14 @@ jobs:
 
           echo "Updated coverage/package.json"
 
+          # Discard local changes since they've been committed via API
+          git checkout -- coverage/package.json
+
           # Update fmt/package.json via API if it exists
           if [ -f "fmt/package.json" ]; then
             # Pull latest to get the new SHA after first commit
             git pull origin ${{ github.ref_name }}
-            
+
             FMT_CONTENT=$(base64 < fmt/package.json)
             gh api \
               --method PUT \
@@ -171,8 +187,11 @@ jobs:
               -f message="Release v${VERSION} - Update fmt package.json" \
               -f content="$FMT_CONTENT" \
               -f sha="$(git rev-parse HEAD:fmt/package.json)"
-            
+
             echo "Updated fmt/package.json"
+            
+            # Discard local changes since they've been committed via API
+            git checkout -- fmt/package.json
           fi
 
           # Pull the latest changes
@@ -190,57 +209,36 @@ jobs:
           # Get the current commit SHA
           COMMIT_SHA=$(git rev-parse HEAD)
 
-          # Create annotated tag for the version via API
-          TAG_SHA=$(gh api \
-            --method POST \
-            /repos/${{ github.repository }}/git/tags \
-            -f tag="v${VERSION}" \
-            -f message="Release v${VERSION}" \
-            -f object="$COMMIT_SHA" \
-            -f type="commit" \
-            | jq -r '.sha')
-
-          # Create reference for the version tag
+          # Create lightweight tag reference for version (points directly to commit)
+          # This should fail if the tag already exists
           gh api \
             --method POST \
             /repos/${{ github.repository }}/git/refs \
             -f ref="refs/tags/v${VERSION}" \
-            -f sha="$TAG_SHA" \
-            || echo "Tag v${VERSION} might already exist"
+            -f sha="$COMMIT_SHA"
 
-          echo "Created signed tag v${VERSION}"
+          echo "Created tag v${VERSION}"
 
-          # Create/update annotated tag for major version via API
-          MAJOR_TAG_SHA=$(gh api \
-            --method POST \
-            /repos/${{ github.repository }}/git/tags \
-            -f tag="v${MAJOR_VERSION}" \
-            -f message="Release v${VERSION}" \
-            -f object="$COMMIT_SHA" \
-            -f type="commit" \
-            | jq -r '.sha')
-
-          # Create or update reference for major version tag (force update if exists)
+          # Create or update lightweight tag reference for major version (force update if exists)
           gh api \
             --method POST \
             /repos/${{ github.repository }}/git/refs \
             -f ref="refs/tags/v${MAJOR_VERSION}" \
-            -f sha="$MAJOR_TAG_SHA" \
+            -f sha="$COMMIT_SHA" \
             2>/dev/null || \
           gh api \
             --method PATCH \
             /repos/${{ github.repository }}/git/refs/tags/v${MAJOR_VERSION} \
-            -f sha="$MAJOR_TAG_SHA" \
-            -f force=true
+            -f sha="$COMMIT_SHA" \
+            -F force=true
 
-          echo "Created/updated signed major version tag v${MAJOR_VERSION}"
+          echo "Created/updated major version tag v${MAJOR_VERSION}"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # version 2.3.2
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          tag_name: v${{ steps.version.outputs.version }}
-          name: v${{ steps.version.outputs.version }}
-          body_path: changelog_content.txt
-          draft: false
-          prerelease: false
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes-file changelog_content.txt \
+            --verify-tag
