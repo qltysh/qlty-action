@@ -1,0 +1,50 @@
+name: Smoke Test
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: coverage/.node-version
+          cache: npm
+          cache-dependency-path: coverage/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./coverage
+        run: npm ci
+
+      - name: Test
+        working-directory: ./coverage
+        run: npm run coverage
+
+      - name: Upload coverage
+        uses: qltysh/qlty-action/coverage@main
+        with:
+          oidc: true
+          files: coverage/coverage/clover.xml
+          incomplete: true
+          skip-errors: false
+
+      - name: Complete coverage
+        uses: qltysh/qlty-action/coverage@main
+        with:
+          oidc: true
+          command: complete
+          skip-errors: false
+
+      - name: Run fmt action
+        uses: qltysh/qlty-action/fmt@main
