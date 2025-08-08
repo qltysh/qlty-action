@@ -4,6 +4,7 @@ export interface ActionOutput {
   setFailed(message: string): void;
   info(message: string): void;
   warning(message: string): void;
+  error(message: string): void;
 }
 
 export class StubbedOutput implements ActionOutput {
@@ -11,6 +12,7 @@ export class StubbedOutput implements ActionOutput {
   paths: string[] = [];
   failures: string[] = [];
   infos: string[] = [];
+  errors: string[] = [];
   warnings: string[] = [];
 
   addPath(path: string): void {
@@ -31,5 +33,9 @@ export class StubbedOutput implements ActionOutput {
 
   warning(message: string): void {
     this.warnings.push(message);
+  }
+
+  error(message: string): void {
+    this.errors.push(message);
   }
 }

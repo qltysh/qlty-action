@@ -20,7 +20,7 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toEqual([
+      expect(output.errors).toEqual([
         "Error validating action input:",
         "Either 'oidc' or 'token' must be provided.",
         "Please check the action's inputs.",
@@ -43,7 +43,7 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toEqual([
+      expect(output.errors).toEqual([
         "Unexpected error executing coverage command:",
         "Crazy unknown error condition happened",
       ]);
@@ -79,7 +79,7 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toEqual([
+      expect(output.errors).toEqual([
         "No code coverage data files were found. Please check the action's inputs.",
         "If you are using a pattern, make sure it is correct.",
         "If you are using a file, make sure it exists.",
@@ -299,7 +299,7 @@ describe("CoverageAction", () => {
       const command = executedCommands[0];
       expect(command?.command).toContain("--dry-run");
       expect(command?.env?.["QLTY_COVERAGE_TOKEN"]).toBeUndefined();
-      expect(output.warnings.length).toBe(0); // No warnings should be generated
+      expect(output.errors.length).toBe(0); // No warnings should be generated
     });
   });
 
@@ -418,7 +418,7 @@ describe("CoverageAction", () => {
 
       await action.run();
 
-      expect(output.warnings).toEqual([]);
+      expect(output.errors).toEqual([]);
 
       const executedCommands = commands.clear();
       expect(executedCommands.length).toBe(1);
@@ -452,7 +452,7 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toEqual([
+      expect(output.errors).toEqual([
         "Error executing coverage command. Output from the Qlty CLI follows:",
         "STDOUT\nSTDERR\n",
       ]);
@@ -484,7 +484,7 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toEqual([
+      expect(output.errors).toEqual([
         "Error executing coverage command. Output from the Qlty CLI follows:",
         "STDOUT\nSTDERR\n",
       ]);
@@ -501,7 +501,7 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toEqual([
+      expect(output.errors).toEqual([
         "Error installing Qlty CLI: download error. Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.",
       ]);
     });
@@ -519,7 +519,7 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(output.warnings).toEqual([
+      expect(output.errors).toEqual([
         "No code coverage data files were found. Please check the action's inputs.",
         "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",
         "If you are using a pattern, make sure it is correct.",
