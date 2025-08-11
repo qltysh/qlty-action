@@ -1,7 +1,7 @@
 {
   "name": "qlty-action-coverage",
   "description": "Reusable GitHub Action to upload code coverage to Qlty Cloud",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "author": "Qlty Software Inc.",
   "homepage": "https://github.com/qltysh/qlty-action/tree/main/coverage",
   "repository": {
