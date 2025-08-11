@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.0 (2025-08-11)
+
+- Testing release process (no changes)
+
 ## v2.1.0 (2025-08-08)
 
 ### New
