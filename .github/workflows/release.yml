@@ -1,0 +1,244 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: "How to increment version (use 'version' to specify version)"
+        required: true
+        type: choice
+        default: minor
+        options:
+          - major
+          - minor
+          - patch
+          - version
+      version:
+        description: >
+          The full version to release (first choose 'version' from the
+          'increment' dropdown)
+        required: false
+        type: string
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # veresion 2.0.6
+        id: app-token
+        with:
+          app-id: ${{ vars.QLTY_APP_ID }}
+          private-key: ${{ secrets.QLTY_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # version 4.2.2
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Determine version
+        id: version
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./coverage/package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Determine new version based on input
+          if [ "${{ inputs.increment }}" == "version" ]; then
+            if [ -z "${{ inputs.version }}" ]; then
+              echo "Error: Version must be specified when increment is 'version'"
+              exit 1
+            fi
+            NEW_VERSION="${{ inputs.version }}"
+          else
+            # Parse current version
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+            case "${{ inputs.increment }}" in
+              major)
+                NEW_VERSION="$((MAJOR + 1)).0.0"
+                ;;
+              minor)
+                NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
+                ;;
+              patch)
+                NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+                ;;
+              *)
+                echo "Error: Invalid increment type"
+                exit 1
+                ;;
+            esac
+          fi
+
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "major_version=$(echo $NEW_VERSION | cut -d. -f1)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate CHANGELOG.md
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "Checking for version $VERSION in CHANGELOG.md"
+
+          # Check if version exists in CHANGELOG.md
+          if ! grep -q "^## v${VERSION}" CHANGELOG.md; then
+            echo "Error: Version v${VERSION} not found in CHANGELOG.md"
+            echo "Please add a changelog entry for v${VERSION} before releasing"
+            exit 1
+          fi
+
+          echo "Found changelog entry for v${VERSION}"
+
+      - name: Extract changelog for version
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Extract the changelog section for this version.
+          # Start from the version header and continue until the next version header
+          # or end of file.
+          CHANGELOG_CONTENT=$(awk "/^## v${VERSION}/{flag=1; next} /^## v[0-9]/{flag=0} flag" CHANGELOG.md)
+
+          if [ -z "$CHANGELOG_CONTENT" ]; then
+            echo "Warning: No changelog content found for v${VERSION}"
+            CHANGELOG_CONTENT="Release v${VERSION}"
+          fi
+
+          # Write to file to preserve formatting
+          echo "$CHANGELOG_CONTENT" > changelog_content.txt
+
+          echo "Extracted changelog content:"
+          cat changelog_content.txt
+
+      - name: Validate required package.json files exist
+        run: |
+          # Check that required package.json files exist
+          MISSING_FILES=""
+
+          if [ ! -f "coverage/package.json" ]; then
+            MISSING_FILES="${MISSING_FILES}coverage/package.json "
+          fi
+
+          if [ ! -f "fmt/package.json" ]; then
+            MISSING_FILES="${MISSING_FILES}fmt/package.json "
+          fi
+
+          if [ -n "$MISSING_FILES" ]; then
+            echo "Error: Required package.json files are missing: $MISSING_FILES"
+            exit 1
+          fi
+
+          echo "All required package.json files exist"
+
+      - name: Update package.json versions
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Update all package.json files
+          for package_file in coverage/package.json fmt/package.json; do
+            echo "Updating version in $package_file to $VERSION"
+            node -e "
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('$package_file', 'utf8'));
+              pkg.version = '$VERSION';
+              fs.writeFileSync('$package_file', JSON.stringify(pkg, null, 2) + '\\n');
+            "
+          done
+
+          # Show the changes
+          git diff coverage/package.json fmt/package.json || true
+
+      - name: Commit version changes via GitHub API
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Update coverage/package.json via API
+          COVERAGE_CONTENT=$(base64 < coverage/package.json)
+          gh api \
+            --method PUT \
+            /repos/${{ github.repository }}/contents/coverage/package.json \
+            -f message="Release v${VERSION} - Update coverage package.json" \
+            -f content="$COVERAGE_CONTENT" \
+            -f sha="$(git rev-parse HEAD:coverage/package.json)"
+
+          echo "Updated coverage/package.json"
+
+          # Discard local changes since they've been committed via API
+          git checkout -- coverage/package.json
+
+          # Update fmt/package.json via API if it exists
+          if [ -f "fmt/package.json" ]; then
+            # Pull latest to get the new SHA after first commit
+            git pull origin ${{ github.ref_name }}
+
+            FMT_CONTENT=$(base64 < fmt/package.json)
+            gh api \
+              --method PUT \
+              /repos/${{ github.repository }}/contents/fmt/package.json \
+              -f message="Release v${VERSION} - Update fmt package.json" \
+              -f content="$FMT_CONTENT" \
+              -f sha="$(git rev-parse HEAD:fmt/package.json)"
+
+            echo "Updated fmt/package.json"
+            
+            # Discard local changes since they've been committed via API
+            git checkout -- fmt/package.json
+          fi
+
+          # Pull the latest changes
+          git pull origin ${{ github.ref_name }}
+
+          echo "Created signed commits for version ${VERSION}"
+
+      - name: Create and push tags via GitHub API
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          MAJOR_VERSION="${{ steps.version.outputs.major_version }}"
+
+          # Get the current commit SHA
+          COMMIT_SHA=$(git rev-parse HEAD)
+
+          # Create lightweight tag reference for version (points directly to commit)
+          # This should fail if the tag already exists
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/v${VERSION}" \
+            -f sha="$COMMIT_SHA"
+
+          echo "Created tag v${VERSION}"
+
+          # Create or update lightweight tag reference for major version (force update if exists)
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/v${MAJOR_VERSION}" \
+            -f sha="$COMMIT_SHA" \
+            2>/dev/null || \
+          gh api \
+            --method PATCH \
+            /repos/${{ github.repository }}/git/refs/tags/v${MAJOR_VERSION} \
+            -f sha="$COMMIT_SHA" \
+            -F force=true
+
+          echo "Created/updated major version tag v${MAJOR_VERSION}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes-file changelog_content.txt \
+            --verify-tag
