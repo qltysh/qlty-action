@@ -39,7 +39,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./fmt
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build dist/ Directory
         working-directory: ./fmt
@@ -74,7 +74,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./coverage
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build dist/ Directory
         working-directory: ./coverage
@@ -122,7 +122,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./coverage
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Test
         working-directory: ./coverage

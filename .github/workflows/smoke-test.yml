@@ -27,7 +27,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./coverage
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Test
         working-directory: ./coverage
