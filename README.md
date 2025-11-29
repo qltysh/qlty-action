@@ -38,6 +38,13 @@ The other actions use the Qlty CLI and do not require Qlty Cloud.
 | [qltysh/qlty-action/install](https://github.com/qltysh/qlty-action/tree/main/install)          | Install the Qlty CLI onto your CI runner                   |
 | [qltysh/qlty-action/fmt](https://github.com/qltysh/qlty-action/tree/main/fmt#readme)           | Auto-format your code                                      |
 
+> [!TIP]
+> For additional security, you can pin actions to a specific commit SHA instead of a tag:
+> ```yaml
+> uses: qltysh/qlty-action/coverage@a1b2c3d4e5f6...
+> ```
+> See [GitHub's documentation](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) for more information.
+
 ---
 
 ## 🛟 Help or Feedback

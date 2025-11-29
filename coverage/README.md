@@ -62,6 +62,13 @@ This GitHub Action uploads code coverage data from your GitHub Actions workflow 
 >
 > As an alternative to OIDC, you can obtain a Workspace or Project-level coverage tokens. See Examples below for more.
 
+> [!TIP]
+> For additional security, you can pin this action to a specific commit SHA instead of a tag:
+> ```yaml
+> uses: qltysh/qlty-action/coverage@a1b2c3d4e5f6...
+> ```
+> See [GitHub's documentation](https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions#using-third-party-actions) for more information.
+
 ---
 
 ## 🖥️ Requirements
