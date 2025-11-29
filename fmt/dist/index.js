@@ -5081,8 +5081,8 @@ var require_merge = __commonJS({
     function wasObjectReferenced(obj, key, objects) {
       const arr = objects.get(obj[key]) || [];
       for (let i = 0, j = arr.length; i < j; i++) {
-        const info = arr[i];
-        if (info.key === key && info.obj === obj) {
+        const info2 = arr[i];
+        if (info2.key === key && info2.obj === obj) {
           return true;
         }
       }
@@ -9785,12 +9785,12 @@ var require_instrumentation = __commonJS({
        * @param span The span to which the hook should be applied
        * @param info The info object to be passed to the hook, with useful data the hook may use
        */
-      _runSpanCustomizationHook(hookHandler, triggerName, span, info) {
+      _runSpanCustomizationHook(hookHandler, triggerName, span, info2) {
         if (!hookHandler) {
           return;
         }
         try {
-          hookHandler(span, info);
+          hookHandler(span, info2);
         } catch (e) {
           this._diag.error(`Error running span customization hook due to exception in handler`, { triggerName }, e);
         }
@@ -25211,14 +25211,14 @@ var require_instrumentation3 = __commonJS({
           return patched;
         });
       }
-      _getSpanName(info, defaultName) {
+      _getSpanName(info2, defaultName) {
         var _a;
         const { spanNameHook: spanNameHook2 } = this.getConfig();
         if (!(spanNameHook2 instanceof Function)) {
           return defaultName;
         }
         try {
-          return (_a = spanNameHook2(info, defaultName)) !== null && _a !== void 0 ? _a : defaultName;
+          return (_a = spanNameHook2(info2, defaultName)) !== null && _a !== void 0 ? _a : defaultName;
         } catch (err) {
           api_1.diag.error("express instrumentation: error calling span name rewrite hook", err);
           return defaultName;
@@ -25725,7 +25725,7 @@ var require_utils8 = __commonJS({
       span.setAttribute(AttributeNames_1.AttributeNames.SOURCE, source);
     }
     exports2.addSpanSource = addSpanSource;
-    function createFieldIfNotExists(tracer, getConfig, contextValue, info, path) {
+    function createFieldIfNotExists(tracer, getConfig, contextValue, info2, path) {
       let field = getField(contextValue, path);
       let spanAdded = false;
       if (!field) {
@@ -25733,25 +25733,25 @@ var require_utils8 = __commonJS({
         const parent = getParentField(contextValue, path);
         field = {
           parent,
-          span: createResolverSpan(tracer, getConfig, contextValue, info, path, parent.span),
+          span: createResolverSpan(tracer, getConfig, contextValue, info2, path, parent.span),
           error: null
         };
         addField(contextValue, path, field);
       }
       return { spanAdded, field };
     }
-    function createResolverSpan(tracer, getConfig, contextValue, info, path, parentSpan) {
+    function createResolverSpan(tracer, getConfig, contextValue, info2, path, parentSpan) {
       var _a, _b;
       const attributes = {
-        [AttributeNames_1.AttributeNames.FIELD_NAME]: info.fieldName,
+        [AttributeNames_1.AttributeNames.FIELD_NAME]: info2.fieldName,
         [AttributeNames_1.AttributeNames.FIELD_PATH]: path.join("."),
-        [AttributeNames_1.AttributeNames.FIELD_TYPE]: info.returnType.toString()
+        [AttributeNames_1.AttributeNames.FIELD_TYPE]: info2.returnType.toString()
       };
       const span = tracer.startSpan(`${enum_1.SpanNames.RESOLVE} ${attributes[AttributeNames_1.AttributeNames.FIELD_PATH]}`, {
         attributes
       }, parentSpan ? api.trace.setSpan(api.context.active(), parentSpan) : void 0);
       const document2 = contextValue[symbols_1.OTEL_GRAPHQL_DATA_SYMBOL].source;
-      const fieldNode = info.fieldNodes.find((fieldNode2) => fieldNode2.kind === "Field");
+      const fieldNode = info2.fieldNodes.find((fieldNode2) => fieldNode2.kind === "Field");
       if (fieldNode) {
         addSpanSource(span, document2.loc, getConfig().allowValues, (_a = fieldNode.loc) === null || _a === void 0 ? void 0 : _a.start, (_b = fieldNode.loc) === null || _b === void 0 ? void 0 : _b.end);
       }
@@ -25926,34 +25926,34 @@ var require_utils8 = __commonJS({
       if (wrappedFieldResolver[symbols_1.OTEL_PATCHED_SYMBOL] || typeof fieldResolver !== "function") {
         return fieldResolver;
       }
-      function wrappedFieldResolver(source, args, contextValue, info) {
+      function wrappedFieldResolver(source, args, contextValue, info2) {
         if (!fieldResolver) {
           return void 0;
         }
         const config2 = getConfig();
         if (config2.ignoreTrivialResolveSpans && isDefaultResolver && (isObjectLike(source) || typeof source === "function")) {
-          const property = source[info.fieldName];
+          const property = source[info2.fieldName];
           if (typeof property !== "function") {
-            return fieldResolver.call(this, source, args, contextValue, info);
+            return fieldResolver.call(this, source, args, contextValue, info2);
           }
         }
         if (!contextValue[symbols_1.OTEL_GRAPHQL_DATA_SYMBOL]) {
-          return fieldResolver.call(this, source, args, contextValue, info);
+          return fieldResolver.call(this, source, args, contextValue, info2);
         }
-        const path = pathToArray(config2.mergeItems, info && info.path);
+        const path = pathToArray(config2.mergeItems, info2 && info2.path);
         const depth = path.filter((item) => typeof item === "string").length;
         let field;
         let shouldEndSpan = false;
         if (config2.depth >= 0 && config2.depth < depth) {
           field = getParentField(contextValue, path);
         } else {
-          const newField = createFieldIfNotExists(tracer, getConfig, contextValue, info, path);
+          const newField = createFieldIfNotExists(tracer, getConfig, contextValue, info2, path);
           field = newField.field;
           shouldEndSpan = newField.spanAdded;
         }
         return api.context.with(api.trace.setSpan(api.context.active(), field.span), () => {
           try {
-            const res = fieldResolver.call(this, source, args, contextValue, info);
+            const res = fieldResolver.call(this, source, args, contextValue, info2);
             if ((0, exports2.isPromise)(res)) {
               return res.then((r) => {
                 handleResolveSpanSuccess(field.span, shouldEndSpan);
@@ -49375,12 +49375,12 @@ var require_lib = __commonJS({
             throw new Error("Client has already been disposed.");
           }
           const parsedUrl = new URL(requestUrl);
-          let info = this._prepareRequest(verb, parsedUrl, headers);
+          let info2 = this._prepareRequest(verb, parsedUrl, headers);
           const maxTries = this._allowRetries && RetryableHttpVerbs.includes(verb) ? this._maxRetries + 1 : 1;
           let numTries = 0;
           let response;
           do {
-            response = yield this.requestRaw(info, data);
+            response = yield this.requestRaw(info2, data);
             if (response && response.message && response.message.statusCode === HttpCodes.Unauthorized) {
               let authenticationHandler;
               for (const handler of this.handlers) {
@@ -49390,7 +49390,7 @@ var require_lib = __commonJS({
                 }
               }
               if (authenticationHandler) {
-                return authenticationHandler.handleAuthentication(this, info, data);
+                return authenticationHandler.handleAuthentication(this, info2, data);
               } else {
                 return response;
               }
@@ -49413,8 +49413,8 @@ var require_lib = __commonJS({
                   }
                 }
               }
-              info = this._prepareRequest(verb, parsedRedirectUrl, headers);
-              response = yield this.requestRaw(info, data);
+              info2 = this._prepareRequest(verb, parsedRedirectUrl, headers);
+              response = yield this.requestRaw(info2, data);
               redirectsRemaining--;
             }
             if (!response.message.statusCode || !HttpResponseRetryCodes.includes(response.message.statusCode)) {
@@ -49443,7 +49443,7 @@ var require_lib = __commonJS({
        * @param info
        * @param data
        */
-      requestRaw(info, data) {
+      requestRaw(info2, data) {
         return __awaiter(this, void 0, void 0, function* () {
           return new Promise((resolve2, reject) => {
             function callbackForResult(err, res) {
@@ -49455,7 +49455,7 @@ var require_lib = __commonJS({
                 resolve2(res);
               }
             }
-            this.requestRawWithCallback(info, data, callbackForResult);
+            this.requestRawWithCallback(info2, data, callbackForResult);
           });
         });
       }
@@ -49465,12 +49465,12 @@ var require_lib = __commonJS({
        * @param data
        * @param onResult
        */
-      requestRawWithCallback(info, data, onResult) {
+      requestRawWithCallback(info2, data, onResult) {
         if (typeof data === "string") {
-          if (!info.options.headers) {
-            info.options.headers = {};
+          if (!info2.options.headers) {
+            info2.options.headers = {};
           }
-          info.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
+          info2.options.headers["Content-Length"] = Buffer.byteLength(data, "utf8");
         }
         let callbackCalled = false;
         function handleResult(err, res) {
@@ -49479,7 +49479,7 @@ var require_lib = __commonJS({
             onResult(err, res);
           }
         }
-        const req = info.httpModule.request(info.options, (msg) => {
+        const req = info2.httpModule.request(info2.options, (msg) => {
           const res = new HttpClientResponse(msg);
           handleResult(void 0, res);
         });
@@ -49491,7 +49491,7 @@ var require_lib = __commonJS({
           if (socket) {
             socket.end();
           }
-          handleResult(new Error(`Request timeout: ${info.options.path}`));
+          handleResult(new Error(`Request timeout: ${info2.options.path}`));
         });
         req.on("error", function(err) {
           handleResult(err);
@@ -49527,27 +49527,27 @@ var require_lib = __commonJS({
         return this._getProxyAgentDispatcher(parsedUrl, proxyUrl);
       }
       _prepareRequest(method, requestUrl, headers) {
-        const info = {};
-        info.parsedUrl = requestUrl;
-        const usingSsl = info.parsedUrl.protocol === "https:";
-        info.httpModule = usingSsl ? https2 : http4;
+        const info2 = {};
+        info2.parsedUrl = requestUrl;
+        const usingSsl = info2.parsedUrl.protocol === "https:";
+        info2.httpModule = usingSsl ? https2 : http4;
         const defaultPort = usingSsl ? 443 : 80;
-        info.options = {};
-        info.options.host = info.parsedUrl.hostname;
-        info.options.port = info.parsedUrl.port ? parseInt(info.parsedUrl.port) : defaultPort;
-        info.options.path = (info.parsedUrl.pathname || "") + (info.parsedUrl.search || "");
-        info.options.method = method;
-        info.options.headers = this._mergeHeaders(headers);
+        info2.options = {};
+        info2.options.host = info2.parsedUrl.hostname;
+        info2.options.port = info2.parsedUrl.port ? parseInt(info2.parsedUrl.port) : defaultPort;
+        info2.options.path = (info2.parsedUrl.pathname || "") + (info2.parsedUrl.search || "");
+        info2.options.method = method;
+        info2.options.headers = this._mergeHeaders(headers);
         if (this.userAgent != null) {
-          info.options.headers["user-agent"] = this.userAgent;
+          info2.options.headers["user-agent"] = this.userAgent;
         }
-        info.options.agent = this._getAgent(info.parsedUrl);
+        info2.options.agent = this._getAgent(info2.parsedUrl);
         if (this.handlers) {
           for (const handler of this.handlers) {
-            handler.prepareRequest(info.options);
+            handler.prepareRequest(info2.options);
           }
         }
-        return info;
+        return info2;
       }
       _mergeHeaders(headers) {
         if (this.requestOptions && this.requestOptions.headers) {
@@ -51537,10 +51537,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       (0, command_1.issueCommand)("notice", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
     exports2.notice = notice;
-    function info(message) {
+    function info2(message) {
       process.stdout.write(message + os4.EOL);
     }
-    exports2.info = info;
+    exports2.info = info2;
     function startGroup(name) {
       (0, command_1.issue)("group", name);
     }
@@ -62721,8 +62721,8 @@ function collectModules() {
         return updir();
       }
       try {
-        const info = JSON.parse((0, import_node_fs3.readFileSync)(pkgfile, "utf8"));
-        infos[info.name] = info.version;
+        const info2 = JSON.parse((0, import_node_fs3.readFileSync)(pkgfile, "utf8"));
+        infos[info2.name] = info2.version;
       } catch (_oO) {
       }
     };
@@ -63231,13 +63231,13 @@ var ExpressInstrumentationV5 = class extends import_instrumentation5.Instrumenta
       return patched;
     });
   }
-  _getSpanName(info, defaultName) {
+  _getSpanName(info2, defaultName) {
     const { spanNameHook: spanNameHook2 } = this.getConfig();
     if (!(spanNameHook2 instanceof Function)) {
       return defaultName;
     }
     try {
-      return spanNameHook2(info, defaultName) ?? defaultName;
+      return spanNameHook2(info2, defaultName) ?? defaultName;
     } catch (err) {
       diag2.error("express instrumentation: error calling span name rewrite hook", err);
       return defaultName;
@@ -63260,15 +63260,15 @@ function requestHook(span) {
     span.updateName(name);
   }
 }
-function spanNameHook(info, defaultName) {
+function spanNameHook(info2, defaultName) {
   if (getIsolationScope() === getDefaultIsolationScope()) {
     DEBUG_BUILD3 && logger.warn("Isolation scope is still default isolation scope - skipping setting transactionName");
     return defaultName;
   }
-  if (info.layerType === "request_handler") {
-    const req = info.request;
+  if (info2.layerType === "request_handler") {
+    const req = info2.request;
     const method = req.method ? req.method.toUpperCase() : "GET";
-    getIsolationScope().setTransactionName(`${method} ${info.route}`);
+    getIsolationScope().setTransactionName(`${method} ${info2.route}`);
   }
   return defaultName;
 }
@@ -63276,14 +63276,14 @@ var instrumentExpress = generateInstrumentOnce(
   INTEGRATION_NAME14,
   () => new import_instrumentation_express.ExpressInstrumentation({
     requestHook: (span) => requestHook(span),
-    spanNameHook: (info, defaultName) => spanNameHook(info, defaultName)
+    spanNameHook: (info2, defaultName) => spanNameHook(info2, defaultName)
   })
 );
 var instrumentExpressV5 = generateInstrumentOnce(
   INTEGRATION_NAME_V5,
   () => new ExpressInstrumentationV5({
     requestHook: (span) => requestHook(span),
-    spanNameHook: (info, defaultName) => spanNameHook(info, defaultName)
+    spanNameHook: (info2, defaultName) => spanNameHook(info2, defaultName)
   })
 );
 var _expressIntegration = () => {
@@ -63743,7 +63743,7 @@ var INTEGRATION_NAME26 = "Koa";
 var instrumentKoa = generateInstrumentOnce(
   INTEGRATION_NAME26,
   () => new import_instrumentation_koa.KoaInstrumentation({
-    requestHook(span, info) {
+    requestHook(span, info2) {
       addKoaSpanAttributes(span);
       if (getIsolationScope() === getDefaultIsolationScope()) {
         DEBUG_BUILD3 && logger.warn("Isolation scope is default isolation scope - skipping setting transactionName");
@@ -63751,7 +63751,7 @@ var instrumentKoa = generateInstrumentOnce(
       }
       const attributes = spanToJSON(span).data;
       const route = attributes[ATTR_HTTP_ROUTE3];
-      const method = info.context?.request?.method?.toUpperCase() || "GET";
+      const method = info2.context?.request?.method?.toUpperCase() || "GET";
       if (route) {
         getIsolationScope().setTransactionName(`${method} ${route}`);
       }
@@ -65170,6 +65170,23 @@ async function run() {
   }
   const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-${platformArch}.tar.xz`;
   const downloadedPath = await tc.downloadTool(downloadUrl);
+  core.info("Verifying sigstore attestation...");
+  let verifyOutput = "";
+  try {
+    await (0, import_exec.exec)("gh", ["attestation", "verify", downloadedPath, "--owner", "qltysh"], {
+      listeners: {
+        stdout: (data) => {
+          verifyOutput += data.toString();
+        },
+        stderr: (data) => {
+          verifyOutput += data.toString();
+        }
+      }
+    });
+    core.info("Attestation verified successfully");
+  } catch {
+    throw new FmtError(`Sigstore attestation verification failed: ${verifyOutput || "Unknown error"}`);
+  }
   const extractedFolder = await tc.extractTar(downloadedPath, void 0, "x");
   const cachedPath = await tc.cacheDir(extractedFolder, "qlty", "latest");
   const binPath = `${cachedPath}/qlty-${platformArch}`;
