@@ -8155,7 +8155,7 @@ var require_common = __commonJS({
         createDebug.namespaces = namespaces;
         createDebug.names = [];
         createDebug.skips = [];
-        const split = (typeof namespaces === "string" ? namespaces : "").trim().replace(/\s+/g, ",").split(",").filter(Boolean);
+        const split = (typeof namespaces === "string" ? namespaces : "").trim().replace(" ", ",").split(",").filter(Boolean);
         for (const ns of split) {
           if (ns[0] === "-") {
             createDebug.skips.push(ns.slice(1));
@@ -8373,7 +8373,7 @@ var require_browser = __commonJS({
     function load() {
       let r;
       try {
-        r = exports2.storage.getItem("debug") || exports2.storage.getItem("DEBUG");
+        r = exports2.storage.getItem("debug");
       } catch (error) {
       }
       if (!r && typeof process !== "undefined" && "env" in process) {
@@ -25644,7 +25644,7 @@ Mongoose Error Code: ${error.code}` : ""}`
       }).finally(() => span.end());
     }
     exports2.handlePromiseResponse = handlePromiseResponse;
-    function handleCallbackResponse(callback, exec, originalThis, span, args, responseHook, moduleVersion = void 0) {
+    function handleCallbackResponse(callback, exec2, originalThis, span, args, responseHook, moduleVersion = void 0) {
       let callbackArgumentIndex = 0;
       if (args.length === 2) {
         callbackArgumentIndex = 1;
@@ -25654,7 +25654,7 @@ Mongoose Error Code: ${error.code}` : ""}`
         span.end();
         return callback(err, response);
       };
-      return exec.apply(originalThis, args);
+      return exec2.apply(originalThis, args);
     }
     exports2.handleCallbackResponse = handleCallbackResponse;
   }
@@ -25764,7 +25764,7 @@ var require_mongoose = __commonJS({
       patchAggregateExec(moduleVersion) {
         const self = this;
         return (originalAggregate) => {
-          return function exec(callback) {
+          return function exec2(callback) {
             var _a;
             if (self.getConfig().requireParentSpan && api_1.trace.getSpan(api_1.context.active()) === void 0) {
               return originalAggregate.apply(this, arguments);
@@ -25786,7 +25786,7 @@ var require_mongoose = __commonJS({
       patchQueryExec(moduleVersion) {
         const self = this;
         return (originalExec) => {
-          return function exec(callback) {
+          return function exec2(callback) {
             if (self.getConfig().requireParentSpan && api_1.trace.getSpan(api_1.context.active()) === void 0) {
               return originalExec.apply(this, arguments);
             }
@@ -25862,12 +25862,12 @@ var require_mongoose = __commonJS({
           attributes: Object.assign(Object.assign(Object.assign({}, attributes), (0, utils_1.getAttributesFromCollection)(collection)), { [semantic_conventions_1.SEMATTRS_DB_OPERATION]: operation, [semantic_conventions_1.SEMATTRS_DB_SYSTEM]: "mongoose" })
         }, parentSpan ? api_1.trace.setSpan(api_1.context.active(), parentSpan) : void 0);
       }
-      _handleResponse(span, exec, originalThis, args, callback, moduleVersion = void 0) {
+      _handleResponse(span, exec2, originalThis, args, callback, moduleVersion = void 0) {
         const self = this;
         if (callback instanceof Function) {
-          return self._callOriginalFunction(() => (0, utils_1.handleCallbackResponse)(callback, exec, originalThis, span, args, self.getConfig().responseHook, moduleVersion));
+          return self._callOriginalFunction(() => (0, utils_1.handleCallbackResponse)(callback, exec2, originalThis, span, args, self.getConfig().responseHook, moduleVersion));
         } else {
-          const response = self._callOriginalFunction(() => exec.apply(originalThis, args));
+          const response = self._callOriginalFunction(() => exec2.apply(originalThis, args));
           return (0, utils_1.handlePromiseResponse)(response, span, self.getConfig().responseHook, moduleVersion);
         }
       }
@@ -49477,7 +49477,7 @@ var require_exec = __commonJS({
     exports2.getExecOutput = exports2.exec = void 0;
     var string_decoder_1 = require("string_decoder");
     var tr = __importStar(require_toolrunner());
-    function exec(commandLine, args, options) {
+    function exec2(commandLine, args, options) {
       return __awaiter(this, void 0, void 0, function* () {
         const commandArgs = tr.argStringToArray(commandLine);
         if (commandArgs.length === 0) {
@@ -49489,7 +49489,7 @@ var require_exec = __commonJS({
         return runner.exec();
       });
     }
-    exports2.exec = exec;
+    exports2.exec = exec2;
     function getExecOutput(commandLine, args, options) {
       var _a, _b;
       return __awaiter(this, void 0, void 0, function* () {
@@ -49512,7 +49512,7 @@ var require_exec = __commonJS({
           }
         };
         const listeners = Object.assign(Object.assign({}, options === null || options === void 0 ? void 0 : options.listeners), { stdout: stdOutListener, stderr: stdErrListener });
-        const exitCode = yield exec(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
+        const exitCode = yield exec2(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
         stdout += stdoutDecoder.end();
         stderr += stderrDecoder.end();
         return {
@@ -49590,12 +49590,12 @@ var require_platform7 = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getDetails = exports2.isLinux = exports2.isMacOS = exports2.isWindows = exports2.arch = exports2.platform = void 0;
     var os_1 = __importDefault(require("os"));
-    var exec = __importStar(require_exec());
+    var exec2 = __importStar(require_exec());
     var getWindowsInfo = () => __awaiter(void 0, void 0, void 0, function* () {
-      const { stdout: version } = yield exec.getExecOutput('powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Version"', void 0, {
+      const { stdout: version } = yield exec2.getExecOutput('powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Version"', void 0, {
         silent: true
       });
-      const { stdout: name } = yield exec.getExecOutput('powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Caption"', void 0, {
+      const { stdout: name } = yield exec2.getExecOutput('powershell -command "(Get-CimInstance -ClassName Win32_OperatingSystem).Caption"', void 0, {
         silent: true
       });
       return {
@@ -49605,7 +49605,7 @@ var require_platform7 = __commonJS({
     });
     var getMacOsInfo = () => __awaiter(void 0, void 0, void 0, function* () {
       var _a, _b, _c, _d;
-      const { stdout } = yield exec.getExecOutput("sw_vers", void 0, {
+      const { stdout } = yield exec2.getExecOutput("sw_vers", void 0, {
         silent: true
       });
       const version = (_b = (_a = stdout.match(/ProductVersion:\s*(.+)/)) === null || _a === void 0 ? void 0 : _a[1]) !== null && _b !== void 0 ? _b : "";
@@ -49616,7 +49616,7 @@ var require_platform7 = __commonJS({
       };
     });
     var getLinuxInfo2 = () => __awaiter(void 0, void 0, void 0, function* () {
-      const { stdout } = yield exec.getExecOutput("lsb_release", ["-i", "-r", "-s"], {
+      const { stdout } = yield exec2.getExecOutput("lsb_release", ["-i", "-r", "-s"], {
         silent: true
       });
       const [name, version] = stdout.trim().split("\n");
@@ -52272,7 +52272,7 @@ var require_brace_expansion = __commonJS({
       var isSequence = isNumericSequence || isAlphaSequence;
       var isOptions = m.body.indexOf(",") >= 0;
       if (!isSequence && !isOptions) {
-        if (m.post.match(/,(?!,).*\}/)) {
+        if (m.post.match(/,.*\}/)) {
           str = m.pre + "{" + m.body + escClose + m.post;
           return expand(str);
         }
@@ -69324,6 +69324,7 @@ var core3 = __toESM(require_core4());
 // src/installer.ts
 var tc = __toESM(require_tool_cache());
 var core = __toESM(require_core4());
+var actionsExec = __toESM(require_exec());
 var import_os = __toESM(require("os"));
 var import_node_events = __toESM(require("node:events"));
 
@@ -69382,27 +69383,64 @@ var StubbedOutput = class {
 
 // src/installer.ts
 var import_node_path4 = __toESM(require("node:path"));
+var GhAttestationVerifier = class {
+  async verify(filePath, owner) {
+    let output = "";
+    try {
+      await actionsExec.exec(
+        "gh",
+        ["attestation", "verify", filePath, "--owner", owner],
+        {
+          listeners: {
+            stdout: (data) => {
+              output += data.toString();
+            },
+            stderr: (data) => {
+              output += data.toString();
+            }
+          }
+        }
+      );
+      return { success: true };
+    } catch {
+      return { success: false, error: output || "Verification failed" };
+    }
+  }
+};
+var StubbedAttestationVerifier = class {
+  constructor(shouldFail = false) {
+    this.shouldFail = shouldFail;
+    __publicField(this, "verifiedFiles", []);
+  }
+  async verify(filePath) {
+    this.verifiedFiles.push(filePath);
+    return this.shouldFail ? { success: false, error: "Stubbed failure" } : { success: true };
+  }
+};
 var DOWNLOAD_EVENT = "download";
 var Installer = class _Installer {
-  constructor(os4, output, toolCache, version) {
+  constructor(os4, output, toolCache, attestationVerifier, version) {
     __publicField(this, "_os");
     __publicField(this, "_output");
     __publicField(this, "_tc");
+    __publicField(this, "_attestationVerifier");
     __publicField(this, "_emitter", new import_node_events.default());
     __publicField(this, "_version");
     this._os = os4;
     this._output = output;
     this._tc = toolCache;
+    this._attestationVerifier = attestationVerifier;
     this._version = version;
   }
   static create(version) {
-    return new _Installer(import_os.default, core, tc, version);
+    return new _Installer(import_os.default, core, tc, new GhAttestationVerifier(), version);
   }
-  static createNull(version, raiseDownloadError) {
+  static createNull(version, raiseDownloadError, attestationShouldFail) {
     return new _Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
       new StubbedToolCache(raiseDownloadError),
+      new StubbedAttestationVerifier(attestationShouldFail),
       version
     );
   }
@@ -69418,6 +69456,18 @@ var Installer = class _Installer {
       return null;
     }
     const tarPath = await this._tc.downloadTool(download.url);
+    this._output.info("Verifying sigstore attestation...");
+    const attestationResult = await this._attestationVerifier.verify(
+      tarPath,
+      "qltysh"
+    );
+    if (!attestationResult.success) {
+      this._output.setFailed(
+        `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`
+      );
+      return null;
+    }
+    this._output.info("Attestation verified successfully");
     let extractedFolder;
     if (download.fileType === "zip") {
       extractedFolder = await this._tc.extractZip(tarPath);
@@ -73820,7 +73870,7 @@ var StubbedInputProvider = class {
 };
 
 // src/action.ts
-var actionsExec = __toESM(require_exec());
+var actionsExec2 = __toESM(require_exec());
 var actionsCore = __toESM(require_core4());
 var actionsGithub = __toESM(require_github());
 
@@ -73889,7 +73939,7 @@ var CoverageAction = class _CoverageAction {
   constructor({
     output = actionsCore,
     context: context3 = actionsGithub.context,
-    executor = actionsExec,
+    executor = actionsExec2,
     installer,
     settings = Settings.create(),
     env = process.env

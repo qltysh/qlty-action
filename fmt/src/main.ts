@@ -79,6 +79,32 @@ async function run(): Promise<void> {
   const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-${platformArch}.tar.xz`;
 
   const downloadedPath = await tc.downloadTool(downloadUrl);
+
+  // Verify attestation (fatal on failure)
+  core.info("Verifying sigstore attestation...");
+  let verifyOutput = "";
+  try {
+    await exec(
+      "gh",
+      ["attestation", "verify", downloadedPath, "--owner", "qltysh"],
+      {
+        listeners: {
+          stdout: (data: Buffer) => {
+            verifyOutput += data.toString();
+          },
+          stderr: (data: Buffer) => {
+            verifyOutput += data.toString();
+          },
+        },
+      },
+    );
+    core.info("Attestation verified successfully");
+  } catch {
+    throw new FmtError(
+      `Sigstore attestation verification failed: ${verifyOutput || "Unknown error"}`,
+    );
+  }
+
   const extractedFolder = await tc.extractTar(downloadedPath, undefined, "x");
 
   const cachedPath = await tc.cacheDir(extractedFolder, "qlty", "latest");

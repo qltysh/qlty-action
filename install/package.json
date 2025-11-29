@@ -1,0 +1,47 @@
+{
+  "name": "qlty-action-install",
+  "description": "Reusable GitHub Action to install the Qlty CLI",
+  "version": "1.0.0",
+  "author": "Qlty Software Inc.",
+  "homepage": "https://github.com/qltysh/qlty-action/tree/main/install",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qltysh/qlty-action.git"
+  },
+  "bugs": {
+    "url": "https://github.com/qltysh/qlty-action/issues"
+  },
+  "keywords": [
+    "cli",
+    "install",
+    "quality",
+    "qlty"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "package": "esbuild src/index.ts --bundle --platform=node --target=es2020 --outfile=dist/index.js",
+    "test": "vitest --run",
+    "test:watch": "vitest --watch",
+    "coverage": "vitest run --coverage",
+    "all": "npm run typecheck && npm run test && npm run package"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/exec": "^1.1.1",
+    "@actions/tool-cache": "^2.0.2",
+    "esbuild": "^0.25.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@vitest/coverage-istanbul": "^3.2.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

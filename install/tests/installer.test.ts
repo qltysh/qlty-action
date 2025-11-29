@@ -3,89 +3,78 @@ import {
   Installer,
   StubbedOperatingSystem,
   StubbedToolCache,
+  StubbedOutput,
   StubbedAttestationVerifier,
-} from "src/installer";
-import { StubbedOutput } from "src/util/output";
+} from "../src/installer.js";
 
 describe("Installer", () => {
   test("installs linux x86", async () => {
-    const { output, downloads, installer } = createTrackedInstaller({
+    const { output, toolCache, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("linux", "x64"),
     });
     const qltyBinary = await installer.install();
-    expect(downloads.clear()).toEqual([
+    expect(toolCache.downloads).toEqual([
       "https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz",
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]${path.sep}qlty-x86_64-unknown-linux-gnu`,
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-unknown-linux-gnu.tar.xz]]]${path.sep}qlty-x86_64-unknown-linux-gnu`,
     ]);
   });
 
   test("installs linux arm64", async () => {
-    const { output, downloads, installer } = createTrackedInstaller({
+    const { output, toolCache, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("linux", "arm64"),
     });
     const qltyBinary = await installer.install();
-    expect(downloads.clear()).toEqual([
+    expect(toolCache.downloads).toEqual([
       "https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-unknown-linux-gnu.tar.xz",
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-unknown-linux-gnu.tar.xz] dest=undefined options=x]]${path.sep}qlty-aarch64-unknown-linux-gnu`,
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-unknown-linux-gnu.tar.xz]]]${path.sep}qlty-aarch64-unknown-linux-gnu`,
     ]);
   });
 
   test("installs darwin x64", async () => {
-    const { output, downloads, installer } = createTrackedInstaller({
+    const { output, toolCache, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("darwin", "x64"),
     });
     const qltyBinary = await installer.install();
-    expect(downloads.clear()).toEqual([
+    expect(toolCache.downloads).toEqual([
       "https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-apple-darwin.tar.xz",
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-apple-darwin.tar.xz] dest=undefined options=x]]${path.sep}qlty-x86_64-apple-darwin`,
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-apple-darwin.tar.xz]]]${path.sep}qlty-x86_64-apple-darwin`,
     ]);
   });
 
   test("installs darwin arm64", async () => {
-    const { output, downloads, installer } = createTrackedInstaller({
+    const { output, toolCache, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("darwin", "arm64"),
     });
     const qltyBinary = await installer.install();
-    expect(downloads.clear()).toEqual([
+    expect(toolCache.downloads).toEqual([
       "https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-apple-darwin.tar.xz",
     ]);
     expect(qltyBinary).toEqual("qlty");
     expect(output.paths).toEqual([
-      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-apple-darwin.tar.xz] dest=undefined options=x]]${path.sep}qlty-aarch64-apple-darwin`,
+      `cacheDir[extractTar[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-aarch64-apple-darwin.tar.xz]]]${path.sep}qlty-aarch64-apple-darwin`,
     ]);
   });
 
   test("installs windows x64", async () => {
-    const { output, downloads, installer } = createTrackedInstaller({
+    const { output, toolCache, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("win32", "x64"),
     });
     const qltyBinary = await installer.install();
-    expect(downloads.clear()).toEqual([
+    expect(toolCache.downloads).toEqual([
       "https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-pc-windows-msvc.zip",
     ]);
     expect(qltyBinary).toEqual("qlty.exe");
     expect(output.paths).toEqual([
-      `cacheDir[extractZip[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-pc-windows-msvc.zip] dest=undefined options=undefined]]`,
-    ]);
-  });
-
-  test("installs specific version", async () => {
-    const { downloads, installer } = createTrackedInstaller({
-      os: new StubbedOperatingSystem("linux", "x64"),
-      version: "1.2.3",
-    });
-    await installer.install();
-    expect(downloads.clear()).toEqual([
-      "https://qlty-releases.s3.amazonaws.com/qlty/v1.2.3/qlty-x86_64-unknown-linux-gnu.tar.xz",
+      `cacheDir[extractZip[downloadTool[https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-x86_64-pc-windows-msvc.zip]]]`,
     ]);
   });
 
@@ -93,7 +82,8 @@ describe("Installer", () => {
     const { output, installer } = createTrackedInstaller({
       os: new StubbedOperatingSystem("unknown", "unknown"),
     });
-    await installer.install();
+    const result = await installer.install();
+    expect(result).toBeNull();
     expect(output.failures).toEqual([
       "Unsupported platform/architecture: unknown/unknown",
     ]);
@@ -122,6 +112,16 @@ describe("Installer", () => {
       expect(result).toBe("qlty");
       expect(attestationVerifier.verifiedFiles).toHaveLength(1);
     });
+
+    test("verifies the downloaded archive path", async () => {
+      const attestationVerifier = new StubbedAttestationVerifier(false);
+      const { installer } = createTrackedInstaller({
+        os: new StubbedOperatingSystem("linux", "x64"),
+        attestationVerifier,
+      });
+      await installer.install();
+      expect(attestationVerifier.verifiedFiles[0]).toContain("downloadTool[");
+    });
   });
 
   function createTrackedInstaller({
@@ -129,22 +129,13 @@ describe("Installer", () => {
     os = new StubbedOperatingSystem(),
     output = new StubbedOutput(),
     attestationVerifier = new StubbedAttestationVerifier(false),
-    version = undefined,
   }: {
     toolCache?: StubbedToolCache;
     os?: StubbedOperatingSystem;
     output?: StubbedOutput;
     attestationVerifier?: StubbedAttestationVerifier;
-    version?: string;
   } = {}) {
-    const installer = new Installer(
-      os,
-      output,
-      toolCache,
-      attestationVerifier,
-      version,
-    );
-    const downloads = installer.trackOutput();
-    return { installer, downloads, output, attestationVerifier };
+    const installer = new Installer(os, output, toolCache, attestationVerifier);
+    return { installer, toolCache, output, attestationVerifier };
   }
 });
