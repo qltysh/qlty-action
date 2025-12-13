@@ -59,6 +59,8 @@ inputs:
       - "lcov"
       - "qlty"
       - "simplecov"
+      - "dotcover"
+      - "xccov-json"
 
   verbose:
     description: "Verbose output for debugging"

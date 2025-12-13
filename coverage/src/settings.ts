@@ -53,6 +53,8 @@ const formatEnum = z.enum([
   "lcov",
   "qlty",
   "simplecov",
+  "dotcover",
+  "xccov-json",
 ]);
 
 const settingsParser = z.object({

@@ -73588,7 +73588,9 @@ var formatEnum = z.enum([
   "jacoco",
   "lcov",
   "qlty",
-  "simplecov"
+  "simplecov",
+  "dotcover",
+  "xccov-json"
 ]);
 var settingsParser = z.object({
   token: preprocessBlanks(z.string().optional()),
