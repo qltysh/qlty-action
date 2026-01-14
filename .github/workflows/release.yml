@@ -41,7 +41,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22.22"
 
       - name: Determine version
         id: version
@@ -189,7 +189,7 @@ jobs:
               -f sha="$(git rev-parse HEAD:fmt/package.json)"
 
             echo "Updated fmt/package.json"
-            
+
             # Discard local changes since they've been committed via API
             git checkout -- fmt/package.json
           fi
