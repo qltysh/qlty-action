@@ -6,6 +6,12 @@ branding:
   icon: "package"
   color: "green"
 
+inputs:
+  github-token:
+    description: "GitHub token for sigstore attestation verification"
+    required: false
+    default: ${{ github.token }}
+
 runs:
   using: node20
   main: dist/index.js

@@ -19716,7 +19716,7 @@ var require_core = __commonJS({
       process.env["PATH"] = `${inputPath}${path2.delimiter}${process.env["PATH"]}`;
     }
     exports2.addPath = addPath;
-    function getInput(name, options) {
+    function getInput2(name, options) {
       const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
       if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
@@ -19726,9 +19726,9 @@ var require_core = __commonJS({
       }
       return val.trim();
     }
-    exports2.getInput = getInput;
+    exports2.getInput = getInput2;
     function getMultilineInput(name, options) {
-      const inputs = getInput(name, options).split("\n").filter((x) => x !== "");
+      const inputs = getInput2(name, options).split("\n").filter((x) => x !== "");
       if (options && options.trimWhitespace === false) {
         return inputs;
       }
@@ -19738,7 +19738,7 @@ var require_core = __commonJS({
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
-      const val = getInput(name, options);
+      const val = getInput2(name, options);
       if (trueValue.includes(val))
         return true;
       if (falseValue.includes(val))
@@ -21805,6 +21805,9 @@ var actionsExec = __toESM(require_exec());
 var import_os = __toESM(require("os"));
 var import_node_path = __toESM(require("node:path"));
 var GhAttestationVerifier = class {
+  constructor(token) {
+    this.token = token;
+  }
   async verify(filePath, owner) {
     let output = "";
     try {
@@ -21812,6 +21815,10 @@ var GhAttestationVerifier = class {
         "gh",
         ["attestation", "verify", filePath, "--owner", owner],
         {
+          env: {
+            ...process.env,
+            GH_TOKEN: this.token
+          },
           listeners: {
             stdout: (data) => {
               output += data.toString();
@@ -21903,8 +21910,8 @@ var Installer = class _Installer {
     this._tc = toolCache;
     this._attestationVerifier = attestationVerifier;
   }
-  static create() {
-    return new _Installer(import_os.default, core, tc, new GhAttestationVerifier());
+  static create(token) {
+    return new _Installer(import_os.default, core, tc, new GhAttestationVerifier(token));
   }
   static createNull(platform = "linux", arch = "x64", attestationShouldFail = false, downloadError = false) {
     return new _Installer(
@@ -21990,7 +21997,8 @@ var Installer = class _Installer {
 // src/main.ts
 async function run() {
   try {
-    const installer = Installer.create();
+    const token = core2.getInput("github-token");
+    const installer = Installer.create(token);
     const result = await installer.install();
     if (!result) {
       process.exit(1);

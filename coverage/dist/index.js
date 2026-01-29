@@ -49740,7 +49740,7 @@ var require_core4 = __commonJS({
       process.env["PATH"] = `${inputPath}${path3.delimiter}${process.env["PATH"]}`;
     }
     exports2.addPath = addPath;
-    function getInput(name, options) {
+    function getInput2(name, options) {
       const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
       if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
@@ -49750,9 +49750,9 @@ var require_core4 = __commonJS({
       }
       return val.trim();
     }
-    exports2.getInput = getInput;
+    exports2.getInput = getInput2;
     function getMultilineInput(name, options) {
-      const inputs = getInput(name, options).split("\n").filter((x) => x !== "");
+      const inputs = getInput2(name, options).split("\n").filter((x) => x !== "");
       if (options && options.trimWhitespace === false) {
         return inputs;
       }
@@ -49762,7 +49762,7 @@ var require_core4 = __commonJS({
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
-      const val = getInput(name, options);
+      const val = getInput2(name, options);
       if (trueValue.includes(val))
         return true;
       if (falseValue.includes(val))
@@ -69384,6 +69384,9 @@ var StubbedOutput = class {
 // src/installer.ts
 var import_node_path4 = __toESM(require("node:path"));
 var GhAttestationVerifier = class {
+  constructor(token) {
+    this.token = token;
+  }
   async verify(filePath, owner) {
     let output = "";
     try {
@@ -69391,6 +69394,10 @@ var GhAttestationVerifier = class {
         "gh",
         ["attestation", "verify", filePath, "--owner", owner],
         {
+          env: {
+            ...process.env,
+            GH_TOKEN: this.token
+          },
           listeners: {
             stdout: (data) => {
               output += data.toString();
@@ -69432,8 +69439,8 @@ var Installer = class _Installer {
     this._attestationVerifier = attestationVerifier;
     this._version = version;
   }
-  static create(version) {
-    return new _Installer(import_os.default, core, tc, new GhAttestationVerifier(), version);
+  static create(token, version) {
+    return new _Installer(import_os.default, core, tc, new GhAttestationVerifier(token), version);
   }
   static createNull(version, raiseDownloadError, attestationShouldFail) {
     return new _Installer(
@@ -73942,7 +73949,8 @@ var CoverageAction = class _CoverageAction {
     executor = actionsExec2,
     installer,
     settings = Settings.create(),
-    env = process.env
+    env = process.env,
+    githubToken = actionsCore.getInput("github-token")
   } = {}) {
     __publicField(this, "_output");
     __publicField(this, "_context");
@@ -73954,7 +73962,7 @@ var CoverageAction = class _CoverageAction {
     this._output = output;
     this._context = context3;
     this._executor = executor;
-    this._installer = installer || Installer.create(settings.getVersion());
+    this._installer = installer || Installer.create(githubToken, settings.getVersion());
     this._settings = settings;
     this._env = env;
   }

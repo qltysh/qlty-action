@@ -25,6 +25,8 @@ export interface AttestationVerifier {
 }
 
 export class GhAttestationVerifier implements AttestationVerifier {
+  constructor(private token: string) {}
+
   async verify(filePath: string, owner: string): Promise<AttestationResult> {
     let output = "";
     try {
@@ -32,6 +34,10 @@ export class GhAttestationVerifier implements AttestationVerifier {
         "gh",
         ["attestation", "verify", filePath, "--owner", owner],
         {
+          env: {
+            ...process.env,
+            GH_TOKEN: this.token,
+          },
           listeners: {
             stdout: (data: Buffer) => {
               output += data.toString();
@@ -164,8 +170,8 @@ export class Installer {
   private _tc: ToolCache;
   private _attestationVerifier: AttestationVerifier;
 
-  static create(): Installer {
-    return new Installer(os, core, tc, new GhAttestationVerifier());
+  static create(token: string): Installer {
+    return new Installer(os, core, tc, new GhAttestationVerifier(token));
   }
 
   static createNull(

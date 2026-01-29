@@ -55,6 +55,7 @@ export class CoverageAction {
     installer,
     settings = Settings.create(),
     env = process.env,
+    githubToken = actionsCore.getInput("github-token"),
   }: {
     output?: ActionOutput;
     context?: ActionContext;
@@ -62,11 +63,13 @@ export class CoverageAction {
     installer?: Installer;
     settings?: Settings;
     env?: ProcessEnv;
+    githubToken?: string;
   } = {}) {
     this._output = output;
     this._context = context;
     this._executor = executor;
-    this._installer = installer || Installer.create(settings.getVersion());
+    this._installer =
+      installer || Installer.create(githubToken, settings.getVersion());
     this._settings = settings;
     this._env = env;
   }

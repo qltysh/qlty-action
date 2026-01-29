@@ -3,7 +3,8 @@ import { Installer } from "./installer.js";
 
 export async function run(): Promise<void> {
   try {
-    const installer = Installer.create();
+    const token = core.getInput("github-token");
+    const installer = Installer.create(token);
     const result = await installer.install();
 
     if (!result) {
