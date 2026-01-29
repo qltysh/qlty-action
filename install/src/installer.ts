@@ -17,6 +17,7 @@ interface DownloadPlan {
 // Attestation interfaces
 export interface AttestationResult {
   success: boolean;
+  skipped?: boolean;
   error?: string;
 }
 
@@ -29,41 +30,63 @@ export class GhAttestationVerifier implements AttestationVerifier {
 
   async verify(filePath: string, owner: string): Promise<AttestationResult> {
     let output = "";
-    try {
-      await actionsExec.exec(
-        "gh",
-        ["attestation", "verify", filePath, "--owner", owner],
-        {
-          env: {
-            ...process.env,
-            GH_TOKEN: this.token,
+    const exitCode = await actionsExec.exec(
+      "gh",
+      ["attestation", "verify", filePath, "--owner", owner],
+      {
+        ignoreReturnCode: true,
+        env: {
+          ...process.env,
+          GH_TOKEN: this.token,
+        },
+        listeners: {
+          stdout: (data: Buffer) => {
+            output += data.toString();
           },
-          listeners: {
-            stdout: (data: Buffer) => {
-              output += data.toString();
-            },
-            stderr: (data: Buffer) => {
-              output += data.toString();
-            },
+          stderr: (data: Buffer) => {
+            output += data.toString();
           },
         },
-      );
+      },
+    );
+
+    if (exitCode === 0) {
       return { success: true };
-    } catch {
-      return { success: false, error: output || "Verification failed" };
     }
+
+    // Exit code 4 indicates authentication failure - treat as skipped, not fatal
+    if (exitCode === 4) {
+      return {
+        success: false,
+        skipped: true,
+        error: "GitHub CLI not authenticated. Attestation verification skipped.",
+      };
+    }
+
+    return { success: false, error: output || "Verification failed" };
   }
 }
 
+type AttestationBehavior = "success" | "fail" | "auth-failure";
+
 export class StubbedAttestationVerifier implements AttestationVerifier {
   verifiedFiles: string[] = [];
-  constructor(private shouldFail = false) {}
+  constructor(private behavior: AttestationBehavior = "success") {}
 
   async verify(filePath: string): Promise<AttestationResult> {
     this.verifiedFiles.push(filePath);
-    return this.shouldFail
-      ? { success: false, error: "Stubbed failure" }
-      : { success: true };
+    switch (this.behavior) {
+      case "success":
+        return { success: true };
+      case "fail":
+        return { success: false, error: "Stubbed failure" };
+      case "auth-failure":
+        return {
+          success: false,
+          skipped: true,
+          error: "GitHub CLI not authenticated",
+        };
+    }
   }
 }
 
@@ -84,6 +107,7 @@ export interface ToolCache {
 // ActionOutput interface
 export interface ActionOutput {
   info(message: string): void;
+  warning(message: string | Error, properties?: { title?: string }): void;
   setFailed(message: string): void;
   addPath(path: string): void;
 }
@@ -149,9 +173,17 @@ export class StubbedOutput implements ActionOutput {
   failures: string[] = [];
   paths: string[] = [];
   infos: string[] = [];
+  warnings: { message: string; title?: string }[] = [];
 
   info(message: string): void {
     this.infos.push(message);
+  }
+
+  warning(message: string | Error, properties?: { title?: string }): void {
+    this.warnings.push({
+      message: message instanceof Error ? message.message : message,
+      title: properties?.title,
+    });
   }
 
   setFailed(message: string): void {
@@ -177,14 +209,14 @@ export class Installer {
   static createNull(
     platform = "linux",
     arch = "x64",
-    attestationShouldFail = false,
+    attestationBehavior: AttestationBehavior = "success",
     downloadError = false,
   ): Installer {
     return new Installer(
       new StubbedOperatingSystem(platform, arch),
       new StubbedOutput(),
       new StubbedToolCache(downloadError),
-      new StubbedAttestationVerifier(attestationShouldFail),
+      new StubbedAttestationVerifier(attestationBehavior),
     );
   }
 
@@ -213,7 +245,7 @@ export class Installer {
     this._output.info(`Downloading Qlty CLI from ${download.url}`);
     const archivePath = await this._tc.downloadTool(download.url);
 
-    // Verify attestation (fatal on failure)
+    // Verify attestation
     this._output.info("Verifying sigstore attestation...");
     const attestationResult = await this._attestationVerifier.verify(
       archivePath,
@@ -221,12 +253,23 @@ export class Installer {
     );
 
     if (!attestationResult.success) {
-      this._output.setFailed(
-        `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
-      );
-      return null;
+      if (attestationResult.skipped) {
+        // Auth failure - warn but proceed
+        this._output.warning(
+          "Sigstore attestation verification was skipped because the GitHub CLI is not authenticated. " +
+            "For enhanced security, ensure the github-token input is provided.",
+          { title: "Attestation Verification Skipped" },
+        );
+      } else {
+        // Real verification failure - fatal
+        this._output.setFailed(
+          `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
+        );
+        return null;
+      }
+    } else {
+      this._output.info("Attestation verified successfully");
     }
-    this._output.info("Attestation verified successfully");
 
     // Extract
     let extractedFolder;

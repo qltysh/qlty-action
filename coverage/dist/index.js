@@ -69373,8 +69373,11 @@ var StubbedOutput = class {
   info(message) {
     this.infos.push(message);
   }
-  warning(message) {
-    this.warnings.push(message);
+  warning(message, properties) {
+    this.warnings.push({
+      message: message instanceof Error ? message.message : message,
+      title: properties?.title
+    });
   }
   error(message) {
     this.errors.push(message);
@@ -69389,39 +69392,57 @@ var GhAttestationVerifier = class {
   }
   async verify(filePath, owner) {
     let output = "";
-    try {
-      await actionsExec.exec(
-        "gh",
-        ["attestation", "verify", filePath, "--owner", owner],
-        {
-          env: {
-            ...process.env,
-            GH_TOKEN: this.token
+    const exitCode = await actionsExec.exec(
+      "gh",
+      ["attestation", "verify", filePath, "--owner", owner],
+      {
+        ignoreReturnCode: true,
+        env: {
+          ...process.env,
+          GH_TOKEN: this.token
+        },
+        listeners: {
+          stdout: (data) => {
+            output += data.toString();
           },
-          listeners: {
-            stdout: (data) => {
-              output += data.toString();
-            },
-            stderr: (data) => {
-              output += data.toString();
-            }
+          stderr: (data) => {
+            output += data.toString();
           }
         }
-      );
+      }
+    );
+    if (exitCode === 0) {
       return { success: true };
-    } catch {
-      return { success: false, error: output || "Verification failed" };
     }
+    if (exitCode === 4) {
+      return {
+        success: false,
+        skipped: true,
+        error: "GitHub CLI not authenticated. Attestation verification skipped."
+      };
+    }
+    return { success: false, error: output || "Verification failed" };
   }
 };
 var StubbedAttestationVerifier = class {
-  constructor(shouldFail = false) {
-    this.shouldFail = shouldFail;
+  constructor(behavior = "success") {
+    this.behavior = behavior;
     __publicField(this, "verifiedFiles", []);
   }
   async verify(filePath) {
     this.verifiedFiles.push(filePath);
-    return this.shouldFail ? { success: false, error: "Stubbed failure" } : { success: true };
+    switch (this.behavior) {
+      case "success":
+        return { success: true };
+      case "fail":
+        return { success: false, error: "Stubbed failure" };
+      case "auth-failure":
+        return {
+          success: false,
+          skipped: true,
+          error: "GitHub CLI not authenticated"
+        };
+    }
   }
 };
 var DOWNLOAD_EVENT = "download";
@@ -69442,12 +69463,12 @@ var Installer = class _Installer {
   static create(token, version) {
     return new _Installer(import_os.default, core, tc, new GhAttestationVerifier(token), version);
   }
-  static createNull(version, raiseDownloadError, attestationShouldFail) {
+  static createNull(version, raiseDownloadError, attestationBehavior = "success") {
     return new _Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
       new StubbedToolCache(raiseDownloadError),
-      new StubbedAttestationVerifier(attestationShouldFail),
+      new StubbedAttestationVerifier(attestationBehavior),
       version
     );
   }
@@ -69469,12 +69490,20 @@ var Installer = class _Installer {
       "qltysh"
     );
     if (!attestationResult.success) {
-      this._output.setFailed(
-        `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`
-      );
-      return null;
+      if (attestationResult.skipped) {
+        this._output.warning(
+          "Sigstore attestation verification was skipped because the GitHub CLI is not authenticated. For enhanced security, ensure the github-token input is provided.",
+          { title: "Attestation Verification Skipped" }
+        );
+      } else {
+        this._output.setFailed(
+          `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`
+        );
+        return null;
+      }
+    } else {
+      this._output.info("Attestation verified successfully");
     }
-    this._output.info("Attestation verified successfully");
     let extractedFolder;
     if (download.fileType === "zip") {
       extractedFolder = await this._tc.extractZip(tarPath);

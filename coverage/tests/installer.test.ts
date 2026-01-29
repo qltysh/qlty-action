@@ -103,7 +103,7 @@ describe("Installer", () => {
     test("fails when attestation verification fails", async () => {
       const { output, installer } = createTrackedInstaller({
         os: new StubbedOperatingSystem("linux", "x64"),
-        attestationVerifier: new StubbedAttestationVerifier(true),
+        attestationVerifier: new StubbedAttestationVerifier("fail"),
       });
       const result = await installer.install();
       expect(result).toBeNull();
@@ -113,7 +113,7 @@ describe("Installer", () => {
     });
 
     test("succeeds when attestation passes", async () => {
-      const attestationVerifier = new StubbedAttestationVerifier(false);
+      const attestationVerifier = new StubbedAttestationVerifier("success");
       const { installer } = createTrackedInstaller({
         os: new StubbedOperatingSystem("linux", "x64"),
         attestationVerifier,
@@ -122,13 +122,26 @@ describe("Installer", () => {
       expect(result).toBe("qlty");
       expect(attestationVerifier.verifiedFiles).toHaveLength(1);
     });
+
+    test("warns but proceeds when gh CLI is not authenticated", async () => {
+      const { output, installer } = createTrackedInstaller({
+        os: new StubbedOperatingSystem("linux", "x64"),
+        attestationVerifier: new StubbedAttestationVerifier("auth-failure"),
+      });
+      const result = await installer.install();
+      expect(result).toBe("qlty");
+      expect(output.failures).toEqual([]);
+      expect(output.warnings).toHaveLength(1);
+      expect(output.warnings[0].title).toBe("Attestation Verification Skipped");
+      expect(output.warnings[0].message).toContain("not authenticated");
+    });
   });
 
   function createTrackedInstaller({
     toolCache = new StubbedToolCache(),
     os = new StubbedOperatingSystem(),
     output = new StubbedOutput(),
-    attestationVerifier = new StubbedAttestationVerifier(false),
+    attestationVerifier = new StubbedAttestationVerifier("success"),
     version = undefined,
   }: {
     toolCache?: StubbedToolCache;

@@ -10,6 +10,7 @@ import path from "node:path";
 // Attestation interfaces
 export interface AttestationResult {
   success: boolean;
+  skipped?: boolean;
   error?: string;
 }
 
@@ -22,41 +23,63 @@ export class GhAttestationVerifier implements AttestationVerifier {
 
   async verify(filePath: string, owner: string): Promise<AttestationResult> {
     let output = "";
-    try {
-      await actionsExec.exec(
-        "gh",
-        ["attestation", "verify", filePath, "--owner", owner],
-        {
-          env: {
-            ...process.env,
-            GH_TOKEN: this.token,
+    const exitCode = await actionsExec.exec(
+      "gh",
+      ["attestation", "verify", filePath, "--owner", owner],
+      {
+        ignoreReturnCode: true,
+        env: {
+          ...process.env,
+          GH_TOKEN: this.token,
+        },
+        listeners: {
+          stdout: (data: Buffer) => {
+            output += data.toString();
           },
-          listeners: {
-            stdout: (data: Buffer) => {
-              output += data.toString();
-            },
-            stderr: (data: Buffer) => {
-              output += data.toString();
-            },
+          stderr: (data: Buffer) => {
+            output += data.toString();
           },
         },
-      );
+      },
+    );
+
+    if (exitCode === 0) {
       return { success: true };
-    } catch {
-      return { success: false, error: output || "Verification failed" };
     }
+
+    // Exit code 4 indicates authentication failure - treat as skipped, not fatal
+    if (exitCode === 4) {
+      return {
+        success: false,
+        skipped: true,
+        error: "GitHub CLI not authenticated. Attestation verification skipped.",
+      };
+    }
+
+    return { success: false, error: output || "Verification failed" };
   }
 }
 
+type AttestationBehavior = "success" | "fail" | "auth-failure";
+
 export class StubbedAttestationVerifier implements AttestationVerifier {
   verifiedFiles: string[] = [];
-  constructor(private shouldFail = false) {}
+  constructor(private behavior: AttestationBehavior = "success") {}
 
   async verify(filePath: string): Promise<AttestationResult> {
     this.verifiedFiles.push(filePath);
-    return this.shouldFail
-      ? { success: false, error: "Stubbed failure" }
-      : { success: true };
+    switch (this.behavior) {
+      case "success":
+        return { success: true };
+      case "fail":
+        return { success: false, error: "Stubbed failure" };
+      case "auth-failure":
+        return {
+          success: false,
+          skipped: true,
+          error: "GitHub CLI not authenticated",
+        };
+    }
   }
 }
 
@@ -88,13 +111,13 @@ export class Installer {
   static createNull(
     version?: string,
     raiseDownloadError?: boolean,
-    attestationShouldFail?: boolean,
+    attestationBehavior: AttestationBehavior = "success",
   ): Installer {
     return new Installer(
       new StubbedOperatingSystem(),
       new StubbedOutput(),
       new StubbedToolCache(raiseDownloadError),
-      new StubbedAttestationVerifier(attestationShouldFail),
+      new StubbedAttestationVerifier(attestationBehavior),
       version,
     );
   }
@@ -129,7 +152,7 @@ export class Installer {
 
     const tarPath = await this._tc.downloadTool(download.url);
 
-    // Verify attestation (fatal on failure)
+    // Verify attestation
     this._output.info("Verifying sigstore attestation...");
     const attestationResult = await this._attestationVerifier.verify(
       tarPath,
@@ -137,12 +160,23 @@ export class Installer {
     );
 
     if (!attestationResult.success) {
-      this._output.setFailed(
-        `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
-      );
-      return null;
+      if (attestationResult.skipped) {
+        // Auth failure - warn but proceed
+        this._output.warning(
+          "Sigstore attestation verification was skipped because the GitHub CLI is not authenticated. " +
+            "For enhanced security, ensure the github-token input is provided.",
+          { title: "Attestation Verification Skipped" },
+        );
+      } else {
+        // Real verification failure - fatal
+        this._output.setFailed(
+          `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
+        );
+        return null;
+      }
+    } else {
+      this._output.info("Attestation verified successfully");
     }
-    this._output.info("Attestation verified successfully");
 
     let extractedFolder;
 
