@@ -3,9 +3,9 @@ import {
   Installer,
   StubbedOperatingSystem,
   StubbedToolCache,
+  StubbedOutput,
   StubbedAttestationVerifier,
-} from "src/installer";
-import { StubbedOutput } from "src/util/output";
+} from "../src/index.js";
 
 describe("Installer", () => {
   test("installs linux x86", async () => {

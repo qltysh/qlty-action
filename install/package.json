@@ -1,9 +1,9 @@
 {
-  "name": "qlty-action-coverage",
-  "description": "Reusable GitHub Action to upload code coverage to Qlty Cloud",
-  "version": "2.2.0",
+  "name": "qlty-action-install",
+  "description": "Reusable GitHub Action to install the Qlty CLI",
+  "version": "1.0.0",
   "author": "Qlty Software Inc.",
-  "homepage": "https://github.com/qltysh/qlty-action/tree/main/coverage",
+  "homepage": "https://github.com/qltysh/qlty-action/tree/main/install",
   "repository": {
     "type": "git",
     "url": "https://github.com/qltysh/qlty-action.git"
@@ -12,11 +12,10 @@
     "url": "https://github.com/qltysh/qlty-action/issues"
   },
   "keywords": [
-    "coverage",
-    "uploader",
+    "cli",
+    "install",
     "quality",
-    "qlty",
-    "codeclimate"
+    "qlty"
   ],
   "exports": {
     ".": "./dist/index.js"
@@ -35,13 +34,8 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/github": "^6.0.0",
-    "@actions/glob": "^0.5.0",
     "@qltysh-action/shared": "*",
-    "@sentry/node": "^9.15.0",
-    "esbuild": "^0.25.3",
-    "zod": "^3.24.3"
+    "esbuild": "^0.25.3"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",

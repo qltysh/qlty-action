@@ -3,7 +3,7 @@ export interface ActionOutput {
   setSecret(secret: string): void;
   setFailed(message: string): void;
   info(message: string): void;
-  warning(message: string): void;
+  warning(message: string | Error, properties?: { title?: string }): void;
   error(message: string): void;
 }
 
@@ -13,7 +13,7 @@ export class StubbedOutput implements ActionOutput {
   failures: string[] = [];
   infos: string[] = [];
   errors: string[] = [];
-  warnings: string[] = [];
+  warnings: { message: string; title?: string | undefined }[] = [];
 
   addPath(path: string): void {
     this.paths.push(path);
@@ -31,8 +31,14 @@ export class StubbedOutput implements ActionOutput {
     this.infos.push(message);
   }
 
-  warning(message: string): void {
-    this.warnings.push(message);
+  warning(message: string | Error, properties?: { title?: string }): void {
+    const warning: { message: string; title?: string | undefined } = {
+      message: message instanceof Error ? message.message : message,
+    };
+    if (properties?.title !== undefined) {
+      warning.title = properties.title;
+    }
+    this.warnings.push(warning);
   }
 
   error(message: string): void {

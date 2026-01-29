@@ -10,18 +10,42 @@ on:
 permissions:
   contents: read
   id-token: write
+  attestations: read
 
 jobs:
   test-install:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Qlty CLI
-        uses: qltysh/qlty-action/install@main
+      - uses: actions/checkout@v4
 
-      - name: Check Qlty CLI version
-        shell: bash
-        run: qlty --version
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: install/.node-version
+          cache: npm
+          cache-dependency-path: install/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./install
+        run: npm ci --ignore-scripts
+
+      - name: Build dist/ Directory
+        working-directory: ./install
+        run: npm run package
+
+      - name: Compare Directories
+        working-directory: ./install
+        run: |
+          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build. See status below:"
+            git diff --ignore-space-at-eol --text dist/
+            exit 1
+          fi
+
+      - name: Test
+        working-directory: ./install
+        run: npm run test
 
   test-fmt:
     runs-on: ubuntu-latest
