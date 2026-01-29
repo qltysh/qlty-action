@@ -80,26 +80,40 @@ async function run(): Promise<void> {
 
   const downloadedPath = await tc.downloadTool(downloadUrl);
 
-  // Verify attestation (fatal on failure)
+  // Verify attestation
   core.info("Verifying sigstore attestation...");
   let verifyOutput = "";
-  try {
-    await exec(
-      "gh",
-      ["attestation", "verify", downloadedPath, "--owner", "qltysh"],
-      {
-        listeners: {
-          stdout: (data: Buffer) => {
-            verifyOutput += data.toString();
-          },
-          stderr: (data: Buffer) => {
-            verifyOutput += data.toString();
-          },
+  const githubToken = core.getInput("github-token");
+  const exitCode = await exec(
+    "gh",
+    ["attestation", "verify", downloadedPath, "--owner", "qltysh"],
+    {
+      ignoreReturnCode: true,
+      env: {
+        ...process.env,
+        GH_TOKEN: githubToken,
+      },
+      listeners: {
+        stdout: (data: Buffer) => {
+          verifyOutput += data.toString();
+        },
+        stderr: (data: Buffer) => {
+          verifyOutput += data.toString();
         },
       },
-    );
+    },
+  );
+
+  if (exitCode === 0) {
     core.info("Attestation verified successfully");
-  } catch {
+  } else if (exitCode === 4) {
+    // Auth failure - warn but proceed
+    core.warning(
+      "Sigstore attestation verification was skipped because the GitHub CLI is not authenticated. " +
+        "For enhanced security, ensure the github-token input is provided.",
+      { title: "Attestation Verification Skipped" },
+    );
+  } else {
     throw new FmtError(
       `Sigstore attestation verification failed: ${verifyOutput || "Unknown error"}`,
     );

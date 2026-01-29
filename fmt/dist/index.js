@@ -51468,7 +51468,7 @@ var require_core4 = __commonJS({
       process.env["PATH"] = `${inputPath}${path.delimiter}${process.env["PATH"]}`;
     }
     exports2.addPath = addPath2;
-    function getInput(name, options) {
+    function getInput2(name, options) {
       const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
       if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
@@ -51478,9 +51478,9 @@ var require_core4 = __commonJS({
       }
       return val.trim();
     }
-    exports2.getInput = getInput;
+    exports2.getInput = getInput2;
     function getMultilineInput(name, options) {
-      const inputs = getInput(name, options).split("\n").filter((x) => x !== "");
+      const inputs = getInput2(name, options).split("\n").filter((x) => x !== "");
       if (options && options.trimWhitespace === false) {
         return inputs;
       }
@@ -51490,7 +51490,7 @@ var require_core4 = __commonJS({
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
-      const val = getInput(name, options);
+      const val = getInput2(name, options);
       if (trueValue.includes(val))
         return true;
       if (falseValue.includes(val))
@@ -51529,10 +51529,10 @@ Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
       (0, command_1.issueCommand)("error", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
     exports2.error = error;
-    function warning(message, properties = {}) {
+    function warning2(message, properties = {}) {
       (0, command_1.issueCommand)("warning", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
-    exports2.warning = warning;
+    exports2.warning = warning2;
     function notice(message, properties = {}) {
       (0, command_1.issueCommand)("notice", (0, utils_1.toCommandProperties)(properties), message instanceof Error ? message.toString() : message);
     }
@@ -65172,8 +65172,16 @@ async function run() {
   const downloadedPath = await tc.downloadTool(downloadUrl);
   core.info("Verifying sigstore attestation...");
   let verifyOutput = "";
-  try {
-    await (0, import_exec.exec)("gh", ["attestation", "verify", downloadedPath, "--owner", "qltysh"], {
+  const githubToken = core.getInput("github-token");
+  const exitCode = await (0, import_exec.exec)(
+    "gh",
+    ["attestation", "verify", downloadedPath, "--owner", "qltysh"],
+    {
+      ignoreReturnCode: true,
+      env: {
+        ...process.env,
+        GH_TOKEN: githubToken
+      },
       listeners: {
         stdout: (data) => {
           verifyOutput += data.toString();
@@ -65182,10 +65190,19 @@ async function run() {
           verifyOutput += data.toString();
         }
       }
-    });
+    }
+  );
+  if (exitCode === 0) {
     core.info("Attestation verified successfully");
-  } catch {
-    throw new FmtError(`Sigstore attestation verification failed: ${verifyOutput || "Unknown error"}`);
+  } else if (exitCode === 4) {
+    core.warning(
+      "Sigstore attestation verification was skipped because the GitHub CLI is not authenticated. For enhanced security, ensure the github-token input is provided.",
+      { title: "Attestation Verification Skipped" }
+    );
+  } else {
+    throw new FmtError(
+      `Sigstore attestation verification failed: ${verifyOutput || "Unknown error"}`
+    );
   }
   const extractedFolder = await tc.extractTar(downloadedPath, void 0, "x");
   const cachedPath = await tc.cacheDir(extractedFolder, "qlty", "latest");
