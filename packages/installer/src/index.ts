@@ -1,5 +1,9 @@
 // Main exports
-export { Installer, type InstallerOptions, type NullInstallerOptions } from "./installer.js";
+export {
+  Installer,
+  type InstallerOptions,
+  type NullInstallerOptions,
+} from "./installer.js";
 
 // Attestation
 export {

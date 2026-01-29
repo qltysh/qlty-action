@@ -49,7 +49,8 @@ export class GhAttestationVerifier implements AttestationVerifier {
       return {
         success: false,
         skipped: true,
-        error: "GitHub CLI not authenticated. Attestation verification skipped.",
+        error:
+          "GitHub CLI not authenticated. Attestation verification skipped.",
       };
     }
 

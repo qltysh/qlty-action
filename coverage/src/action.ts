@@ -41,7 +41,11 @@ export class CoverageAction {
       output,
       context,
       executor,
-      installer: installer || Installer.createNull(settings.getVersion() ? { version: settings.getVersion() } : {}),
+      installer:
+        installer ||
+        Installer.createNull(
+          settings.getVersion() ? { version: settings.getVersion() } : {},
+        ),
       settings,
       env,
     });
@@ -69,7 +73,8 @@ export class CoverageAction {
     this._executor = executor;
     const version = settings.getVersion();
     this._installer =
-      installer || Installer.create(githubToken, version ? { version } : undefined);
+      installer ||
+      Installer.create(githubToken, version ? { version } : undefined);
     this._settings = settings;
     this._env = env;
   }

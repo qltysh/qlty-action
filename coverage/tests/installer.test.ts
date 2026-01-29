@@ -132,7 +132,9 @@ describe("Installer", () => {
       expect(result).toBe("qlty");
       expect(output.failures).toEqual([]);
       expect(output.warnings).toHaveLength(1);
-      expect(output.warnings[0]?.title).toBe("Attestation Verification Skipped");
+      expect(output.warnings[0]?.title).toBe(
+        "Attestation Verification Skipped",
+      );
       expect(output.warnings[0]?.message).toContain("not authenticated");
     });
   });
