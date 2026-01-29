@@ -497,7 +497,7 @@ describe("CoverageAction", () => {
           files: "info.lcov",
           "skip-errors": true,
         }),
-        installer: Installer.createNull(undefined, true),
+        installer: Installer.createNull({ downloadError: true }),
       });
 
       await action.run();
@@ -533,7 +533,7 @@ describe("CoverageAction", () => {
     context = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
     output = new StubbedOutput(),
-    installer = Installer.createNull(undefined),
+    installer = Installer.createNull(),
     env = {},
   } = {}) {
     const action = CoverageAction.createNull({

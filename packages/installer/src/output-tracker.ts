@@ -6,7 +6,7 @@ export default class OutputTracker<T> {
   _trackerFn: (data: T) => void;
   _data: T[];
 
-  static create<T>(emitter: EventEmitter, event: string) {
+  static create<T>(emitter: EventEmitter, event: string): OutputTracker<T> {
     return new OutputTracker<T>(emitter, event);
   }
 

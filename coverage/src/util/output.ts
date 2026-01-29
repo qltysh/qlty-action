@@ -13,7 +13,7 @@ export class StubbedOutput implements ActionOutput {
   failures: string[] = [];
   infos: string[] = [];
   errors: string[] = [];
-  warnings: { message: string; title?: string }[] = [];
+  warnings: { message: string; title?: string | undefined }[] = [];
 
   addPath(path: string): void {
     this.paths.push(path);
@@ -32,10 +32,13 @@ export class StubbedOutput implements ActionOutput {
   }
 
   warning(message: string | Error, properties?: { title?: string }): void {
-    this.warnings.push({
+    const warning: { message: string; title?: string | undefined } = {
       message: message instanceof Error ? message.message : message,
-      title: properties?.title,
-    });
+    };
+    if (properties?.title !== undefined) {
+      warning.title = properties.title;
+    }
+    this.warnings.push(warning);
   }
 
   error(message: string): void {

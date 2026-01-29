@@ -34,8 +34,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/tool-cache": "^2.0.2",
+    "@qltysh-action/shared": "*",
     "esbuild": "^0.25.3"
   },
   "devDependencies": {

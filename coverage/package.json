@@ -38,7 +38,7 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "@actions/glob": "^0.5.0",
-    "@actions/tool-cache": "^2.0.2",
+    "@qltysh-action/shared": "*",
     "@sentry/node": "^9.15.0",
     "esbuild": "^0.25.3",
     "zod": "^3.24.3"

@@ -1,0 +1,5 @@
+{
+  "name": "qlty-action",
+  "private": true,
+  "workspaces": ["packages/*", "install", "coverage", "fmt"]
+}
