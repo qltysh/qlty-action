@@ -21819,22 +21819,36 @@ var GhAttestationVerifier = class {
         env[key] = value;
       }
     }
-    const exitCode = await actionsExec.exec(
-      "gh",
-      ["attestation", "verify", filePath, "--owner", owner],
-      {
-        ignoreReturnCode: true,
-        env,
-        listeners: {
-          stdout: (data) => {
-            output += data.toString();
-          },
-          stderr: (data) => {
-            output += data.toString();
+    let exitCode;
+    try {
+      exitCode = await actionsExec.exec(
+        "gh",
+        ["attestation", "verify", filePath, "--owner", owner],
+        {
+          ignoreReturnCode: true,
+          env,
+          listeners: {
+            stdout: (data) => {
+              output += data.toString();
+            },
+            stderr: (data) => {
+              output += data.toString();
+            }
           }
         }
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const lowered = message.toLowerCase();
+      if (lowered.includes("unable to locate executable file") || lowered.includes("enoent") || lowered.includes("not found")) {
+        return {
+          success: false,
+          skipped: true,
+          error: "GitHub CLI not installed. Attestation verification skipped."
+        };
       }
-    );
+      return { success: false, error: message || "Verification failed" };
+    }
     if (exitCode === 0) {
       return { success: true };
     }
@@ -21843,6 +21857,14 @@ var GhAttestationVerifier = class {
         success: false,
         skipped: true,
         error: "GitHub CLI not authenticated. Attestation verification skipped."
+      };
+    }
+    const outputLowered = output.toLowerCase();
+    if (exitCode === 127 || outputLowered.includes("unable to locate executable file") || outputLowered.includes("not found")) {
+      return {
+        success: false,
+        skipped: true,
+        error: "GitHub CLI not installed. Attestation verification skipped."
       };
     }
     return { success: false, error: output || "Verification failed" };
@@ -22054,8 +22076,9 @@ var Installer = class _Installer {
     );
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
+        const warningDetails = attestationResult.error ? ` ${attestationResult.error}` : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped because the GitHub CLI is not authenticated. For enhanced security, ensure the github-token input is provided.",
+          "Sigstore attestation verification was skipped." + warningDetails + " For enhanced security, ensure the GitHub CLI is available and the github-token input is provided.",
           { title: "Attestation Verification Skipped" }
         );
       } else {

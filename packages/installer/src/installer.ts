@@ -106,10 +106,14 @@ export class Installer {
 
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
-        // Auth failure - warn but proceed
+        // Skipped verification - warn but proceed
+        const warningDetails = attestationResult.error
+          ? ` ${attestationResult.error}`
+          : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped because the GitHub CLI is not authenticated. " +
-            "For enhanced security, ensure the github-token input is provided.",
+          "Sigstore attestation verification was skipped." +
+            warningDetails +
+            " For enhanced security, ensure the GitHub CLI is available and the github-token input is provided.",
           { title: "Attestation Verification Skipped" },
         );
       } else {

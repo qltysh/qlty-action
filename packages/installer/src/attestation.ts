@@ -23,22 +23,40 @@ export class GhAttestationVerifier implements AttestationVerifier {
       }
     }
 
-    const exitCode = await actionsExec.exec(
-      "gh",
-      ["attestation", "verify", filePath, "--owner", owner],
-      {
-        ignoreReturnCode: true,
-        env,
-        listeners: {
-          stdout: (data: Buffer) => {
-            output += data.toString();
-          },
-          stderr: (data: Buffer) => {
-            output += data.toString();
+    let exitCode: number;
+    try {
+      exitCode = await actionsExec.exec(
+        "gh",
+        ["attestation", "verify", filePath, "--owner", owner],
+        {
+          ignoreReturnCode: true,
+          env,
+          listeners: {
+            stdout: (data: Buffer) => {
+              output += data.toString();
+            },
+            stderr: (data: Buffer) => {
+              output += data.toString();
+            },
           },
         },
-      },
-    );
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const lowered = message.toLowerCase();
+      if (
+        lowered.includes("unable to locate executable file") ||
+        lowered.includes("enoent") ||
+        lowered.includes("not found")
+      ) {
+        return {
+          success: false,
+          skipped: true,
+          error: "GitHub CLI not installed. Attestation verification skipped.",
+        };
+      }
+      return { success: false, error: message || "Verification failed" };
+    }
 
     if (exitCode === 0) {
       return { success: true };
@@ -51,6 +69,19 @@ export class GhAttestationVerifier implements AttestationVerifier {
         skipped: true,
         error:
           "GitHub CLI not authenticated. Attestation verification skipped.",
+      };
+    }
+
+    const outputLowered = output.toLowerCase();
+    if (
+      exitCode === 127 ||
+      outputLowered.includes("unable to locate executable file") ||
+      outputLowered.includes("not found")
+    ) {
+      return {
+        success: false,
+        skipped: true,
+        error: "GitHub CLI not installed. Attestation verification skipped.",
       };
     }
 
