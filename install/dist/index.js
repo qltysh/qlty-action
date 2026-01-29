@@ -21798,14 +21798,14 @@ var require_tool_cache = __commonJS({
 // src/main.ts
 var core2 = __toESM(require_core());
 
-// ../packages/installer/src/installer.ts
+// ../packages/shared/src/installer.ts
 var tc = __toESM(require_tool_cache(), 1);
 var core = __toESM(require_core(), 1);
 var import_os = __toESM(require("os"), 1);
 var import_node_path = __toESM(require("node:path"), 1);
 var import_node_events = __toESM(require("node:events"), 1);
 
-// ../packages/installer/src/attestation.ts
+// ../packages/shared/src/attestation.ts
 var actionsExec = __toESM(require_exec(), 1);
 var GhAttestationVerifier = class {
   constructor(token) {
@@ -21871,7 +21871,7 @@ var GhAttestationVerifier = class {
   }
 };
 
-// ../packages/installer/src/platform.ts
+// ../packages/shared/src/platform.ts
 function planDownload(os2, version) {
   const platform = os2.platform();
   const arch = os2.arch();
@@ -21906,7 +21906,7 @@ function planDownload(os2, version) {
   };
 }
 
-// ../packages/installer/src/output-tracker.ts
+// ../packages/shared/src/output-tracker.ts
 var OutputTracker = class _OutputTracker {
   constructor(emitter, event) {
     __publicField(this, "_emitter");
@@ -21929,7 +21929,7 @@ var OutputTracker = class _OutputTracker {
   }
 };
 
-// ../packages/installer/src/stubs.ts
+// ../packages/shared/src/stubs.ts
 var StubbedAttestationVerifier = class {
   constructor(behavior = "success") {
     this.behavior = behavior;
@@ -22016,7 +22016,7 @@ var StubbedOutput = class {
   }
 };
 
-// ../packages/installer/src/installer.ts
+// ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
 var Installer = class _Installer {
   constructor(os2, output, toolCache, attestationVerifier, version) {
