@@ -6,9 +6,8 @@ Sentry.init({
 });
 
 import * as core from "@actions/core";
-import * as tc from "@actions/tool-cache";
 import { exec } from "@actions/exec";
-import os from "os";
+import { Installer } from "@qltysh-action/shared";
 
 class FmtError extends Error {
   constructor(message: string) {
@@ -58,49 +57,28 @@ export async function runWithTracing(): Promise<void> {
 }
 
 async function run(): Promise<void> {
-  const platform = os.platform();
-  const arch = os.arch();
+  const githubToken = core.getInput("github-token");
+  const installer = Installer.create(githubToken);
+  const qltyBinary = await installer.install();
 
-  let platformArch;
-
-  if (platform === "linux" && arch === "x64") {
-    platformArch = "x86_64-unknown-linux-gnu";
-  } else if (platform === "linux" && arch === "arm64") {
-    platformArch = "aarch64-unknown-linux-gnu";
-  } else if (platform === "darwin" && arch === "x64") {
-    platformArch = "x86_64-apple-darwin";
-  } else if (platform === "darwin" && arch === "arm64") {
-    platformArch = "aarch64-apple-darwin";
-  } else {
-    core.setFailed(`Unsupported platform/architecture: ${platform}/${arch}`);
-    return;
+  if (!qltyBinary) {
+    throw new FmtError("Failed to install Qlty CLI");
   }
 
-  const downloadUrl = `https://qlty-releases.s3.amazonaws.com/qlty/latest/qlty-${platformArch}.tar.xz`;
-
-  const downloadedPath = await tc.downloadTool(downloadUrl);
-  const extractedFolder = await tc.extractTar(downloadedPath, undefined, "x");
-
-  const cachedPath = await tc.cacheDir(extractedFolder, "qlty", "latest");
-  const binPath = `${cachedPath}/qlty-${platformArch}`;
-  core.addPath(binPath);
-
-  // const commit = core.getBooleanInput('commit')
-
-  let qlytOutput = "";
+  let qltyOutput = "";
 
   try {
     await exec("qlty", ["fmt", "--all"], {
       listeners: {
         stdout: (data: Buffer) => {
-          qlytOutput += data.toString();
+          qltyOutput += data.toString();
         },
         stderr: (data: Buffer) => {
-          qlytOutput += data.toString();
+          qltyOutput += data.toString();
         },
       },
     });
   } catch {
-    throw new FmtError(qlytOutput);
+    throw new FmtError(qltyOutput);
   }
 }

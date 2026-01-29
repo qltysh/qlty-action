@@ -1,4 +1,4 @@
-import { Installer } from "./installer";
+import { Installer, OutputTracker } from "./installer";
 import { Settings } from "./settings";
 import * as actionsExec from "@actions/exec";
 import * as actionsCore from "@actions/core";
@@ -6,7 +6,6 @@ import * as actionsGithub from "@actions/github";
 import { WebhookPayload } from "@actions/github/lib/interfaces";
 import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
-import OutputTracker from "./util/output_tracker";
 import EventEmitter from "node:events";
 import Version from "./version";
 
@@ -42,7 +41,11 @@ export class CoverageAction {
       output,
       context,
       executor,
-      installer: installer || Installer.createNull(settings.getVersion()),
+      installer:
+        installer ||
+        Installer.createNull(
+          settings.getVersion() ? { version: settings.getVersion() } : {},
+        ),
       settings,
       env,
     });
@@ -55,6 +58,7 @@ export class CoverageAction {
     installer,
     settings = Settings.create(),
     env = process.env,
+    githubToken = actionsCore.getInput("github-token"),
   }: {
     output?: ActionOutput;
     context?: ActionContext;
@@ -62,11 +66,15 @@ export class CoverageAction {
     installer?: Installer;
     settings?: Settings;
     env?: ProcessEnv;
+    githubToken?: string;
   } = {}) {
     this._output = output;
     this._context = context;
     this._executor = executor;
-    this._installer = installer || Installer.create(settings.getVersion());
+    const version = settings.getVersion();
+    this._installer =
+      installer ||
+      Installer.create(githubToken, version ? { version } : undefined);
     this._settings = settings;
     this._env = env;
   }

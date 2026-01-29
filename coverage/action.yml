@@ -7,6 +7,11 @@ branding:
   color: "red"
 
 inputs:
+  github-token:
+    description: "GitHub token for sigstore attestation verification"
+    required: false
+    default: ${{ github.token }}
+
   token:
     description: "The Qlty Cloud coverage token"
     required: false
@@ -59,6 +64,8 @@ inputs:
       - "lcov"
       - "qlty"
       - "simplecov"
+      - "dotcover"
+      - "xccov-json"
 
   verbose:
     description: "Verbose output for debugging"

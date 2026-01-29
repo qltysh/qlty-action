@@ -11,9 +11,11 @@ export {
   type FileType,
   type ToolCache,
   type OperatingSystem,
+  type ActionOutput,
   StubbedAttestationVerifier,
   StubbedOperatingSystem,
   StubbedToolCache,
+  StubbedOutput,
   type AttestationBehavior,
   OutputTracker,
 } from "@qltysh-action/shared";

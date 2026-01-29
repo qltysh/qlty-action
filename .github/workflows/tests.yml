@@ -10,18 +10,42 @@ on:
 permissions:
   contents: read
   id-token: write
+  attestations: read
 
 jobs:
   test-install:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Qlty CLI
-        uses: qltysh/qlty-action/install@92420f3093ba65970fed22ce5f162ecb8a5c1700 # main
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
-      - name: Check Qlty CLI version
-        shell: bash
-        run: qlty --version
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: install/.node-version
+          cache: npm
+          cache-dependency-path: install/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./install
+        run: npm ci --ignore-scripts
+
+      - name: Build dist/ Directory
+        working-directory: ./install
+        run: npm run package
+
+      - name: Compare Directories
+        working-directory: ./install
+        run: |
+          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
+            echo "Detected uncommitted changes after build. See status below:"
+            git diff --ignore-space-at-eol --text dist/
+            exit 1
+          fi
+
+      - name: Test
+        working-directory: ./install
+        run: npm run test
 
   test-fmt:
     runs-on: ubuntu-latest
@@ -39,7 +63,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./fmt
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build dist/ Directory
         working-directory: ./fmt
@@ -74,7 +98,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./coverage
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build dist/ Directory
         working-directory: ./coverage
@@ -122,7 +146,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./coverage
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Test
         working-directory: ./coverage

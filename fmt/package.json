@@ -36,7 +36,7 @@
     "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
-    "@actions/tool-cache": "^2.0.2",
+    "@qltysh-action/shared": "*",
     "@sentry/node": "^9.15.0",
     "esbuild": "^0.25.3"
   },

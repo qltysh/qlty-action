@@ -87,12 +87,12 @@ name = "yamllint"
 name = "eslint"
 package_file = ".qlty/configs/package.json"
 
-[[exclude]]
-file_patterns = ["**/LICENSE.md"]
-plugins = ["markdownlint"]
-rules = ["MD041"]
+[[triage]]
+match.file_patterns = ["**/LICENSE.md"]
+match.rules = ["markdownlint:MD041"]
+set.ignored = true
 
-[[exclude]]
-file_patterns = [".github/workflows/*"]
-plugins = ["yamllint"]
-rules = ["line-length"]
+[[triage]]
+match.file_patterns = [".github/workflows/*"]
+match.rules = ["yamllint:line-length"]
+set.ignored = true
