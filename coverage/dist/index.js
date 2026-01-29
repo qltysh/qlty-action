@@ -74075,7 +74075,9 @@ var CoverageAction = class _CoverageAction {
       output,
       context: context3,
       executor,
-      installer: installer || Installer.createNull(settings.getVersion() ? { version: settings.getVersion() } : {}),
+      installer: installer || Installer.createNull(
+        settings.getVersion() ? { version: settings.getVersion() } : {}
+      ),
       settings,
       env
     });
