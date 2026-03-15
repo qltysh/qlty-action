@@ -33,7 +33,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^2.0.3",
     "@qltysh-action/shared": "*",
     "esbuild": "^0.25.3"
   },

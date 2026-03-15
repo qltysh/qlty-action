@@ -3,7 +3,8 @@ import { Settings } from "./settings";
 import * as actionsExec from "@actions/exec";
 import * as actionsCore from "@actions/core";
 import * as actionsGithub from "@actions/github";
-import { WebhookPayload } from "@actions/github/lib/interfaces";
+
+type WebhookPayload = typeof actionsGithub.context.payload;
 import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import EventEmitter from "node:events";
