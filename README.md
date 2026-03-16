@@ -28,6 +28,10 @@ The `qltysh/qlty-action/coverage` action requires a free account on [Qlty Cloud]
 
 The other actions use the Qlty CLI and do not require Qlty Cloud.
 
+ 
+> ⚠️ The Qlty GitHub Action is **not supported on self-hosted runners**.  To use coverage uploads, your workflow must run on GitHub-hosted runners.
+
+
 ---
 
 ## ▶️ Actions
