@@ -328,8 +328,6 @@ export class CoverageAction {
     }
 
     if (this._settings.input.validate) {
-      uploadArgs.push("--validate");
-
       if (this._settings.input.validateFileThreshold) {
         uploadArgs.push(
           "--validate-file-threshold",
