@@ -4,6 +4,8 @@ updates:
     directory: /coverage
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions-minor:
         update-types:
@@ -14,6 +16,8 @@ updates:
     directory: /coverage
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       npm-development:
         dependency-type: development
@@ -29,6 +33,8 @@ updates:
     directory: /fmt
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions-minor:
         update-types:
@@ -39,6 +45,8 @@ updates:
     directory: /fmt
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       npm-development:
         dependency-type: development
