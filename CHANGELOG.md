@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.1 (2026-06-02)
+
+- Bump action runtime to node24
+
 ## v2.2.0 (2025-08-11)
 
 - Testing release process (no changes)
