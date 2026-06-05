@@ -2,7 +2,11 @@
 
 ## v2.2.1 (2026-06-02)
 
-- Bump action runtime to node24
+### Changed
+
+- Bump action runtime from Node 20 to Node 24 (#177)
+
+This update aligns all three actions (`coverage`, `fmt`, `install`) with GitHub's Node 24 runtime. Node 20 actions receive deprecation warnings starting June 2026, and GitHub will force-migrate them to Node 24. This release proactively addresses those warnings.
 
 ## v2.2.0 (2025-08-11)
 
