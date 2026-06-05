@@ -2,7 +2,23 @@
 
 ## v2.2.1 (2026-06-02)
 
+### New
+
+- Add sigstore attestation verification for CLI downloads, improving supply chain security
+- Add `dotcover` and `xccov-json` to supported coverage formats
+- Add `github-token` input to all actions for attestation verification (defaults to `${{ github.token }}`)
+
+### Improved
+
 - Bump action runtime to node24
+- Bump Node.js version to 22.22
+- Extract shared installer package for better code reuse across actions
+- fmt action now supports Windows through shared installer
+
+### Fixed
+
+- Fix Dependabot security alerts for minimatch
+- Upgrade js-yaml, glob, vite, vitest, and brace-expansion dependencies
 
 ## v2.2.0 (2025-08-11)
 
