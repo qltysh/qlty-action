@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: install/.node-version
           cache: npm
@@ -51,11 +51,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Setup Node.js
         id: setup-node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: fmt/.node-version
           cache: npm
@@ -87,10 +87,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: coverage/.node-version
           cache: npm
@@ -118,7 +118,7 @@ jobs:
         run: npm run coverage
 
       - name: Upload coverage
-        uses: qltysh/qlty-action/coverage@main
+        uses: qltysh/qlty-action/coverage@92420f3093ba65970fed22ce5f162ecb8a5c1700 # main
         with:
           oidc: true
           files: coverage/coverage/clover.xml
@@ -135,10 +135,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: coverage/.node-version
           cache: npm
@@ -153,7 +153,7 @@ jobs:
         run: npm run coverage
 
       - name: Upload coverage
-        uses: qltysh/qlty-action/coverage@bh-windows-install
+        uses: qltysh/qlty-action/coverage@fc2df17c09544ede081e67e34e2aea2f6c9a571b # bh-windows-install
         with:
           files: coverage/coverage/clover.xml
           verbose: true
