@@ -37,11 +37,6 @@
     "@actions/exec": "^1.1.1",
     "@actions/github": "^6.0.0",
     "@qltysh-action/shared": "*",
-    "@sentry/node": "^9.15.0",
-    "esbuild": "^0.25.3"
-  },
-  "devDependencies": {
-    "@types/node": "^22.15.3",
-    "typescript": "^5.8.3"
+    "@sentry/node": "^9.15.0"
   }
 }

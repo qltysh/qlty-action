@@ -6,5 +6,12 @@
     "install",
     "coverage",
     "fmt"
-  ]
+  ],
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@vitest/coverage-istanbul": "^3.2.6",
+    "esbuild": "^0.25.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.6"
+  }
 }
