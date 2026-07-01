@@ -1,17 +1,10 @@
 version: 2
 updates:
-  - package-ecosystem: github-actions
-    directory: /coverage
-    schedule:
-      interval: weekly
-    groups:
-      actions-minor:
-        update-types:
-          - minor
-          - patch
-
+  # Single npm entry: the repo is one npm workspace with one root lockfile,
+  # so Dependabot manages all three actions (install/coverage/fmt) + the
+  # shared package from the root.
   - package-ecosystem: npm
-    directory: /coverage
+    directory: /
     schedule:
       interval: weekly
     groups:
@@ -26,26 +19,11 @@ updates:
           - patch
 
   - package-ecosystem: github-actions
-    directory: /fmt
+    directory: /
     schedule:
       interval: weekly
     groups:
       actions-minor:
         update-types:
           - minor
-          - patch
-
-  - package-ecosystem: npm
-    directory: /fmt
-    schedule:
-      interval: weekly
-    groups:
-      npm-development:
-        dependency-type: development
-        update-types:
-          - minor
-          - patch
-      npm-production:
-        dependency-type: production
-        update-types:
           - patch

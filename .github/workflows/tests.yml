@@ -22,12 +22,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: install/.node-version
+          node-version-file: .node-version
           cache: npm
-          cache-dependency-path: install/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install Dependencies
-        working-directory: ./install
+      - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
 
       - name: Build dist/ Directory
@@ -57,12 +56,11 @@ jobs:
         id: setup-node
         uses: actions/setup-node@v4
         with:
-          node-version-file: fmt/.node-version
+          node-version-file: .node-version
           cache: npm
-          cache-dependency-path: fmt/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install Dependencies
-        working-directory: ./fmt
+      - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
 
       - name: Build dist/ Directory
@@ -92,12 +90,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: coverage/.node-version
+          node-version-file: .node-version
           cache: npm
-          cache-dependency-path: coverage/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install Dependencies
-        working-directory: ./coverage
+      - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
 
       - name: Build dist/ Directory
@@ -140,12 +137,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version-file: coverage/.node-version
+          node-version-file: .node-version
           cache: npm
-          cache-dependency-path: coverage/package-lock.json
+          cache-dependency-path: package-lock.json
 
-      - name: Install Dependencies
-        working-directory: ./coverage
+      - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
 
       - name: Test
