@@ -34,13 +34,6 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@qltysh-action/shared": "*",
-    "esbuild": "^0.25.3"
-  },
-  "devDependencies": {
-    "@types/node": "^22.15.3",
-    "@vitest/coverage-istanbul": "^3.2.6",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.6"
+    "@qltysh-action/shared": "*"
   }
 }
