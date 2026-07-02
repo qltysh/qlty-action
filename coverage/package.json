@@ -40,6 +40,6 @@
     "@actions/glob": "^0.5.0",
     "@qltysh-action/shared": "*",
     "@sentry/node": "^10.63.0",
-    "zod": "^3.24.3"
+    "zod": "^4.4.3"
   }
 }
