@@ -13,5 +13,8 @@
     "esbuild": "^0.25.3",
     "typescript": "^5.8.3",
     "vitest": "^3.2.6"
+  },
+  "overrides": {
+    "undici": "^6.27.0"
   }
 }
