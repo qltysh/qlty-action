@@ -96,3 +96,10 @@ set.ignored = true
 match.file_patterns = [".github/workflows/*"]
 match.rules = ["yamllint:line-length"]
 set.ignored = true
+
+# Prettier normalizes inline comments to one leading space, which conflicts
+# with yamllint's default two-space requirement
+[[triage]]
+match.file_patterns = [".github/workflows/*"]
+match.rules = ["yamllint:comments"]
+set.ignored = true

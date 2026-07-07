@@ -1,0 +1,227 @@
+name: Prepare Release
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: "How to increment version (use 'version' to specify version)"
+        required: true
+        type: choice
+        default: minor
+        options:
+          - major
+          - minor
+          - patch
+          - version
+      version:
+        description: >
+          The full version to release (first choose 'version' from the
+          'increment' dropdown)
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # version 2.0.6
+        id: app-token
+        with:
+          app-id: ${{ vars.QLTY_APP_ID }}
+          private-key: ${{ secrets.QLTY_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # version 4.2.2
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - name: Determine version
+        id: version
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./coverage/package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Determine new version based on input
+          if [ "${{ inputs.increment }}" == "version" ]; then
+            if [ -z "${{ inputs.version }}" ]; then
+              echo "Error: Version must be specified when increment is 'version'"
+              exit 1
+            fi
+            NEW_VERSION="${{ inputs.version }}"
+          else
+            # Parse current version
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+            case "${{ inputs.increment }}" in
+              major)
+                NEW_VERSION="$((MAJOR + 1)).0.0"
+                ;;
+              minor)
+                NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
+                ;;
+              patch)
+                NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+                ;;
+              *)
+                echo "Error: Invalid increment type"
+                exit 1
+                ;;
+            esac
+          fi
+
+          LAST_TAG=$(git tag --list 'v*' --sort=-version:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+
+          echo "New version: $NEW_VERSION (last release tag: $LAST_TAG)"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Check version is unreleased
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" > /dev/null; then
+            echo "Error: Tag v${VERSION} already exists"
+            exit 1
+          fi
+
+          if grep -q "^## v${VERSION} " CHANGELOG.md; then
+            echo "Error: CHANGELOG.md already has an entry for v${VERSION}"
+            exit 1
+          fi
+
+          if git ls-remote --exit-code origin "refs/heads/release/v${VERSION}" > /dev/null; then
+            echo "Error: Branch release/v${VERSION} already exists."
+            echo "Close its pull request and delete the branch to re-prepare this release."
+            exit 1
+          fi
+
+      - name: Update package.json versions
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          for package_file in coverage/package.json fmt/package.json; do
+            echo "Updating version in $package_file to $VERSION"
+            node -e "
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('$package_file', 'utf8'));
+              pkg.version = '$VERSION';
+              fs.writeFileSync('$package_file', JSON.stringify(pkg, null, 2) + '\\n');
+            "
+          done
+
+      - name: Draft changelog entry
+        uses: anthropics/claude-code-action@493279a9d94b7cc5d07a98e5e66cb03313805350 # version 1.0.166
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ steps.app-token.outputs.token }}
+          prompt: |
+            Follow the instructions in .github/prompts/changelog.md with these values:
+
+            VERSION: ${{ steps.version.outputs.version }}
+            LAST_TAG: ${{ steps.version.outputs.last_tag }}
+            DATE: ${{ steps.version.outputs.date }}
+          claude_args: >-
+            --allowedTools "Read,Grep,Glob,Edit(CHANGELOG.md),Write(CHANGELOG.md),Bash(git log:*),Bash(git show:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh release list:*)"
+
+      - name: Validate drafted changes
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          if ! grep -q "^## v${VERSION} " CHANGELOG.md; then
+            echo "Error: No '## v${VERSION}' entry was added to CHANGELOG.md"
+            exit 1
+          fi
+
+          # Only the changelog and package.json version bumps may change
+          git status --porcelain | while read -r _status file; do
+            case "$file" in
+              CHANGELOG.md|coverage/package.json|fmt/package.json) ;;
+              *)
+                echo "Error: Unexpected change to $file"
+                exit 1
+                ;;
+            esac
+          done
+
+          # Extract the new entry for the PR body
+          awk "/^## v${VERSION} /{flag=1; next} /^## v[0-9]/{flag=0} flag" \
+            CHANGELOG.md > changelog_entry.txt
+
+          echo "Drafted changelog entry:"
+          cat changelog_entry.txt
+
+      - name: Create release branch with signed commit
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          BRANCH="release/v${VERSION}"
+          HEAD_SHA=$(git rev-parse HEAD)
+
+          gh api \
+            --method POST \
+            /repos/${{ github.repository }}/git/refs \
+            -f ref="refs/heads/${BRANCH}" \
+            -f sha="$HEAD_SHA"
+
+          # createCommitOnBranch produces a commit signed by the GitHub App
+          gh api graphql \
+            -f query='
+              mutation($repo: String!, $branch: String!, $head: GitObjectID!, $message: String!, $changelog: Base64String!, $coverage: Base64String!, $fmt: Base64String!) {
+                createCommitOnBranch(input: {
+                  branch: {repositoryNameWithOwner: $repo, branchName: $branch},
+                  expectedHeadOid: $head,
+                  message: {headline: $message},
+                  fileChanges: {additions: [
+                    {path: "CHANGELOG.md", contents: $changelog},
+                    {path: "coverage/package.json", contents: $coverage},
+                    {path: "fmt/package.json", contents: $fmt}
+                  ]}
+                }) { commit { oid } }
+              }' \
+            -f repo="${{ github.repository }}" \
+            -f branch="$BRANCH" \
+            -f head="$HEAD_SHA" \
+            -f message="Prepare release v${VERSION}" \
+            -f changelog="$(base64 -w0 CHANGELOG.md)" \
+            -f coverage="$(base64 -w0 coverage/package.json)" \
+            -f fmt="$(base64 -w0 fmt/package.json)"
+
+      - name: Open release pull request
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          {
+            echo "Automated release preparation for v${VERSION}."
+            echo
+            echo "Review (and edit, if needed) the changelog entry below, then"
+            echo "merge this pull request to tag and publish the release."
+            echo
+            echo "## Draft release notes"
+            echo
+            cat changelog_entry.txt
+          } > pr_body.md
+
+          gh pr create \
+            --head "release/v${VERSION}" \
+            --base main \
+            --title "Release v${VERSION}" \
+            --body-file pr_body.md
