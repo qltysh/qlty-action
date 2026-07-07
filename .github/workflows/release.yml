@@ -168,28 +168,46 @@ jobs:
             --notes-file changelog_content.txt \
             --verify-tag
 
+      - name: Compose Slack announcement
+        id: compose
+        run: |
+          cat > slack_announcement.json <<'EOF'
+          {
+            "text": ":rocket: qlty-action <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}|v${{ steps.version.outputs.version }}> released (previous version: ${{ steps.version.outputs.previous_tag }})",
+            "attachments": [
+              {
+                "color": "#2eb886",
+                "blocks": [
+                  {
+                    "type": "context",
+                    "elements": [
+                      {
+                        "type": "mrkdwn",
+                        "text": "by ${{ github.actor }} · <${{ steps.version.outputs.full_changelog_url }}|full changelog> · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+
+          cat slack_announcement.json
+
       - name: Announce release to Slack (#feed-deploys)
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
-          payload: |
-            {
-              "text": ":rocket: qlty-action <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}|v${{ steps.version.outputs.version }}> released (previous version: ${{ steps.version.outputs.previous_tag }})",
-              "attachments": [
-                {
-                  "color": "#2eb886",
-                  "blocks": [
-                    {
-                      "type": "context",
-                      "elements": [
-                        {
-                          "type": "mrkdwn",
-                          "text": "by ${{ github.actor }} · <${{ steps.version.outputs.full_changelog_url }}|full changelog> · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
+          payload-file-path: slack_announcement.json
+
+      - name: Announce release to Slack (#cust-public)
+        # Runs as long as the release was published (compose succeeded),
+        # even if the #feed-deploys announcement failed
+        if: ${{ !cancelled() && steps.compose.conclusion == 'success' }}
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_CUST_PUBLIC_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload-file-path: slack_announcement.json
