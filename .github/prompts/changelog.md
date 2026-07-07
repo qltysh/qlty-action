@@ -28,7 +28,7 @@ Follow these steps:
 5. If there are no externally observable changes, still add the section with a
    single brief bullet summarizing the most significant internal change.
 6. If a PR author is not a member of the team, include a shout out thanking
-   them. (Team members are @noahd1, @lsegal, @brynary, @marschattha,
+   them. (Team members are @noahd1, @brynary, @marschattha,
    @davehenton, @laura-mlg. They don't need shout outs.)
 
 Rules:
