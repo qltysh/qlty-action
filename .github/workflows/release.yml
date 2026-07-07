@@ -162,24 +162,23 @@ jobs:
       - name: Announce release to Slack (#feed-deploys)
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
-          webhook: ${{ secrets.SLACK_FEED_DEPLOYS_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {
-              "blocks": [
+              "text": ":rocket: qlty-action <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}|v${{ steps.version.outputs.version }}> released (previous version: ${{ steps.version.outputs.previous_tag }})",
+              "attachments": [
                 {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "🚀 New *qlty-action* release: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}|v${{ steps.version.outputs.version }}> (previous version: ${{ steps.version.outputs.previous_tag }})"
-                  }
-                },
-                {
-                  "type": "context",
-                  "elements": [
+                  "color": "#2eb886",
+                  "blocks": [
                     {
-                      "type": "mrkdwn",
-                      "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
+                      "type": "context",
+                      "elements": [
+                        {
+                          "type": "mrkdwn",
+                          "text": "by ${{ github.actor }} · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
+                        }
+                      ]
                     }
                   ]
                 }
