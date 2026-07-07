@@ -224,5 +224,4 @@ jobs:
             --head "release/v${VERSION}" \
             --base main \
             --title "Release v${VERSION}" \
-            --label release \
             --body-file pr_body.md

@@ -9,17 +9,15 @@ permissions:
 jobs:
   release:
     # Runs when a release pull request is merged, or on manual dispatch as
-    # a fallback. A release pull request must come from a release/* branch
-    # (whose creation is restricted to maintainers and the release app by a
-    # ruleset) AND carry the "release" label, as set up by the Prepare
-    # Release workflow. Either way, the version comes from the package.json
-    # files on the released commit.
+    # a fallback. A release pull request is one from a release/* branch,
+    # whose creation is restricted to maintainers and the release app by a
+    # ruleset. Either way, the version comes from the package.json files on
+    # the released commit.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged == true &&
        github.event.pull_request.base.ref == github.event.repository.default_branch &&
-       startsWith(github.event.pull_request.head.ref, 'release/') &&
-       contains(github.event.pull_request.labels.*.name, 'release'))
+       startsWith(github.event.pull_request.head.ref, 'release/'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # version 2.0.6
