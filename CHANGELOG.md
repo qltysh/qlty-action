@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.2.2 (2026-07-07)
+
+### Fixed
+
+- Security updates to bundled dependencies (#190, #191)
+
 ## v2.2.1 (2026-06-02)
 
 - Bump action runtime to node24
