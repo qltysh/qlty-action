@@ -4,8 +4,7 @@
 
 ### Fixed
 
-- Update bundled `undici` to `^6.27.0` to resolve HIGH severity request/response smuggling and related advisories in the published action (#190)
-- Update bundled `@sentry/node` to `^10.63.0` to resolve the `@opentelemetry/core` unbounded memory allocation advisory in the published action (#191)
+- Security updates to bundled dependencies (#190, #191)
 
 ## v2.2.1 (2026-06-02)
 
