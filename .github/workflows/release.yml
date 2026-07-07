@@ -183,7 +183,7 @@ jobs:
                     "elements": [
                       {
                         "type": "mrkdwn",
-                        "text": "by ${{ github.actor }} · <${{ steps.version.outputs.full_changelog_url }}|full changelog> · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
+                        "text": "<${{ steps.version.outputs.full_changelog_url }}|full changelog>"
                       }
                     ]
                   }
