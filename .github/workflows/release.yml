@@ -176,7 +176,7 @@ jobs:
                       "elements": [
                         {
                           "type": "mrkdwn",
-                          "text": "by ${{ github.actor }} · <${{ github.server_url }}/${{ github.repository }}/blob/v${{ steps.version.outputs.version }}/CHANGELOG.md|changelog> · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
+                          "text": "by ${{ github.actor }} · <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}|changelog> · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
                         }
                       ]
                     }
