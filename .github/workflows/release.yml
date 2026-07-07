@@ -51,9 +51,15 @@ jobs:
             exit 1
           fi
 
-          echo "Releasing version: $VERSION"
+          # The new tag doesn't exist yet, so the newest semver tag is the
+          # version being replaced
+          PREVIOUS_TAG=$(git tag --list 'v*' --sort=-version:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+
+          echo "Releasing version: $VERSION (previous release: ${PREVIOUS_TAG:-none})"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "major_version=$(echo $VERSION | cut -d. -f1)" >> "$GITHUB_OUTPUT"
+          echo "previous_tag=${PREVIOUS_TAG:-none}" >> "$GITHUB_OUTPUT"
 
       - name: Validate CHANGELOG.md
         run: |
@@ -152,3 +158,30 @@ jobs:
             --title "v${{ steps.version.outputs.version }}" \
             --notes-file changelog_content.txt \
             --verify-tag
+
+      - name: Announce release to Slack (#feed-deploys)
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_FEED_DEPLOYS_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "🚀 New *qlty-action* release: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}|v${{ steps.version.outputs.version }}> (previous version: ${{ steps.version.outputs.previous_tag }})"
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
+                    }
+                  ]
+                }
+              ]
+            }
