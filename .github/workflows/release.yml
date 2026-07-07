@@ -61,6 +61,15 @@ jobs:
           echo "major_version=$(echo $VERSION | cut -d. -f1)" >> "$GITHUB_OUTPUT"
           echo "previous_tag=${PREVIOUS_TAG:-none}" >> "$GITHUB_OUTPUT"
 
+          # For the Slack announcement: a compare URL between the previous
+          # and new tags, falling back to the release page on a first release
+          if [ -n "$PREVIOUS_TAG" ]; then
+            FULL_CHANGELOG_URL="${{ github.server_url }}/${{ github.repository }}/compare/${PREVIOUS_TAG}...v${VERSION}"
+          else
+            FULL_CHANGELOG_URL="${{ github.server_url }}/${{ github.repository }}/releases/tag/v${VERSION}"
+          fi
+          echo "full_changelog_url=$FULL_CHANGELOG_URL" >> "$GITHUB_OUTPUT"
+
       - name: Validate CHANGELOG.md
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -176,7 +185,7 @@ jobs:
                       "elements": [
                         {
                           "type": "mrkdwn",
-                          "text": "by ${{ github.actor }} · <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.version }}|changelog> · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
+                          "text": "by ${{ github.actor }} · <${{ steps.version.outputs.full_changelog_url }}|full changelog> · <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|run #${{ github.run_number }}>"
                         }
                       ]
                     }
