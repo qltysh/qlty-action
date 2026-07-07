@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.3 (2026-07-07)
+
+- Internal release process improvements (no user-facing changes) (#196)
+
 ## v2.2.2 (2026-07-07)
 
 ### Fixed
