@@ -18,16 +18,20 @@ Follow these steps:
    style/formatting changes, build pipeline changes, and routine dependency
    bumps that don't change the published action's behavior. The CHANGELOG.md
    only contains changes which are externally observable new features,
-   enhancements, and fixes. (A dependency update that fixes a security
-   vulnerability in the published action counts as a fix.)
-4. Add exactly one new section to the top of CHANGELOG.md, directly below the
+   enhancements, and fixes.
+4. Dependency updates that fix security vulnerabilities in the published
+   action count as a fix, but do not list them individually or include
+   package names, versions, or advisory details — those aren't important to
+   end users. Group all of them into a single item with a user-friendly
+   description, such as: "Security updates to bundled dependencies".
+5. Add exactly one new section to the top of CHANGELOG.md, directly below the
    `# Changelog` heading: `## v${VERSION} (${DATE})`. Follow the existing
    format of the file — group changes under `### New`, `### Improved`, and
    `### Fixed` subheadings when there is more than one kind of change, and
    reference PR numbers like `(#125)`.
-5. If there are no externally observable changes, still add the section with a
+6. If there are no externally observable changes, still add the section with a
    single brief bullet summarizing the most significant internal change.
-6. If a PR author is not a member of the team, include a shout out thanking
+7. If a PR author is not a member of the team, include a shout out thanking
    them. (Team members are @noahd1, @brynary, @marschattha,
    @davehenton, @laura-mlg. They don't need shout outs.)
 
