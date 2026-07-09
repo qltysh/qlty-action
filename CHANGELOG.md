@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.3.0 (2026-07-09)
+
+### New
+
+- Add a `selected` input to the coverage action for marking an upload as covering a selected subset of the test suite, which contributes to diff coverage only and is excluded from total coverage (#200)
+
 ## v2.2.3 (2026-07-07)
 
 - Internal release process improvements (no user-facing changes) (#196)
