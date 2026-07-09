@@ -101,7 +101,7 @@ inputs:
     required: false
     default: false
 
-  selection:
+  selected:
     description: >-
       Mark the coverage data as coming from a selected subset of the test
       suite. Selected coverage contributes to diff coverage only and is

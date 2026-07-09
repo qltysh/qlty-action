@@ -70949,7 +70949,7 @@ var settingsParser = z2.object({
   format: preprocessBlanks(formatEnum.optional()),
   dryRun: z2.boolean(),
   incomplete: z2.boolean(),
-  selection: z2.boolean(),
+  selected: z2.boolean(),
   name: preprocessBlanks(z2.string().optional()),
   validate: z2.boolean(),
   validateFileThreshold: preprocessBlanks(
@@ -70986,7 +70986,7 @@ var Settings = class _Settings {
         format: input.getInput("format"),
         dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
-        selection: input.getBooleanInput("selection"),
+        selected: input.getBooleanInput("selected"),
         name: input.getInput("name"),
         validate: input.getBooleanInput("validate"),
         validateFileThreshold: input.getInput("validate-file-threshold"),
@@ -71147,7 +71147,7 @@ var StubbedInputProvider = class {
       format: data["format"] || "",
       "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
-      selection: data.selection || false,
+      selected: data.selected || false,
       name: data.name || "",
       validate: data.validate || false,
       "validate-file-threshold": data["validate-file-threshold"] || "",
@@ -71470,7 +71470,7 @@ var CoverageAction = class _CoverageAction {
     if (this._settings.input.tag) {
       completeArgs.push("--tag", this._settings.input.tag);
     }
-    if (this._settings.input.selection) {
+    if (this._settings.input.selected) {
       completeArgs.push("--selection");
     }
     completeArgs.push(...this.getOverrideCommitArgs());
@@ -71513,7 +71513,7 @@ var CoverageAction = class _CoverageAction {
     if (this._settings.input.incomplete) {
       uploadArgs.push("--incomplete");
     }
-    if (this._settings.input.selection) {
+    if (this._settings.input.selected) {
       uploadArgs.push("--selection");
     }
     if (this._settings.input.name) {

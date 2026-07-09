@@ -269,7 +269,7 @@ export class CoverageAction {
       completeArgs.push("--tag", this._settings.input.tag);
     }
 
-    if (this._settings.input.selection) {
+    if (this._settings.input.selected) {
       completeArgs.push("--selection");
     }
 
@@ -327,7 +327,7 @@ export class CoverageAction {
       uploadArgs.push("--incomplete");
     }
 
-    if (this._settings.input.selection) {
+    if (this._settings.input.selected) {
       uploadArgs.push("--selection");
     }
 

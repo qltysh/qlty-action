@@ -124,7 +124,7 @@ describe("CoverageAction", () => {
           verbose: true,
           "dry-run": true,
           incomplete: true,
-          selection: true,
+          selected: true,
           name: "test-name",
         }),
         context: { payload: {} },
@@ -210,12 +210,12 @@ describe("CoverageAction", () => {
       expect(command?.command).toContain("--incomplete");
     });
 
-    test("adds selection flag when selection is true", async () => {
+    test("adds selection flag when selected is true", async () => {
       const { action, commands } = createTrackedAction({
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           files: "info.lcov",
-          selection: true,
+          selected: true,
         }),
         context: { payload: {} },
       });
@@ -362,12 +362,12 @@ describe("CoverageAction", () => {
       ]);
     });
 
-    test("adds selection flag when selection is true", async () => {
+    test("adds selection flag when selected is true", async () => {
       const { action, commands } = createTrackedAction({
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           command: "complete",
-          selection: true,
+          selected: true,
         }),
         context: { payload: {} },
       });
