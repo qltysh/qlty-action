@@ -124,6 +124,7 @@ describe("CoverageAction", () => {
           verbose: true,
           "dry-run": true,
           incomplete: true,
+          selected: true,
           name: "test-name",
         }),
         context: { payload: {} },
@@ -152,6 +153,7 @@ describe("CoverageAction", () => {
         "5",
         "--skip-missing-files",
         "--incomplete",
+        "--selection",
         "--name",
         "test-name",
         "--no-validate",
@@ -206,6 +208,23 @@ describe("CoverageAction", () => {
       expect(executedCommands.length).toBe(1);
       const command = executedCommands[0];
       expect(command?.command).toContain("--incomplete");
+    });
+
+    test("adds selection flag when selected is true", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          selected: true,
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toContain("--selection");
     });
 
     test("adds name argument when name is provided", async () => {
@@ -340,6 +359,28 @@ describe("CoverageAction", () => {
         "complete",
         "--tag",
         "test-tag",
+      ]);
+    });
+
+    test("adds selection flag when selected is true", async () => {
+      const { action, commands } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+          selected: true,
+        }),
+        context: { payload: {} },
+      });
+      await action.run();
+
+      const executedCommands = commands.clear();
+      expect(executedCommands.length).toBe(1);
+      const command = executedCommands[0];
+      expect(command?.command).toEqual([
+        "qlty",
+        "coverage",
+        "complete",
+        "--selection",
       ]);
     });
 

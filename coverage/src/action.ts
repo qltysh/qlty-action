@@ -269,6 +269,10 @@ export class CoverageAction {
       completeArgs.push("--tag", this._settings.input.tag);
     }
 
+    if (this._settings.input.selected) {
+      completeArgs.push("--selection");
+    }
+
     completeArgs.push(...this.getOverrideCommitArgs());
 
     return completeArgs;
@@ -321,6 +325,10 @@ export class CoverageAction {
 
     if (this._settings.input.incomplete) {
       uploadArgs.push("--incomplete");
+    }
+
+    if (this._settings.input.selected) {
+      uploadArgs.push("--selection");
     }
 
     if (this._settings.input.name) {

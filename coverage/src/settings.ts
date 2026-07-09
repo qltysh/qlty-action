@@ -28,6 +28,7 @@ interface ActionInputKeys {
   format: string;
   "dry-run": boolean;
   incomplete: boolean;
+  selected: boolean;
   name: string;
   validate: boolean;
   "validate-file-threshold": string;
@@ -73,6 +74,7 @@ const settingsParser = z.object({
   format: preprocessBlanks(formatEnum.optional()),
   dryRun: z.boolean(),
   incomplete: z.boolean(),
+  selected: z.boolean(),
   name: preprocessBlanks(z.string().optional()),
   validate: z.boolean(),
   validateFileThreshold: preprocessBlanks(
@@ -112,6 +114,7 @@ export class Settings {
         format: input.getInput("format"),
         dryRun: input.getBooleanInput("dry-run"),
         incomplete: input.getBooleanInput("incomplete"),
+        selected: input.getBooleanInput("selected"),
         name: input.getInput("name"),
         validate: input.getBooleanInput("validate"),
         validateFileThreshold: input.getInput("validate-file-threshold"),
@@ -326,6 +329,7 @@ export class StubbedInputProvider implements InputProvider {
       format: data["format"] || "",
       "dry-run": data["dry-run"] || false,
       incomplete: data.incomplete || false,
+      selected: data.selected || false,
       name: data.name || "",
       validate: data.validate || false,
       "validate-file-threshold": data["validate-file-threshold"] || "",
