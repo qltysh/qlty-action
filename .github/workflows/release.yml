@@ -188,7 +188,7 @@ jobs:
           cat slack_announcement.json
 
       - name: Announce release to Slack (#feed-deploys)
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -198,7 +198,7 @@ jobs:
         # Runs as long as the release was published (compose succeeded),
         # even if the #feed-deploys announcement failed
         if: ${{ !cancelled() && steps.compose.conclusion == 'success' }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
         with:
           webhook: ${{ secrets.SLACK_CUST_PUBLIC_WEBHOOK_URL }}
           webhook-type: incoming-webhook
