@@ -15,8 +15,8 @@
     "test:watch": "vitest --watch"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^3.0.1",
     "@actions/exec": "^1.1.1",
-    "@actions/tool-cache": "^2.0.2"
+    "@actions/tool-cache": "^4.0.0"
   }
 }
