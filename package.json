@@ -9,10 +9,10 @@
   ],
   "devDependencies": {
     "@types/node": "^22.15.3",
-    "@vitest/coverage-istanbul": "^3.2.6",
+    "@vitest/coverage-istanbul": "^4.1.11",
     "esbuild": "^0.25.3",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.6"
+    "vitest": "^4.1.11"
   },
   "overrides": {
     "undici": "^6.27.0"
