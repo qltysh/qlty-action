@@ -127083,7 +127083,7 @@ var os20 = __toESM(require("os"), 1);
 var path17 = __toESM(require("path"), 1);
 var import_assert5 = __toESM(require("assert"), 1);
 
-// ../node_modules/@actions/glob/node_modules/balanced-match/dist/esm/index.js
+// ../node_modules/balanced-match/dist/esm/index.js
 var balanced = (a2, b2, str) => {
   const ma2 = a2 instanceof RegExp ? maybeMatch(a2, str) : a2;
   const mb = b2 instanceof RegExp ? maybeMatch(b2, str) : b2;
@@ -127136,7 +127136,7 @@ var range = (a2, b2, str) => {
   return result;
 };
 
-// ../node_modules/@actions/glob/node_modules/brace-expansion/dist/esm/index.js
+// ../node_modules/brace-expansion/dist/esm/index.js
 var escSlash = "\0SLASH" + Math.random() + "\0";
 var escOpen = "\0OPEN" + Math.random() + "\0";
 var escClose = "\0CLOSE" + Math.random() + "\0";
@@ -127154,6 +127154,8 @@ var commaPattern = /\\,/g;
 var periodPattern = /\\\./g;
 var EXPANSION_MAX = 1e5;
 var EXPANSION_MAX_LENGTH = 4e6;
+var EXPANSION_MAX_DEPTH = 1e3;
+var EXPANSION_MAX_REWRITES = 1e3;
 function numeric(str) {
   return !isNaN(str) ? parseInt(str, 10) : str.charCodeAt(0);
 }
@@ -127163,36 +127165,44 @@ function escapeBraces(str) {
 function unescapeBraces(str) {
   return str.replace(escSlashPattern, "\\").replace(escOpenPattern, "{").replace(escClosePattern, "}").replace(escCommaPattern, ",").replace(escPeriodPattern, ".");
 }
+function pushAll(target, items) {
+  for (let i2 = 0; i2 < items.length; i2++) {
+    target.push(items[i2]);
+  }
+}
 function parseCommaParts(str) {
-  if (!str) {
-    return [""];
-  }
   const parts = [];
-  const m2 = balanced("{", "}", str);
-  if (!m2) {
-    return str.split(",");
+  let carry = "";
+  for (; ; ) {
+    const m2 = balanced("{", "}", str);
+    if (!m2) {
+      const tail = str.split(",");
+      tail[0] = carry + tail[0];
+      pushAll(parts, tail);
+      return parts;
+    }
+    const { pre, body, post } = m2;
+    const p2 = pre.split(",");
+    p2[0] = carry + p2[0];
+    p2[p2.length - 1] += "{" + body + "}";
+    if (!post.length) {
+      pushAll(parts, p2);
+      return parts;
+    }
+    carry = p2.pop();
+    pushAll(parts, p2);
+    str = post;
   }
-  const { pre, body, post } = m2;
-  const p2 = pre.split(",");
-  p2[p2.length - 1] += "{" + body + "}";
-  const postParts = parseCommaParts(post);
-  if (post.length) {
-    ;
-    p2[p2.length - 1] += postParts.shift();
-    p2.push.apply(p2, postParts);
-  }
-  parts.push.apply(parts, p2);
-  return parts;
 }
 function expand(str, options = {}) {
   if (!str) {
     return [];
   }
-  const { max = EXPANSION_MAX, maxLength = EXPANSION_MAX_LENGTH } = options;
+  const { max = EXPANSION_MAX, maxLength = EXPANSION_MAX_LENGTH, maxDepth = EXPANSION_MAX_DEPTH, maxRewrites = EXPANSION_MAX_REWRITES } = options;
   if (str.slice(0, 2) === "{}") {
     str = "\\{\\}" + str.slice(2);
   }
-  return expand_(escapeBraces(str), max, maxLength, true).map(unescapeBraces);
+  return expand_(escapeBraces(str), max, maxLength, maxDepth, 0, maxRewrites, true).map(unescapeBraces);
 }
 function embrace(str) {
   return "{" + str + "}";
@@ -127270,8 +127280,12 @@ function expandSequence(body, isAlphaSequence, max, maxLength) {
   }
   return N2;
 }
-function expand_(str, max, maxLength, isTop) {
+function expand_(str, max, maxLength, maxDepth, depth, maxRewrites, isTop) {
+  if (depth > maxDepth) {
+    return [str];
+  }
   let acc = [""];
+  let rewrites = 0;
   let dropEmpties = false;
   let firstGroup = true;
   for (; ; ) {
@@ -127293,7 +127307,8 @@ function expand_(str, max, maxLength, isTop) {
     const isSequence = isNumericSequence || isAlphaSequence;
     const isOptions = m2.body.indexOf(",") >= 0;
     if (!isSequence && !isOptions) {
-      if (m2.post.match(/,(?!,).*\}/)) {
+      if (rewrites < maxRewrites && m2.post.match(/,(?!,).*\}/)) {
+        rewrites++;
         str = m2.pre + "{" + m2.body + escClose + m2.post;
         isTop = true;
         continue;
@@ -127310,7 +127325,7 @@ function expand_(str, max, maxLength, isTop) {
     } else {
       let n2 = parseCommaParts(m2.body);
       if (n2.length === 1 && n2[0] !== void 0) {
-        n2 = expand_(n2[0], max, maxLength, false).map(embrace);
+        n2 = expand_(n2[0], max, maxLength, maxDepth, depth + 1, maxRewrites, false).map(embrace);
         if (n2.length === 1) {
           acc = combine(acc, pre + n2[0], [""], max, maxLength, dropEmpties && !m2.post.length);
           if (!m2.post.length)
@@ -127328,7 +127343,7 @@ function expand_(str, max, maxLength, isTop) {
       values = [];
       let valuesLength = 0;
       outer: for (let j2 = 0; j2 < n2.length; j2++) {
-        const expanded = expand_(n2[j2], max, maxLength, false);
+        const expanded = expand_(n2[j2], max, maxLength, maxDepth, depth + 1, maxRewrites, false);
         for (let k2 = 0; k2 < expanded.length; k2++) {
           const v2 = expanded[k2];
           if (dropsEmpties && !v2)
@@ -127349,7 +127364,7 @@ function expand_(str, max, maxLength, isTop) {
   return acc;
 }
 
-// ../node_modules/@actions/glob/node_modules/minimatch/dist/esm/assert-valid-pattern.js
+// ../node_modules/minimatch/dist/esm/assert-valid-pattern.js
 var MAX_PATTERN_LENGTH = 1024 * 64;
 var assertValidPattern = (pattern) => {
   if (typeof pattern !== "string") {
@@ -127360,7 +127375,7 @@ var assertValidPattern = (pattern) => {
   }
 };
 
-// ../node_modules/@actions/glob/node_modules/minimatch/dist/esm/brace-expressions.js
+// ../node_modules/minimatch/dist/esm/brace-expressions.js
 var posixClasses = {
   "[:alnum:]": ["\\p{L}\\p{Nl}\\p{Nd}", true],
   "[:alpha:]": ["\\p{L}\\p{Nl}", true],
@@ -127469,7 +127484,7 @@ var parseClass = (glob, position) => {
   return [comb, uflag, endPos - pos, true];
 };
 
-// ../node_modules/@actions/glob/node_modules/minimatch/dist/esm/unescape.js
+// ../node_modules/minimatch/dist/esm/unescape.js
 var unescape = (s2, { windowsPathsNoEscape = false, magicalBraces = true } = {}) => {
   if (magicalBraces) {
     return windowsPathsNoEscape ? s2.replace(/\[([^/\\])\]/g, "$1") : s2.replace(/((?!\\).|^)\[([^/\\])\]/g, "$1$2").replace(/\\([^/])/g, "$1");
@@ -127477,7 +127492,7 @@ var unescape = (s2, { windowsPathsNoEscape = false, magicalBraces = true } = {})
   return windowsPathsNoEscape ? s2.replace(/\[([^/\\{}])\]/g, "$1") : s2.replace(/((?!\\).|^)\[([^/\\{}])\]/g, "$1$2").replace(/\\([^/{}])/g, "$1");
 };
 
-// ../node_modules/@actions/glob/node_modules/minimatch/dist/esm/ast.js
+// ../node_modules/minimatch/dist/esm/ast.js
 var _a3;
 var types = /* @__PURE__ */ new Set(["!", "?", "+", "*", "@"]);
 var isExtglobType = (c2) => types.has(c2);
@@ -128141,7 +128156,7 @@ parseGlob_fn = function(glob, hasMagic, noEmpty = false) {
 __privateAdd(AST, _AST_static);
 _a3 = AST;
 
-// ../node_modules/@actions/glob/node_modules/minimatch/dist/esm/escape.js
+// ../node_modules/minimatch/dist/esm/escape.js
 var escape = (s2, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
   if (magicalBraces) {
     return windowsPathsNoEscape ? s2.replace(/[?*()[\]{}]/g, "[$&]") : s2.replace(/[?*()[\]\\{}]/g, "\\$&");
@@ -128149,7 +128164,7 @@ var escape = (s2, { windowsPathsNoEscape = false, magicalBraces = false } = {}) 
   return windowsPathsNoEscape ? s2.replace(/[?*()[\]]/g, "[$&]") : s2.replace(/[?*()[\]\\]/g, "\\$&");
 };
 
-// ../node_modules/@actions/glob/node_modules/minimatch/dist/esm/index.js
+// ../node_modules/minimatch/dist/esm/index.js
 var minimatch = (p2, pattern, options = {}) => {
   assertValidPattern(pattern);
   if (!options.nocomment && pattern.charAt(0) === "#") {

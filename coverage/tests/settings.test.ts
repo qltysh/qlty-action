@@ -1,4 +1,4 @@
-import { Settings } from "src/settings";
+import { Settings } from "../src/settings";
 
 describe("Settings", () => {
   test("parses values", () => {

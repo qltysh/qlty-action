@@ -4,8 +4,8 @@ import {
   StubbedOperatingSystem,
   StubbedToolCache,
   StubbedAttestationVerifier,
-} from "src/installer";
-import { StubbedOutput } from "src/util/output";
+} from "../src/installer";
+import { StubbedOutput } from "../src/util/output";
 
 describe("Installer", () => {
   test("installs linux x86", async () => {

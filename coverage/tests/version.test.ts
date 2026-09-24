@@ -1,4 +1,4 @@
-import Version from "src/version";
+import Version from "../src/version";
 
 describe("Version", () => {
   const nullConsole = {
