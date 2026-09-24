@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.4.0 (2026-09-24)
+
+### Fixed
+
+- Security updates to bundled dependencies (#207, #208, #209)
+
 ## v2.3.0 (2026-07-09)
 
 ### New
