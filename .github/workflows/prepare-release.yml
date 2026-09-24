@@ -123,7 +123,7 @@ jobs:
           done
 
       - name: Draft changelog entry
-        uses: anthropics/claude-code-action@493279a9d94b7cc5d07a98e5e66cb03313805350 # version 1.0.166
+        uses: anthropics/claude-code-action@f87768c6d25f92ae6efa7175e223ef77d4cbf97f # version 1.0.166
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         with:
