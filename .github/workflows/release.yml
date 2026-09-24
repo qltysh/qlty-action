@@ -95,8 +95,9 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
 
-          # The release was prepared by the commit that set this version
-          PREPARED_SHA=$(git log -1 --format=%H -S"\"version\": \"${VERSION}\"" -- coverage/package.json)
+          # The release was prepared by the commit that last changed the
+          # version line, i.e. the merged "Prepare release" pull request
+          PREPARED_SHA=$(git blame --porcelain -L '/"version":/,+1' -- coverage/package.json | head -n1 | cut -d' ' -f1)
 
           if [ -z "$PREPARED_SHA" ]; then
             echo "::warning::Could not find the commit that set version ${VERSION}; skipping staleness check"
