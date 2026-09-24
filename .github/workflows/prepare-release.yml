@@ -208,6 +208,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          MAJOR="${VERSION%%.*}"
 
           {
             echo "Automated release preparation for v${VERSION}."
@@ -215,10 +216,22 @@ jobs:
             echo "Review (and edit, if needed) the changelog entry below, then"
             echo "merge this pull request. Merging does not tag or publish anything."
             echo
-            echo "To tag and publish, run the Release workflow on the default branch"
-            echo "after this pull request is merged:"
+            echo "To publish, a maintainer tags the merged commit on main and pushes"
+            echo "the tag. The Release workflow verifies the tag and publishes the"
+            echo "GitHub release from it:"
             echo
-            echo '    gh workflow run release.yml --ref main'
+            echo '```'
+            echo "git fetch origin main"
+            echo "git tag -s v${VERSION} origin/main -m \"v${VERSION}\""
+            echo "git push origin v${VERSION}"
+            echo '```'
+            echo
+            echo "Then point the major tag at the new release:"
+            echo
+            echo '```'
+            echo "git tag -f v${MAJOR} v${VERSION}"
+            echo "git push --force origin v${MAJOR}"
+            echo '```'
             echo
             echo "## Draft release notes"
             echo
