@@ -1,23 +1,18 @@
 name: Release
 on:
-  pull_request:
-    types:
-      - closed
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
   release:
-    # Runs when a release pull request is merged, or on manual dispatch as
-    # a fallback. A release pull request is one from a release/* branch,
-    # whose creation is restricted to maintainers and the release app by a
-    # ruleset. Either way, the version comes from the package.json files on
-    # the released commit.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true &&
-       github.event.pull_request.base.ref == github.event.repository.default_branch &&
-       startsWith(github.event.pull_request.head.ref, 'release/'))
+    # Tagging and publishing is a deliberate, manual step. Merging a release
+    # pull request only lands the version bump and changelog entry on the
+    # default branch; a maintainer then dispatches this workflow on the
+    # default branch to tag and publish that commit. The version comes from
+    # the package.json files on the dispatched commit. Dispatches on any
+    # other ref are refused so a release can only be cut from reviewed
+    # history.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # version 2.0.6
@@ -31,7 +26,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # version 4.2.2
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.merge_commit_sha || github.ref }}
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
@@ -98,18 +92,18 @@ jobs:
           cat changelog_content.txt
 
       - name: Check for changes merged after release preparation
-        if: github.event_name == 'pull_request'
         run: |
-          MERGE_SHA="${{ github.event.pull_request.merge_commit_sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          VERSION="${{ steps.version.outputs.version }}"
 
-          if ! git cat-file -e "$HEAD_SHA" 2> /dev/null; then
-            echo "Release branch head $HEAD_SHA is no longer reachable; skipping staleness check"
+          # The release was prepared by the commit that set this version
+          PREPARED_SHA=$(git log -1 --format=%H -S"\"version\": \"${VERSION}\"" -- coverage/package.json)
+
+          if [ -z "$PREPARED_SHA" ]; then
+            echo "::warning::Could not find the commit that set version ${VERSION}; skipping staleness check"
             exit 0
           fi
 
-          BRANCH_POINT=$(git merge-base "$HEAD_SHA" "${MERGE_SHA}^")
-          MISSED=$(git log --oneline --first-parent "${BRANCH_POINT}..${MERGE_SHA}^")
+          MISSED=$(git log --oneline --first-parent "${PREPARED_SHA}..HEAD")
 
           if [ -n "$MISSED" ]; then
             echo "::warning::Commits landed on the default branch after this release was prepared. Verify the changelog covers them:"
@@ -191,15 +185,5 @@ jobs:
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload-file-path: slack_announcement.json
-
-      - name: Announce release to Slack (#cust-public)
-        # Runs as long as the release was published (compose succeeded),
-        # even if the #feed-deploys announcement failed
-        if: ${{ !cancelled() && steps.compose.conclusion == 'success' }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
-        with:
-          webhook: ${{ secrets.SLACK_CUST_PUBLIC_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload-file-path: slack_announcement.json

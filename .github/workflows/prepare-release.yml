@@ -213,7 +213,12 @@ jobs:
             echo "Automated release preparation for v${VERSION}."
             echo
             echo "Review (and edit, if needed) the changelog entry below, then"
-            echo "merge this pull request to tag and publish the release."
+            echo "merge this pull request. Merging does not tag or publish anything."
+            echo
+            echo "To tag and publish, run the Release workflow on the default branch"
+            echo "after this pull request is merged:"
+            echo
+            echo '    gh workflow run release.yml --ref main'
             echo
             echo "## Draft release notes"
             echo
