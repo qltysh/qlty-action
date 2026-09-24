@@ -1,66 +1,75 @@
 name: Release
 on:
-  pull_request:
-    types:
-      - closed
-  workflow_dispatch:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
 permissions:
   contents: write
 jobs:
   release:
-    # Runs when a release pull request is merged, or on manual dispatch as
-    # a fallback. A release pull request is one from a release/* branch,
-    # whose creation is restricted to maintainers and the release app by a
-    # ruleset. Either way, the version comes from the package.json files on
-    # the released commit.
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true &&
-       github.event.pull_request.base.ref == github.event.repository.default_branch &&
-       startsWith(github.event.pull_request.head.ref, 'release/'))
+    # Publishing a release starts with a maintainer pushing a version tag
+    # (vX.Y.Z) to the commit that prepared it; the "Only maintainers manage
+    # tags" ruleset restricts who can do that. Merging a release pull request
+    # only lands the version bump and changelog entry on the default branch.
+    #
+    # This workflow never creates or moves tags. It verifies that the tagged
+    # commit is on the default branch and agrees with the package.json
+    # versions and CHANGELOG.md, publishes the GitHub release for the tag,
+    # and announces it. The floating major tag (vN) is moved by the
+    # maintainer as well; the workflow only warns when it does not point at
+    # the release.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # version 2.0.6
-        id: app-token
-        with:
-          app-id: ${{ vars.QLTY_APP_ID }}
-          private-key: ${{ secrets.QLTY_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name }}
-
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # version 4.2.2
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.merge_commit_sha || github.ref }}
           fetch-depth: 0
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Determine version
         id: version
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
-          VERSION=$(node -p "require('./coverage/package.json').version")
+          VERSION="${TAG#v}"
+          PACKAGE_VERSION=$(node -p "require('./coverage/package.json').version")
           FMT_VERSION=$(node -p "require('./fmt/package.json').version")
 
-          if [ "$VERSION" != "$FMT_VERSION" ]; then
-            echo "Error: coverage/package.json ($VERSION) and fmt/package.json ($FMT_VERSION) disagree"
+          if [ "$PACKAGE_VERSION" != "$FMT_VERSION" ]; then
+            echo "Error: coverage/package.json ($PACKAGE_VERSION) and fmt/package.json ($FMT_VERSION) disagree"
             exit 1
           fi
 
-          if git rev-parse -q --verify "refs/tags/v${VERSION}" > /dev/null; then
-            echo "Error: Tag v${VERSION} already exists"
+          if [ "$VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Error: tag ${TAG} does not match the version in package.json (${PACKAGE_VERSION})"
+            echo "Tag the commit that prepared release v${PACKAGE_VERSION}, or delete this tag"
             exit 1
           fi
 
-          # The new tag doesn't exist yet, so the newest semver tag is the
-          # version being replaced
+          # The newest semver tag other than the one being released
           PREVIOUS_TAG=$(git tag --list 'v*' --sort=-version:refname \
-            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -vx "${TAG}" | head -n1)
 
           echo "Releasing version: $VERSION (previous release: $PREVIOUS_TAG)"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "major_version=$(echo $VERSION | cut -d. -f1)" >> "$GITHUB_OUTPUT"
+          echo "major_version=${VERSION%%.*}" >> "$GITHUB_OUTPUT"
           echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
-          echo "full_changelog_url=${{ github.server_url }}/${{ github.repository }}/compare/${PREVIOUS_TAG}...v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "full_changelog_url=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${PREVIOUS_TAG}...${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the tagged commit is on the default branch
+        env:
+          TAG: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch --quiet origin "${DEFAULT_BRANCH}"
+          RELEASE_SHA=$(git rev-parse HEAD)
+
+          if ! git merge-base --is-ancestor "$RELEASE_SHA" FETCH_HEAD; then
+            echo "Error: ${TAG} points at ${RELEASE_SHA}, which is not on ${DEFAULT_BRANCH}"
+            echo "Releases may only be cut from reviewed history on the default branch"
+            exit 1
+          fi
+
+          echo "${TAG} points at ${RELEASE_SHA}, which is on ${DEFAULT_BRANCH}"
 
       - name: Validate CHANGELOG.md
         run: |
@@ -97,68 +106,62 @@ jobs:
           echo "Extracted changelog content:"
           cat changelog_content.txt
 
-      - name: Check for changes merged after release preparation
-        if: github.event_name == 'pull_request'
+      - name: Check for changes after release preparation
+        env:
+          TAG: ${{ github.ref_name }}
         run: |
-          MERGE_SHA="${{ github.event.pull_request.merge_commit_sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          VERSION="${TAG#v}"
 
-          if ! git cat-file -e "$HEAD_SHA" 2> /dev/null; then
-            echo "Release branch head $HEAD_SHA is no longer reachable; skipping staleness check"
+          # The release was prepared by the commit that last changed the
+          # version line, i.e. the merged "Prepare release" pull request
+          PREPARED_SHA=$(git blame --porcelain -L '/"version":/,+1' -- coverage/package.json | head -n1 | cut -d' ' -f1)
+
+          if [ -z "$PREPARED_SHA" ]; then
+            echo "::warning::Could not find the commit that set version ${VERSION}; skipping staleness check"
             exit 0
           fi
 
-          BRANCH_POINT=$(git merge-base "$HEAD_SHA" "${MERGE_SHA}^")
-          MISSED=$(git log --oneline --first-parent "${BRANCH_POINT}..${MERGE_SHA}^")
+          MISSED=$(git log --oneline --first-parent "${PREPARED_SHA}..HEAD")
 
           if [ -n "$MISSED" ]; then
-            echo "::warning::Commits landed on the default branch after this release was prepared. Verify the changelog covers them:"
+            echo "::warning::Commits landed after this release was prepared. Verify the changelog covers them:"
             echo "$MISSED"
           fi
 
-      - name: Create and push tags via GitHub API
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          MAJOR_VERSION="${{ steps.version.outputs.major_version }}"
-
-          # Get the current commit SHA
-          COMMIT_SHA=$(git rev-parse HEAD)
-
-          # Create lightweight tag reference for version (points directly to commit)
-          # This should fail if the tag already exists
-          gh api \
-            --method POST \
-            /repos/${{ github.repository }}/git/refs \
-            -f ref="refs/tags/v${VERSION}" \
-            -f sha="$COMMIT_SHA"
-
-          echo "Created tag v${VERSION}"
-
-          # Create or update lightweight tag reference for major version (force update if exists)
-          gh api \
-            --method POST \
-            /repos/${{ github.repository }}/git/refs \
-            -f ref="refs/tags/v${MAJOR_VERSION}" \
-            -f sha="$COMMIT_SHA" \
-            2>/dev/null || \
-          gh api \
-            --method PATCH \
-            /repos/${{ github.repository }}/git/refs/tags/v${MAJOR_VERSION} \
-            -f sha="$COMMIT_SHA" \
-            -F force=true
-
-          echo "Created/updated major version tag v${MAJOR_VERSION}"
-
       - name: Create GitHub Release
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
         run: |
-          gh release create "v${{ steps.version.outputs.version }}" \
-            --title "v${{ steps.version.outputs.version }}" \
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release ${TAG} already exists; leaving it as is"
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --title "$TAG" \
             --notes-file changelog_content.txt \
             --verify-tag
+
+      - name: Check the major version tag
+        env:
+          TAG: ${{ github.ref_name }}
+          MAJOR_TAG: v${{ steps.version.outputs.major_version }}
+        run: |
+          RELEASE_SHA=$(git rev-parse HEAD)
+
+          if git fetch --quiet --force origin "refs/tags/${MAJOR_TAG}:refs/tags/${MAJOR_TAG}" 2> /dev/null; then
+            MAJOR_SHA=$(git rev-parse "${MAJOR_TAG}^{commit}")
+          else
+            MAJOR_SHA=""
+          fi
+
+          if [ "$MAJOR_SHA" = "$RELEASE_SHA" ]; then
+            echo "${MAJOR_TAG} points at ${TAG}"
+            exit 0
+          fi
+
+          echo "::warning::${MAJOR_TAG} does not point at ${TAG} (currently ${MAJOR_SHA:-unset}). Move it with: git tag -f ${MAJOR_TAG} ${TAG} && git push --force origin ${MAJOR_TAG}"
 
       - name: Compose Slack announcement
         id: compose
@@ -191,15 +194,5 @@ jobs:
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload-file-path: slack_announcement.json
-
-      - name: Announce release to Slack (#cust-public)
-        # Runs as long as the release was published (compose succeeded),
-        # even if the #feed-deploys announcement failed
-        if: ${{ !cancelled() && steps.compose.conclusion == 'success' }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
-        with:
-          webhook: ${{ secrets.SLACK_CUST_PUBLIC_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload-file-path: slack_announcement.json
