@@ -1,8 +1,8 @@
-import { CoverageAction, StubbedActionContext } from "src/action";
-import { Installer } from "src/installer";
-import { FileSystem, Settings, StubbedFileSystem } from "src/settings";
-import { StubbedCommandExecutor } from "src/util/exec";
-import { StubbedOutput } from "src/util/output";
+import { CoverageAction, StubbedActionContext } from "../src/action";
+import { Installer } from "../src/installer";
+import { FileSystem, Settings, StubbedFileSystem } from "../src/settings";
+import { StubbedCommandExecutor } from "../src/util/exec";
+import { StubbedOutput } from "../src/util/output";
 
 describe("CoverageAction", () => {
   describe("validation errors", async () => {
