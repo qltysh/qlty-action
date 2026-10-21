@@ -74,6 +74,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install xz for the CLI archive
+        run: apt-get update -qq && apt-get install -y -qq xz-utils
+
       - name: Install Qlty CLI
         uses: ./install
 
