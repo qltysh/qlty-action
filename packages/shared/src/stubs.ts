@@ -1,7 +1,54 @@
+import type { ExecOptions } from "@actions/exec";
 import type { OperatingSystem, ToolCache, ActionOutput } from "./interfaces.js";
-import type { AttestationResult, AttestationVerifier } from "./attestation.js";
+import type {
+  AttestationResult,
+  AttestationVerifier,
+  CommandRunner,
+} from "./attestation.js";
 
-export type AttestationBehavior = "success" | "fail" | "auth-failure";
+export type AttestationBehavior = "success" | "fail" | "gh-missing";
+
+export interface StubbedCommandResult {
+  exitCode?: number;
+  output?: string;
+  spawnError?: string;
+}
+
+export class StubbedGhRunner implements CommandRunner {
+  calls: {
+    command: string;
+    args: string[];
+    env: Record<string, string> | undefined;
+  }[] = [];
+
+  constructor(
+    private responses: {
+      version?: StubbedCommandResult;
+      verify?: StubbedCommandResult;
+    } = {},
+  ) {}
+
+  async exec(
+    command: string,
+    args: string[],
+    options: ExecOptions,
+  ): Promise<number> {
+    this.calls.push({ command, args, env: options.env });
+    const response =
+      args[0] === "--version"
+        ? (this.responses.version ?? {
+            output: "gh version 2.97.0 (2026-07-31)\n",
+          })
+        : (this.responses.verify ?? {});
+    if (response.spawnError) {
+      throw new Error(response.spawnError);
+    }
+    if (response.output) {
+      options.listeners?.stdout?.(Buffer.from(response.output));
+    }
+    return response.exitCode ?? 0;
+  }
+}
 
 export class StubbedAttestationVerifier implements AttestationVerifier {
   verifiedFiles: string[] = [];
@@ -14,11 +61,11 @@ export class StubbedAttestationVerifier implements AttestationVerifier {
         return { success: true };
       case "fail":
         return { success: false, error: "Stubbed failure" };
-      case "auth-failure":
+      case "gh-missing":
         return {
           success: false,
           skipped: true,
-          error: "GitHub CLI not authenticated",
+          error: "GitHub CLI (gh) is not installed.",
         };
     }
   }

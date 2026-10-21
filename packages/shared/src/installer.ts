@@ -111,9 +111,9 @@ export class Installer {
           ? ` ${attestationResult.error}`
           : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped." +
+          "Sigstore attestation verification was skipped, so this run is unverified." +
             warningDetails +
-            " For enhanced security, ensure the GitHub CLI is available and the github-token input is provided.",
+            " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
           { title: "Attestation Verification Skipped" },
         );
       } else {

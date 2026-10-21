@@ -123,10 +123,10 @@ describe("Installer", () => {
       expect(attestationVerifier.verifiedFiles).toHaveLength(1);
     });
 
-    test("warns but proceeds when gh CLI is not authenticated", async () => {
+    test("warns that the run is unverified but installs when gh is missing", async () => {
       const { output, installer } = createTrackedInstaller({
         os: new StubbedOperatingSystem("linux", "x64"),
-        attestationVerifier: new StubbedAttestationVerifier("auth-failure"),
+        attestationVerifier: new StubbedAttestationVerifier("gh-missing"),
       });
       const result = await installer.install();
       expect(result).toBe("qlty");
@@ -135,7 +135,7 @@ describe("Installer", () => {
       expect(output.warnings[0]?.title).toBe(
         "Attestation Verification Skipped",
       );
-      expect(output.warnings[0]?.message).toContain("not authenticated");
+      expect(output.warnings[0]?.message).toContain("this run is unverified");
     });
   });
 

@@ -40910,7 +40910,7 @@ var require_exec = __commonJS({
     exports2.getExecOutput = exports2.exec = void 0;
     var string_decoder_1 = require("string_decoder");
     var tr = __importStar(require_toolrunner());
-    function exec4(commandLine, args, options) {
+    function exec3(commandLine, args, options) {
       return __awaiter17(this, void 0, void 0, function* () {
         const commandArgs = tr.argStringToArray(commandLine);
         if (commandArgs.length === 0) {
@@ -40922,7 +40922,7 @@ var require_exec = __commonJS({
         return runner.exec();
       });
     }
-    exports2.exec = exec4;
+    exports2.exec = exec3;
     function getExecOutput3(commandLine, args, options) {
       var _a, _b;
       return __awaiter17(this, void 0, void 0, function* () {
@@ -40945,7 +40945,7 @@ var require_exec = __commonJS({
           }
         };
         const listeners = Object.assign(Object.assign({}, options === null || options === void 0 ? void 0 : options.listeners), { stdout: stdOutListener, stderr: stdErrListener });
-        const exitCode = yield exec4(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
+        const exitCode = yield exec3(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
         stdout += stdoutDecoder.end();
         stderr += stderrDecoder.end();
         return {
@@ -44982,23 +44982,44 @@ var import_node_events = __toESM(require("node:events"), 1);
 
 // ../packages/shared/src/attestation.ts
 var actionsExec = __toESM(require_exec(), 1);
+var MINIMUM_GH_VERSION = [2, 67, 0];
 var GhAttestationVerifier = class {
-  constructor(token) {
+  constructor(token, {
+    runner = actionsExec,
+    env = process.env
+  } = {}) {
+    __publicField(this, "token");
+    __publicField(this, "runner");
+    __publicField(this, "env");
     this.token = token;
+    this.runner = runner;
+    this.env = env;
   }
   async verify(filePath, owner) {
-    let output = "";
+    const unusable = await this.unusableGhReason();
+    if (unusable) {
+      return { success: false, skipped: true, error: unusable };
+    }
     const env = { GH_TOKEN: this.token };
-    for (const [key, value] of Object.entries(process.env)) {
+    for (const [key, value] of Object.entries(this.env)) {
       if (value !== void 0) {
         env[key] = value;
       }
     }
+    let output = "";
     let exitCode;
     try {
-      exitCode = await actionsExec.exec(
+      exitCode = await this.runner.exec(
         "gh",
-        ["attestation", "verify", filePath, "--owner", owner],
+        [
+          "attestation",
+          "verify",
+          filePath,
+          "--owner",
+          owner,
+          "--hostname",
+          "github.com"
+        ],
         {
           ignoreReturnCode: true,
           env,
@@ -45014,37 +45035,54 @@ var GhAttestationVerifier = class {
       );
     } catch (error3) {
       const message = error3 instanceof Error ? error3.message : String(error3);
-      const lowered = message.toLowerCase();
-      if (lowered.includes("unable to locate executable file") || lowered.includes("enoent") || lowered.includes("not found")) {
-        return {
-          success: false,
-          skipped: true,
-          error: "GitHub CLI not installed. Attestation verification skipped."
-        };
-      }
       return { success: false, error: message || "Verification failed" };
     }
     if (exitCode === 0) {
       return { success: true };
     }
-    if (exitCode === 4) {
+    if (output.includes("HTTP 404")) {
       return {
         success: false,
-        skipped: true,
-        error: "GitHub CLI not authenticated. Attestation verification skipped."
-      };
-    }
-    const outputLowered = output.toLowerCase();
-    if (exitCode === 127 || outputLowered.includes("unable to locate executable file") || outputLowered.includes("not found")) {
-      return {
-        success: false,
-        skipped: true,
-        error: "GitHub CLI not installed. Attestation verification skipped."
+        error: "No attestation was found for this archive."
       };
     }
     return { success: false, error: output || "Verification failed" };
   }
+  async unusableGhReason() {
+    let output = "";
+    try {
+      await this.runner.exec("gh", ["--version"], {
+        ignoreReturnCode: true,
+        silent: true,
+        listeners: {
+          stdout: (data) => {
+            output += data.toString();
+          }
+        }
+      });
+    } catch {
+      return "GitHub CLI (gh) is not installed.";
+    }
+    const match = output.match(/gh version (\d+)\.(\d+)\.(\d+)/);
+    if (!match) {
+      return "GitHub CLI (gh) did not report its version.";
+    }
+    const version = match.slice(1, 4).map(Number);
+    if (isOlder(version, MINIMUM_GH_VERSION)) {
+      return `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`;
+    }
+    return null;
+  }
 };
+function isOlder(version, minimum) {
+  for (const [i, min] of minimum.entries()) {
+    const part = version[i] ?? 0;
+    if (part !== min) {
+      return part < min;
+    }
+  }
+  return false;
+}
 
 // ../packages/shared/src/platform.ts
 function planDownload(os13, version) {
@@ -45117,11 +45155,11 @@ var StubbedAttestationVerifier = class {
         return { success: true };
       case "fail":
         return { success: false, error: "Stubbed failure" };
-      case "auth-failure":
+      case "gh-missing":
         return {
           success: false,
           skipped: true,
-          error: "GitHub CLI not authenticated"
+          error: "GitHub CLI (gh) is not installed."
         };
     }
   }
@@ -45253,7 +45291,7 @@ var Installer = class _Installer {
       if (attestationResult.skipped) {
         const warningDetails = attestationResult.error ? ` ${attestationResult.error}` : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped." + warningDetails + " For enhanced security, ensure the GitHub CLI is available and the github-token input is provided.",
+          "Sigstore attestation verification was skipped, so this run is unverified." + warningDetails + " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
           { title: "Attestation Verification Skipped" }
         );
       } else {
