@@ -1,5 +1,6 @@
 // Re-export from shared installer package
 export {
+  AttestationError,
   Installer,
   type InstallerOptions,
   type NullInstallerOptions,

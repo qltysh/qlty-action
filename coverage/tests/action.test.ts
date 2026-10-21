@@ -547,6 +547,39 @@ describe("CoverageAction", () => {
       ]);
     });
 
+    test.each([true, false])(
+      "fails on an attestation failure when skip-errors is %s",
+      async (skipErrors) => {
+        const { commands, action } = createTrackedAction({
+          settings: Settings.createNull({
+            "coverage-token": "qltcp_1234567890",
+            files: "info.lcov",
+            "skip-errors": skipErrors,
+          }),
+          installer: Installer.createNull({ attestationBehavior: "fail" }),
+        });
+
+        await expect(action.run()).rejects.toThrow(
+          "Sigstore attestation verification failed: Stubbed failure",
+        );
+        expect(commands.clear()).toEqual([]);
+      },
+    );
+
+    test("publishes when gh is missing and skip-errors is true", async () => {
+      const { commands, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+        installer: Installer.createNull({ attestationBehavior: "gh-missing" }),
+      });
+
+      await action.run();
+      expect(commands.clear()).toHaveLength(1);
+    });
+
     test("handles empty files array with spaces in the files input", async () => {
       const { output, action } = createTrackedAction({
         settings: Settings.createNull(

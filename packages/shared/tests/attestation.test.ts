@@ -71,22 +71,28 @@ describe("GhAttestationVerifier", () => {
     const result = await createVerifier(runner).verify("qlty.tar.xz", "qltysh");
     expect(result).toEqual({
       success: false,
-      error: "No attestation was found for this archive.",
+      error:
+        "gh exited with code 1. No attestation was found for this archive.",
     });
   });
 
   test.each([
-    { exitCode: 1, output: "HTTP 401: Bad credentials\n" },
-    { exitCode: 1, output: "error creating Sigstore verifier\n" },
+    { exitCode: 1, output: "HTTP 401: Bad credentials" },
+    { exitCode: 1, output: "error creating Sigstore verifier" },
     {
       exitCode: 4,
-      output: "To get started with GitHub CLI, please run: gh auth login\n",
+      output: "To get started with GitHub CLI, please run: gh auth login",
     },
-    { exitCode: 127, output: "gh: not found\n" },
+    { exitCode: 127, output: "gh: not found" },
   ])("fails when gh exits $exitCode", async ({ exitCode, output }) => {
-    const runner = new StubbedGhRunner({ verify: { exitCode, output } });
+    const runner = new StubbedGhRunner({
+      verify: { exitCode, output: `${output}\n` },
+    });
     const result = await createVerifier(runner).verify("qlty.tar.xz", "qltysh");
-    expect(result).toEqual({ success: false, error: output });
+    expect(result).toEqual({
+      success: false,
+      error: `gh exited with code ${exitCode}. ${output}`,
+    });
   });
 
   function createVerifier(

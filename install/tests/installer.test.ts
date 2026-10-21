@@ -95,11 +95,10 @@ describe("Installer", () => {
         os: new StubbedOperatingSystem("linux", "x64"),
         attestationVerifier: new StubbedAttestationVerifier("fail"),
       });
-      const result = await installer.install();
-      expect(result).toBeNull();
-      expect(output.failures).toEqual([
+      await expect(installer.install()).rejects.toThrow(
         "Sigstore attestation verification failed: Stubbed failure",
-      ]);
+      );
+      expect(output.paths).toEqual([]);
     });
 
     test("succeeds when attestation passes", async () => {

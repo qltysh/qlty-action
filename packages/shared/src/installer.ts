@@ -19,6 +19,13 @@ import {
 
 const DOWNLOAD_EVENT = "download";
 
+export class AttestationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AttestationError";
+  }
+}
+
 export interface InstallerOptions {
   version?: string | undefined;
 }
@@ -117,11 +124,9 @@ export class Installer {
           { title: "Attestation Verification Skipped" },
         );
       } else {
-        // Real verification failure - fatal
-        this._output.setFailed(
+        throw new AttestationError(
           `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
         );
-        return null;
       }
     } else {
       this._output.info("Attestation verified successfully");

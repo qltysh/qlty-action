@@ -87,14 +87,13 @@ export class GhAttestationVerifier implements AttestationVerifier {
       return { success: true };
     }
 
-    if (output.includes("HTTP 404")) {
-      return {
-        success: false,
-        error: "No attestation was found for this archive.",
-      };
-    }
-
-    return { success: false, error: output || "Verification failed" };
+    const detail = output.includes("HTTP 404")
+      ? "No attestation was found for this archive."
+      : output.trim() || "Verification failed.";
+    return {
+      success: false,
+      error: `gh exited with code ${exitCode}. ${detail}`,
+    };
   }
 
   private async unusableGhReason(): Promise<string | null> {

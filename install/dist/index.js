@@ -45040,13 +45040,11 @@ var GhAttestationVerifier = class {
     if (exitCode === 0) {
       return { success: true };
     }
-    if (output.includes("HTTP 404")) {
-      return {
-        success: false,
-        error: "No attestation was found for this archive."
-      };
-    }
-    return { success: false, error: output || "Verification failed" };
+    const detail = output.includes("HTTP 404") ? "No attestation was found for this archive." : output.trim() || "Verification failed.";
+    return {
+      success: false,
+      error: `gh exited with code ${exitCode}. ${detail}`
+    };
   }
   async unusableGhReason() {
     let output = "";
@@ -45231,6 +45229,12 @@ var StubbedOutput = class {
 
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
+var AttestationError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "AttestationError";
+  }
+};
 var Installer = class _Installer {
   constructor(os13, output, toolCache, attestationVerifier, version) {
     __publicField(this, "_os");
@@ -45295,10 +45299,9 @@ var Installer = class _Installer {
           { title: "Attestation Verification Skipped" }
         );
       } else {
-        this._output.setFailed(
+        throw new AttestationError(
           `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`
         );
-        return null;
       }
     } else {
       this._output.info("Attestation verified successfully");

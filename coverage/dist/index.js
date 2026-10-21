@@ -122157,13 +122157,11 @@ var GhAttestationVerifier = class {
     if (exitCode === 0) {
       return { success: true };
     }
-    if (output.includes("HTTP 404")) {
-      return {
-        success: false,
-        error: "No attestation was found for this archive."
-      };
-    }
-    return { success: false, error: output || "Verification failed" };
+    const detail = output.includes("HTTP 404") ? "No attestation was found for this archive." : output.trim() || "Verification failed.";
+    return {
+      success: false,
+      error: `gh exited with code ${exitCode}. ${detail}`
+    };
   }
   async unusableGhReason() {
     let output = "";
@@ -122348,6 +122346,12 @@ var StubbedOutput = class {
 
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
+var AttestationError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "AttestationError";
+  }
+};
 var Installer = class _Installer {
   constructor(os21, output, toolCache, attestationVerifier, version) {
     __publicField(this, "_os");
@@ -122412,10 +122416,9 @@ var Installer = class _Installer {
           { title: "Attestation Verification Skipped" }
         );
       } else {
-        this._output.setFailed(
+        throw new AttestationError(
           `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`
         );
-        return null;
       }
     } else {
       this._output.info("Attestation verified successfully");
@@ -134047,6 +134050,9 @@ var CoverageAction = class _CoverageAction {
     try {
       qltyBinary = await this._installer.install();
     } catch (error4) {
+      if (error4 instanceof AttestationError) {
+        throw error4;
+      }
       const errorMessage = error4 instanceof Error ? `: ${error4.message}.` : ".";
       this.reportOrFail([
         `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`

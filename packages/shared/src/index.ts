@@ -1,5 +1,6 @@
 // Main exports
 export {
+  AttestationError,
   Installer,
   type InstallerOptions,
   type NullInstallerOptions,
