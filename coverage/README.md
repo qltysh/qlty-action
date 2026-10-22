@@ -85,7 +85,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 | `verbose`                 | Display debug logs along with coverage data                                                                                                                                                                            | No       | `false`   |
 | `add-prefix`              | Prefix to add to file paths                                                                                                                                                                                            | No       | -         |
 | `strip-prefix`            | Prefix to remove from file paths                                                                                                                                                                                       | No       | -         |
-| `skip-errors`             | If coverage upload fails, do not fail the CI build occur                                                                                                                                                               | No       | `true`    |
+| `skip-errors`             | Report coverage errors without failing the CI build. See [What `skip-errors` covers](#what-skip-errors-covers)                                                                                                         | No       | `true`    |
 | `skip-missing-files`      | Files not in the directory are skipped                                                                                                                                                                                 | No       | `false`   |
 | `tag`                     | Tag to associate with the coverage data                                                                                                                                                                                | No       | -         |
 | `cli-version`             | Specific version of the Qlty CLI to use (e.g., '1.0.1'). If not specified, will install the latest version.                                                                                                            | No       |           |
@@ -98,9 +98,19 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 
 \*Required when command is 'publish'. Not applicable when command is 'complete'.
 
+## What `skip-errors` covers
+
+`skip-errors` keeps a problem with Qlty, or with a service the action depends on, from failing your build. With `skip-errors: true`, the default, the step logs these errors and passes:
+
+- The coverage upload fails.
+- The Qlty CLI can't be downloaded, or it exits with an error.
+- The attestation check can't finish because GitHub or Sigstore is unavailable, for example a 5xx response, a rate limit or a timeout. The action doesn't run the CLI, so that run uploads no coverage.
+
+`skip-errors` never lets an unverified Qlty CLI run. If the attestation check finishes and rejects the CLI, for example because no attestation matches the downloaded archive, the step fails even with `skip-errors: true`.
+
 ## Verifying the Qlty CLI
 
-Before it runs the Qlty CLI, the action checks the CLI's attestation with the [GitHub CLI](https://cli.github.com/) (`gh`). If the check fails, the step fails, even with `skip-errors: true`, and the CLI never runs.
+Before it runs the Qlty CLI, the action checks the CLI's attestation with the [GitHub CLI](https://cli.github.com/) (`gh`). If the check rejects the CLI, the step fails, even with `skip-errors: true`, and the CLI never runs. If the check can't finish because GitHub is unavailable, the CLI doesn't run either, and `skip-errors` decides whether the step fails.
 
 The check needs `gh` 2.67.0 or later on the machine that runs the step. GitHub-hosted runners include it. Self-hosted runners and `container:` jobs often don't; without a usable `gh`, the action logs a warning that the run is unverified and continues. Install `gh` there to verify.
 

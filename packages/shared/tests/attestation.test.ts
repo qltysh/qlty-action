@@ -78,7 +78,13 @@ describe("GhAttestationVerifier", () => {
 
   test.each([
     { exitCode: 1, output: "HTTP 401: Bad credentials" },
-    { exitCode: 1, output: "error creating Sigstore verifier" },
+    { exitCode: 1, output: "Error: no attestations found" },
+    { exitCode: 1, output: 'Error: verifying with issuer "sigstore.dev"' },
+    {
+      exitCode: 1,
+      output:
+        'Error: Get "https://api.github.com/orgs/qltysh/attestations/sha256:abc": tls: failed to verify certificate: x509: certificate signed by unknown authority',
+    },
     {
       exitCode: 4,
       output: "To get started with GitHub CLI, please run: gh auth login",
@@ -92,6 +98,30 @@ describe("GhAttestationVerifier", () => {
     expect(result).toEqual({
       success: false,
       error: `gh exited with code ${exitCode}. ${output}`,
+    });
+  });
+
+  test.each([
+    "Error: HTTP 500: Internal Server Error (https://api.github.com/orgs/qltysh/attestations/sha256:abc)",
+    "Error: HTTP 502: 502 Bad Gateway (https://api.github.com/orgs/qltysh/attestations/sha256:abc)",
+    "Error: HTTP 503: Service Unavailable (https://api.github.com/orgs/qltysh/attestations/sha256:abc)",
+    "Error: HTTP 429: Too Many Requests (https://api.github.com/orgs/qltysh/attestations/sha256:abc)",
+    "Error: HTTP 403: API rate limit exceeded for installation ID 1. (https://api.github.com/orgs/qltysh/attestations/sha256:abc)",
+    'Error: Get "https://api.github.com/orgs/qltysh/attestations/sha256:abc": net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)',
+    'Error: Get "https://api.github.com/orgs/qltysh/attestations/sha256:abc": read tcp 10.0.0.2:50000->140.82.112.6:443: read: connection reset by peer',
+    'Error: Get "https://api.github.com/orgs/qltysh/attestations/sha256:abc": EOF',
+    'Error: Get "https://api.github.com/orgs/qltysh/attestations/sha256:abc": stream error: stream ID 1; INTERNAL_ERROR; received from peer',
+    'Error: Get "https://api.github.com/orgs/qltysh/attestations/sha256:abc": dial tcp: lookup api.github.com on 127.0.0.53:53: server misbehaving',
+    "error creating Sigstore verifier: no valid Sigstore verifiers could be initialized",
+  ])("reports the check as unavailable when gh prints %s", async (output) => {
+    const runner = new StubbedGhRunner({
+      verify: { exitCode: 1, output: `${output}\n` },
+    });
+    const result = await createVerifier(runner).verify("qlty.tar.xz", "qltysh");
+    expect(result).toEqual({
+      success: false,
+      unavailable: true,
+      error: `gh exited with code 1. ${output}`,
     });
   });
 

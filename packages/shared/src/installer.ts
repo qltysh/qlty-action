@@ -26,6 +26,13 @@ export class AttestationError extends Error {
   }
 }
 
+export class AttestationUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AttestationUnavailableError";
+  }
+}
+
 export interface InstallerOptions {
   version?: string | undefined;
 }
@@ -122,6 +129,10 @@ export class Installer {
             warningDetails +
             " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
           { title: "Attestation Verification Skipped" },
+        );
+      } else if (attestationResult.unavailable) {
+        throw new AttestationUnavailableError(
+          `Sigstore attestation verification could not finish, so the Qlty CLI was not installed: ${attestationResult.error ?? "Unknown error"}`,
         );
       } else {
         throw new AttestationError(

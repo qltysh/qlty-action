@@ -1,4 +1,9 @@
-import { AttestationError, Installer, OutputTracker } from "./installer";
+import {
+  AttestationError,
+  AttestationUnavailableError,
+  Installer,
+  OutputTracker,
+} from "./installer";
 import { Settings } from "./settings";
 import * as actionsExec from "@actions/exec";
 import * as actionsCore from "@actions/core";
@@ -91,6 +96,10 @@ export class CoverageAction {
     } catch (error) {
       if (error instanceof AttestationError) {
         throw error;
+      }
+      if (error instanceof AttestationUnavailableError) {
+        this.reportOrFail([error.message]);
+        return;
       }
       const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
       this.reportOrFail([
