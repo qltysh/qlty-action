@@ -104,7 +104,7 @@ Before it runs the Qlty CLI, the action checks the CLI's attestation with the [G
 
 The check needs `gh` 2.67.0 or later on the machine that runs the step. GitHub-hosted runners include it. Self-hosted runners and `container:` jobs often don't; without a usable `gh`, the action logs a warning that the run is unverified and continues. Install `gh` there to verify.
 
-If you set `cli-version`, use a release with an attestation (0.549.0 or later). We recommend the latest release.
+If you set `cli-version`, use a release with an attestation (0.554.0 or later). We recommend the latest release.
 
 ---
 

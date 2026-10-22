@@ -82,3 +82,21 @@ jobs:
 
       - name: Run Qlty CLI
         run: qlty --version
+
+  test-install-on-hosted-runners:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install Qlty CLI
+        uses: ./install
+
+      - name: Run Qlty CLI
+        run: qlty --version
