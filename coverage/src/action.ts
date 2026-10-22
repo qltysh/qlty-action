@@ -1,4 +1,4 @@
-import { Installer, OutputTracker } from "./installer";
+import { AttestationError, Installer, OutputTracker } from "./installer";
 import { Settings } from "./settings";
 import * as actionsExec from "@actions/exec";
 import * as actionsCore from "@actions/core";
@@ -89,6 +89,9 @@ export class CoverageAction {
     try {
       qltyBinary = await this._installer.install();
     } catch (error) {
+      if (error instanceof AttestationError) {
+        throw error;
+      }
       const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
       this.reportOrFail([
         `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`,

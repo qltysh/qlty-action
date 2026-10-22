@@ -1,5 +1,6 @@
 // Main exports
 export {
+  AttestationError,
   Installer,
   type InstallerOptions,
   type NullInstallerOptions,
@@ -10,6 +11,7 @@ export {
   GhAttestationVerifier,
   type AttestationResult,
   type AttestationVerifier,
+  type CommandRunner,
 } from "./attestation.js";
 
 // Platform detection
@@ -21,6 +23,7 @@ export type { ToolCache, OperatingSystem, ActionOutput } from "./interfaces.js";
 // Test stubs
 export {
   StubbedAttestationVerifier,
+  StubbedGhRunner,
   StubbedOperatingSystem,
   StubbedToolCache,
   StubbedOutput,

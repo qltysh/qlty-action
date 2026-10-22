@@ -19,6 +19,13 @@ import {
 
 const DOWNLOAD_EVENT = "download";
 
+export class AttestationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AttestationError";
+  }
+}
+
 export interface InstallerOptions {
   version?: string | undefined;
 }
@@ -111,17 +118,15 @@ export class Installer {
           ? ` ${attestationResult.error}`
           : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped." +
+          "Sigstore attestation verification was skipped, so this run is unverified." +
             warningDetails +
-            " For enhanced security, ensure the GitHub CLI is available and the github-token input is provided.",
+            " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
           { title: "Attestation Verification Skipped" },
         );
       } else {
-        // Real verification failure - fatal
-        this._output.setFailed(
+        throw new AttestationError(
           `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
         );
-        return null;
       }
     } else {
       this._output.info("Attestation verified successfully");

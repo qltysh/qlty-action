@@ -98,6 +98,14 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 
 \*Required when command is 'publish'. Not applicable when command is 'complete'.
 
+## Verifying the Qlty CLI
+
+Before it runs the Qlty CLI, the action checks the CLI's attestation with the [GitHub CLI](https://cli.github.com/) (`gh`). If the check fails, the step fails, even with `skip-errors: true`, and the CLI never runs.
+
+The check needs `gh` 2.67.0 or later on the machine that runs the step. GitHub-hosted runners include it. Self-hosted runners and `container:` jobs often don't; without a usable `gh`, the action logs a warning that the run is unverified and continues. Install `gh` there to verify.
+
+If you set `cli-version`, use a release with an attestation (0.549.0 or later). We recommend the latest release.
+
 ---
 
 ## 📚 Examples

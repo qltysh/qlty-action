@@ -30370,7 +30370,7 @@ var require_exec = __commonJS({
     exports2.getExecOutput = exports2.exec = void 0;
     var string_decoder_1 = require("string_decoder");
     var tr2 = __importStar(require_toolrunner());
-    function exec5(commandLine, args, options) {
+    function exec4(commandLine, args, options) {
       return __awaiter17(this, void 0, void 0, function* () {
         const commandArgs = tr2.argStringToArray(commandLine);
         if (commandArgs.length === 0) {
@@ -30382,7 +30382,7 @@ var require_exec = __commonJS({
         return runner.exec();
       });
     }
-    exports2.exec = exec5;
+    exports2.exec = exec4;
     function getExecOutput3(commandLine, args, options) {
       var _a3, _b;
       return __awaiter17(this, void 0, void 0, function* () {
@@ -30405,7 +30405,7 @@ var require_exec = __commonJS({
           }
         };
         const listeners = Object.assign(Object.assign({}, options === null || options === void 0 ? void 0 : options.listeners), { stdout: stdOutListener, stderr: stdErrListener });
-        const exitCode = yield exec5(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
+        const exitCode = yield exec4(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
         stdout += stdoutDecoder.end();
         stderr += stderrDecoder.end();
         return {
@@ -72468,7 +72468,7 @@ function handlePromiseResponse(execResponse, span) {
     throw err;
   }).finally(() => span.end());
 }
-function handleCallbackResponse(callback, exec5, originalThis, span, args) {
+function handleCallbackResponse(callback, exec4, originalThis, span, args) {
   let callbackArgumentIndex = 0;
   if (args.length === 2) {
     callbackArgumentIndex = 1;
@@ -72482,7 +72482,7 @@ function handleCallbackResponse(callback, exec5, originalThis, span, args) {
     span.end();
     return callback(err, response);
   };
-  return exec5.apply(originalThis, args);
+  return exec4.apply(originalThis, args);
 }
 
 // ../node_modules/@sentry/node/build/esm/integrations/tracing/mongoose/vendored/mongoose.js
@@ -72587,7 +72587,7 @@ var MongooseInstrumentation = class extends import_instrumentation17.Instrumenta
   patchAggregateExec() {
     const self2 = this;
     return (originalAggregate) => {
-      return function exec5(callback) {
+      return function exec4(callback) {
         const parentSpan = this[_STORED_PARENT_SPAN];
         const span = self2._startSpan(this._model.collection, this._model?.modelName, "aggregate", parentSpan);
         return self2._handleResponse(span, originalAggregate, this, arguments, callback);
@@ -72597,7 +72597,7 @@ var MongooseInstrumentation = class extends import_instrumentation17.Instrumenta
   patchQueryExec() {
     const self2 = this;
     return (originalExec) => {
-      return function exec5(callback) {
+      return function exec4(callback) {
         if (this[_ALREADY_INSTRUMENTED]) {
           return originalExec.apply(this, arguments);
         }
@@ -72690,12 +72690,12 @@ var MongooseInstrumentation = class extends import_instrumentation17.Instrumenta
       parentSpan
     });
   }
-  _handleResponse(span, exec5, originalThis, args, callback) {
+  _handleResponse(span, exec4, originalThis, args, callback) {
     return withActiveSpan(span, () => {
       if (callback instanceof Function) {
-        return handleCallbackResponse(callback, exec5, originalThis, span, args);
+        return handleCallbackResponse(callback, exec4, originalThis, span, args);
       } else {
-        const response = exec5.apply(originalThis, args);
+        const response = exec4.apply(originalThis, args);
         return handlePromiseResponse(response, span);
       }
     });
@@ -81831,23 +81831,44 @@ var import_node_events4 = __toESM(require("node:events"), 1);
 
 // ../packages/shared/src/attestation.ts
 var actionsExec = __toESM(require_exec(), 1);
+var MINIMUM_GH_VERSION = [2, 67, 0];
 var GhAttestationVerifier = class {
-  constructor(token) {
+  constructor(token, {
+    runner = actionsExec,
+    env = process.env
+  } = {}) {
+    __publicField(this, "token");
+    __publicField(this, "runner");
+    __publicField(this, "env");
     this.token = token;
+    this.runner = runner;
+    this.env = env;
   }
   async verify(filePath, owner) {
-    let output = "";
+    const unusable = await this.unusableGhReason();
+    if (unusable) {
+      return { success: false, skipped: true, error: unusable };
+    }
     const env = { GH_TOKEN: this.token };
-    for (const [key, value] of Object.entries(process.env)) {
+    for (const [key, value] of Object.entries(this.env)) {
       if (value !== void 0) {
         env[key] = value;
       }
     }
+    let output = "";
     let exitCode;
     try {
-      exitCode = await actionsExec.exec(
+      exitCode = await this.runner.exec(
         "gh",
-        ["attestation", "verify", filePath, "--owner", owner],
+        [
+          "attestation",
+          "verify",
+          filePath,
+          "--owner",
+          owner,
+          "--hostname",
+          "github.com"
+        ],
         {
           ignoreReturnCode: true,
           env,
@@ -81863,37 +81884,52 @@ var GhAttestationVerifier = class {
       );
     } catch (error4) {
       const message = error4 instanceof Error ? error4.message : String(error4);
-      const lowered = message.toLowerCase();
-      if (lowered.includes("unable to locate executable file") || lowered.includes("enoent") || lowered.includes("not found")) {
-        return {
-          success: false,
-          skipped: true,
-          error: "GitHub CLI not installed. Attestation verification skipped."
-        };
-      }
       return { success: false, error: message || "Verification failed" };
     }
     if (exitCode === 0) {
       return { success: true };
     }
-    if (exitCode === 4) {
-      return {
-        success: false,
-        skipped: true,
-        error: "GitHub CLI not authenticated. Attestation verification skipped."
-      };
+    const detail = output.includes("HTTP 404") ? "No attestation was found for this archive." : output.trim() || "Verification failed.";
+    return {
+      success: false,
+      error: `gh exited with code ${exitCode}. ${detail}`
+    };
+  }
+  async unusableGhReason() {
+    let output = "";
+    try {
+      await this.runner.exec("gh", ["--version"], {
+        ignoreReturnCode: true,
+        silent: true,
+        listeners: {
+          stdout: (data) => {
+            output += data.toString();
+          }
+        }
+      });
+    } catch {
+      return "GitHub CLI (gh) is not installed.";
     }
-    const outputLowered = output.toLowerCase();
-    if (exitCode === 127 || outputLowered.includes("unable to locate executable file") || outputLowered.includes("not found")) {
-      return {
-        success: false,
-        skipped: true,
-        error: "GitHub CLI not installed. Attestation verification skipped."
-      };
+    const match = output.match(/gh version (\d+)\.(\d+)\.(\d+)/);
+    if (!match) {
+      return "GitHub CLI (gh) did not report its version.";
     }
-    return { success: false, error: output || "Verification failed" };
+    const version = match.slice(1, 4).map(Number);
+    if (isOlder(version, MINIMUM_GH_VERSION)) {
+      return `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`;
+    }
+    return null;
   }
 };
+function isOlder(version, minimum) {
+  for (const [i2, min] of minimum.entries()) {
+    const part = version[i2] ?? 0;
+    if (part !== min) {
+      return part < min;
+    }
+  }
+  return false;
+}
 
 // ../packages/shared/src/platform.ts
 function planDownload(os15, version) {
@@ -81966,11 +82002,11 @@ var StubbedAttestationVerifier = class {
         return { success: true };
       case "fail":
         return { success: false, error: "Stubbed failure" };
-      case "auth-failure":
+      case "gh-missing":
         return {
           success: false,
           skipped: true,
-          error: "GitHub CLI not authenticated"
+          error: "GitHub CLI (gh) is not installed."
         };
     }
   }
@@ -82042,6 +82078,12 @@ var StubbedOutput = class {
 
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
+var AttestationError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "AttestationError";
+  }
+};
 var Installer = class _Installer {
   constructor(os15, output, toolCache, attestationVerifier, version) {
     __publicField(this, "_os");
@@ -82102,14 +82144,13 @@ var Installer = class _Installer {
       if (attestationResult.skipped) {
         const warningDetails = attestationResult.error ? ` ${attestationResult.error}` : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped." + warningDetails + " For enhanced security, ensure the GitHub CLI is available and the github-token input is provided.",
+          "Sigstore attestation verification was skipped, so this run is unverified." + warningDetails + " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
           { title: "Attestation Verification Skipped" }
         );
       } else {
-        this._output.setFailed(
+        throw new AttestationError(
           `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`
         );
-        return null;
       }
     } else {
       this._output.info("Attestation verified successfully");

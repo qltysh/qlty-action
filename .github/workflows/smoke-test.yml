@@ -49,3 +49,36 @@ jobs:
 
       - name: Run fmt action
         uses: ./fmt
+
+  test-install-without-token-permissions:
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install Qlty CLI
+        uses: ./install
+
+      - name: Run Qlty CLI
+        run: qlty --version
+
+  test-install-in-container-without-gh:
+    runs-on: ubuntu-latest
+    container: debian:13-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install xz for the CLI archive
+        run: apt-get update -qq && apt-get install -y -qq xz-utils
+
+      - name: Install Qlty CLI
+        uses: ./install
+
+      - name: Run Qlty CLI
+        run: qlty --version
