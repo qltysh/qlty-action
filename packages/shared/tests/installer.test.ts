@@ -111,6 +111,19 @@ describe("Installer", () => {
       expect(output.paths).toEqual([]);
     });
 
+    test("fails without installing when the check cannot finish", async () => {
+      const { output, installer } = createTrackedInstaller({
+        os: new StubbedOperatingSystem("linux", "x64"),
+        attestationVerifier: new StubbedAttestationVerifier("unavailable"),
+      });
+      await expect(installer.install()).rejects.toMatchObject({
+        name: "AttestationUnavailableError",
+        message:
+          "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage",
+      });
+      expect(output.paths).toEqual([]);
+    });
+
     test("succeeds when attestation passes", async () => {
       const attestationVerifier = new StubbedAttestationVerifier("success");
       const { installer } = createTrackedInstaller({

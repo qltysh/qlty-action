@@ -566,6 +566,39 @@ describe("CoverageAction", () => {
       },
     );
 
+    test("reports without running the CLI when the attestation check cannot finish and skip-errors is true", async () => {
+      const { output, commands, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+        installer: Installer.createNull({ attestationBehavior: "unavailable" }),
+      });
+
+      await action.run();
+      expect(output.errors).toEqual([
+        "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage",
+      ]);
+      expect(commands.clear()).toEqual([]);
+    });
+
+    test("fails when the attestation check cannot finish and skip-errors is false", async () => {
+      const { commands, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+        installer: Installer.createNull({ attestationBehavior: "unavailable" }),
+      });
+
+      await expect(action.run()).rejects.toThrow(
+        "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage",
+      );
+      expect(commands.clear()).toEqual([]);
+    });
+
     test("publishes when gh is missing and skip-errors is true", async () => {
       const { commands, action } = createTrackedAction({
         settings: Settings.createNull({

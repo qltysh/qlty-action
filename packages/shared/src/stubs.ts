@@ -6,7 +6,11 @@ import type {
   CommandRunner,
 } from "./attestation.js";
 
-export type AttestationBehavior = "success" | "fail" | "gh-missing";
+export type AttestationBehavior =
+  | "success"
+  | "fail"
+  | "unavailable"
+  | "gh-missing";
 
 export interface StubbedCommandResult {
   exitCode?: number;
@@ -61,6 +65,8 @@ export class StubbedAttestationVerifier implements AttestationVerifier {
         return { success: true };
       case "fail":
         return { success: false, error: "Stubbed failure" };
+      case "unavailable":
+        return { success: false, unavailable: true, error: "Stubbed outage" };
       case "gh-missing":
         return {
           success: false,

@@ -3,6 +3,7 @@ import * as actionsExec from "@actions/exec";
 export interface AttestationResult {
   success: boolean;
   skipped?: boolean;
+  unavailable?: boolean;
   error?: string;
 }
 
@@ -20,6 +21,20 @@ export interface CommandRunner {
 
 // gh 2.49.0 through 2.66.x can exit 0 when no attestation matches (CVE-2025-25204).
 const MINIMUM_GH_VERSION = [2, 67, 0];
+
+// gh exits 1 for most failures, so only its output tells an outage from a rejected archive.
+const UNAVAILABLE_OUTPUT = [
+  /HTTP 5\d\d\b/,
+  /HTTP 429\b/,
+  /rate limit exceeded/i,
+  /timeout|deadline exceeded/i,
+  /connection (reset|refused)/i,
+  /\bEOF\b/,
+  /stream error/i,
+  /no such host|server misbehaving|name resolution/i,
+  /network is unreachable|no route to host/i,
+  /error creating Sigstore verifier/,
+];
 
 export class GhAttestationVerifier implements AttestationVerifier {
   private token: string;
@@ -87,13 +102,18 @@ export class GhAttestationVerifier implements AttestationVerifier {
       return { success: true };
     }
 
-    const detail = output.includes("HTTP 404")
-      ? "No attestation was found for this archive."
-      : output.trim() || "Verification failed.";
-    return {
-      success: false,
-      error: `gh exited with code ${exitCode}. ${detail}`,
-    };
+    if (output.includes("HTTP 404")) {
+      return {
+        success: false,
+        error: `gh exited with code ${exitCode}. No attestation was found for this archive.`,
+      };
+    }
+
+    const error = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
+    if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
+      return { success: false, unavailable: true, error };
+    }
+    return { success: false, error };
   }
 
   private async unusableGhReason(): Promise<string | null> {

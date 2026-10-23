@@ -122100,6 +122100,18 @@ var import_node_events4 = __toESM(require("node:events"), 1);
 // ../packages/shared/src/attestation.ts
 var actionsExec = __toESM(require_exec(), 1);
 var MINIMUM_GH_VERSION = [2, 67, 0];
+var UNAVAILABLE_OUTPUT = [
+  /HTTP 5\d\d\b/,
+  /HTTP 429\b/,
+  /rate limit exceeded/i,
+  /timeout|deadline exceeded/i,
+  /connection (reset|refused)/i,
+  /\bEOF\b/,
+  /stream error/i,
+  /no such host|server misbehaving|name resolution/i,
+  /network is unreachable|no route to host/i,
+  /error creating Sigstore verifier/
+];
 var GhAttestationVerifier = class {
   constructor(token, {
     runner = actionsExec,
@@ -122150,18 +122162,24 @@ var GhAttestationVerifier = class {
           }
         }
       );
-    } catch (error4) {
-      const message = error4 instanceof Error ? error4.message : String(error4);
+    } catch (error5) {
+      const message = error5 instanceof Error ? error5.message : String(error5);
       return { success: false, error: message || "Verification failed" };
     }
     if (exitCode === 0) {
       return { success: true };
     }
-    const detail = output.includes("HTTP 404") ? "No attestation was found for this archive." : output.trim() || "Verification failed.";
-    return {
-      success: false,
-      error: `gh exited with code ${exitCode}. ${detail}`
-    };
+    if (output.includes("HTTP 404")) {
+      return {
+        success: false,
+        error: `gh exited with code ${exitCode}. No attestation was found for this archive.`
+      };
+    }
+    const error4 = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
+    if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
+      return { success: false, unavailable: true, error: error4 };
+    }
+    return { success: false, error: error4 };
   }
   async unusableGhReason() {
     let output = "";
@@ -122270,6 +122288,8 @@ var StubbedAttestationVerifier = class {
         return { success: true };
       case "fail":
         return { success: false, error: "Stubbed failure" };
+      case "unavailable":
+        return { success: false, unavailable: true, error: "Stubbed outage" };
       case "gh-missing":
         return {
           success: false,
@@ -122352,6 +122372,12 @@ var AttestationError = class extends Error {
     this.name = "AttestationError";
   }
 };
+var AttestationUnavailableError = class extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "AttestationUnavailableError";
+  }
+};
 var Installer = class _Installer {
   constructor(os21, output, toolCache, attestationVerifier, version) {
     __publicField(this, "_os");
@@ -122414,6 +122440,10 @@ var Installer = class _Installer {
         this._output.warning(
           "Sigstore attestation verification was skipped, so this run is unverified." + warningDetails + " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
           { title: "Attestation Verification Skipped" }
+        );
+      } else if (attestationResult.unavailable) {
+        throw new AttestationUnavailableError(
+          `Sigstore attestation verification could not finish, so the Qlty CLI was not installed: ${attestationResult.error ?? "Unknown error"}`
         );
       } else {
         throw new AttestationError(
@@ -134052,6 +134082,10 @@ var CoverageAction = class _CoverageAction {
     } catch (error4) {
       if (error4 instanceof AttestationError) {
         throw error4;
+      }
+      if (error4 instanceof AttestationUnavailableError) {
+        this.reportOrFail([error4.message]);
+        return;
       }
       const errorMessage = error4 instanceof Error ? `: ${error4.message}.` : ".";
       this.reportOrFail([

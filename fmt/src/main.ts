@@ -40,7 +40,11 @@ export async function runWithTracing(): Promise<void> {
           });
         })
         .catch((error) => {
-          core.setFailed(`Action failed with error: ${error.name}`);
+          core.setFailed(
+            error instanceof FmtError
+              ? `Action failed with error: ${error.name}`
+              : `Action failed with error: ${error.name}: ${error.message}`,
+          );
           Sentry.addBreadcrumb({
             category: "qlty-fmt.log",
             level: "log",
