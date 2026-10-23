@@ -5,7 +5,10 @@ import path from "node:path";
 import EventEmitter from "node:events";
 
 import type { ToolCache, OperatingSystem, ActionOutput } from "./interfaces.js";
-import type { AttestationVerifier } from "./attestation.js";
+import type {
+  AttestationFailureKind,
+  AttestationVerifier,
+} from "./attestation.js";
 import { GhAttestationVerifier } from "./attestation.js";
 import { planDownload, type DownloadPlan } from "./platform.js";
 import OutputTracker from "./output-tracker.js";
@@ -20,9 +23,18 @@ import {
 const DOWNLOAD_EVENT = "download";
 
 export class AttestationError extends Error {
-  constructor(message: string) {
+  readonly kind: AttestationFailureKind;
+
+  constructor({
+    message,
+    kind,
+  }: {
+    message: string;
+    kind: AttestationFailureKind;
+  }) {
     super(message);
     this.name = "AttestationError";
+    this.kind = kind;
   }
 }
 
@@ -124,9 +136,12 @@ export class Installer {
           { title: "Attestation Verification Skipped" },
         );
       } else {
-        throw new AttestationError(
-          `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
-        );
+        const kind = attestationResult.kind ?? "rejected";
+        const outcome = kind === "unavailable" ? "was unavailable" : "failed";
+        throw new AttestationError({
+          message: `Sigstore attestation verification ${outcome}: ${attestationResult.error ?? "Unknown error"}`,
+          kind,
+        });
       }
     } else {
       this._output.info("Attestation verified successfully");

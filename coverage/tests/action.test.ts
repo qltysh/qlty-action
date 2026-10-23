@@ -580,6 +580,40 @@ describe("CoverageAction", () => {
       expect(commands.clear()).toHaveLength(1);
     });
 
+    test("reports an error without running the CLI when verification is unavailable and skip-errors is true", async () => {
+      const { output, commands, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+        installer: Installer.createNull({ attestationBehavior: "unavailable" }),
+      });
+
+      await action.run();
+      expect(output.errors).toEqual([
+        "Sigstore attestation verification was unavailable: Stubbed outage",
+        "The Qlty CLI did not run.",
+      ]);
+      expect(commands.clear()).toEqual([]);
+    });
+
+    test("fails when verification is unavailable and skip-errors is false", async () => {
+      const { commands, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+        installer: Installer.createNull({ attestationBehavior: "unavailable" }),
+      });
+
+      await expect(action.run()).rejects.toThrow(
+        "Sigstore attestation verification was unavailable: Stubbed outage; The Qlty CLI did not run.",
+      );
+      expect(commands.clear()).toEqual([]);
+    });
+
     test("handles empty files array with spaces in the files input", async () => {
       const { output, action } = createTrackedAction({
         settings: Settings.createNull(

@@ -1,8 +1,11 @@
 import * as actionsExec from "@actions/exec";
 
+export type AttestationFailureKind = "rejected" | "unavailable";
+
 export interface AttestationResult {
   success: boolean;
   skipped?: boolean;
+  kind?: AttestationFailureKind;
   error?: string;
 }
 
@@ -20,6 +23,17 @@ export interface CommandRunner {
 
 // gh 2.49.0 through 2.66.x can exit 0 when no attestation matches (CVE-2025-25204).
 const MINIMUM_GH_VERSION = [2, 67, 0];
+
+// gh exits 1 for every failure, so the text decides: `HTTP <status>` is go-gh's format,
+// `Get "<url>"` is Go's, and the rest are gh's own Sigstore and bundle-fetch messages.
+const UNAVAILABLE_OUTPUT = [
+  /\bHTTP (401|403|429|5\d\d)\b/,
+  /\bGet "https?:\/\//,
+  /Sigstore verifier/,
+  /verifier is not available/,
+  /failed to fetch bundle/,
+  /error getting trust domain/,
+];
 
 export class GhAttestationVerifier implements AttestationVerifier {
   private token: string;
@@ -80,7 +94,11 @@ export class GhAttestationVerifier implements AttestationVerifier {
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return { success: false, error: message || "Verification failed" };
+      return {
+        success: false,
+        kind: "unavailable",
+        error: message || "Verification failed",
+      };
     }
 
     if (exitCode === 0) {
@@ -92,6 +110,7 @@ export class GhAttestationVerifier implements AttestationVerifier {
       : output.trim() || "Verification failed.";
     return {
       success: false,
+      kind: failureKind(exitCode, output),
       error: `gh exited with code ${exitCode}. ${detail}`,
     };
   }
@@ -124,6 +143,13 @@ export class GhAttestationVerifier implements AttestationVerifier {
 
     return null;
   }
+}
+
+function failureKind(exitCode: number, output: string): AttestationFailureKind {
+  const unavailable =
+    exitCode === 4 ||
+    UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output));
+  return unavailable ? "unavailable" : "rejected";
 }
 
 function isOlder(version: number[], minimum: number[]): boolean {

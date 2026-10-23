@@ -105,10 +105,39 @@ describe("Installer", () => {
         os: new StubbedOperatingSystem("linux", "x64"),
         attestationVerifier: new StubbedAttestationVerifier("fail"),
       });
-      await expect(installer.install()).rejects.toThrow(
-        "Sigstore attestation verification failed: Stubbed failure",
-      );
+      await expect(installer.install()).rejects.toMatchObject({
+        name: "AttestationError",
+        kind: "rejected",
+        message: "Sigstore attestation verification failed: Stubbed failure",
+      });
       expect(output.paths).toEqual([]);
+    });
+
+    test("fails with the unavailable kind when verification cannot run", async () => {
+      const { output, installer } = createTrackedInstaller({
+        os: new StubbedOperatingSystem("linux", "x64"),
+        attestationVerifier: new StubbedAttestationVerifier("unavailable"),
+      });
+      await expect(installer.install()).rejects.toMatchObject({
+        name: "AttestationError",
+        kind: "unavailable",
+        message:
+          "Sigstore attestation verification was unavailable: Stubbed outage",
+      });
+      expect(output.paths).toEqual([]);
+    });
+
+    test("treats a failure without a kind as rejected", async () => {
+      const installer = new Installer(
+        new StubbedOperatingSystem("linux", "x64"),
+        new StubbedOutput(),
+        new StubbedToolCache(),
+        { verify: async () => ({ success: false, error: "Legacy failure" }) },
+      );
+      await expect(installer.install()).rejects.toMatchObject({
+        kind: "rejected",
+        message: "Sigstore attestation verification failed: Legacy failure",
+      });
     });
 
     test("succeeds when attestation passes", async () => {
