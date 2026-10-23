@@ -9,6 +9,7 @@ export {
 // Attestation
 export {
   GhAttestationVerifier,
+  type AttestationFailureKind,
   type AttestationResult,
   type AttestationVerifier,
   type CommandRunner,

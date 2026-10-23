@@ -122100,6 +122100,14 @@ var import_node_events4 = __toESM(require("node:events"), 1);
 // ../packages/shared/src/attestation.ts
 var actionsExec = __toESM(require_exec(), 1);
 var MINIMUM_GH_VERSION = [2, 67, 0];
+var UNAVAILABLE_OUTPUT = [
+  /\bHTTP (401|403|429|5\d\d)\b/,
+  /\bGet "https?:\/\//,
+  /Sigstore verifier/,
+  /verifier is not available/,
+  /failed to fetch bundle/,
+  /error getting trust domain/
+];
 var GhAttestationVerifier = class {
   constructor(token, {
     runner = actionsExec,
@@ -122152,7 +122160,11 @@ var GhAttestationVerifier = class {
       );
     } catch (error4) {
       const message = error4 instanceof Error ? error4.message : String(error4);
-      return { success: false, error: message || "Verification failed" };
+      return {
+        success: false,
+        kind: "unavailable",
+        error: message || "Verification failed"
+      };
     }
     if (exitCode === 0) {
       return { success: true };
@@ -122160,6 +122172,7 @@ var GhAttestationVerifier = class {
     const detail = output.includes("HTTP 404") ? "No attestation was found for this archive." : output.trim() || "Verification failed.";
     return {
       success: false,
+      kind: failureKind(exitCode, output),
       error: `gh exited with code ${exitCode}. ${detail}`
     };
   }
@@ -122189,6 +122202,10 @@ var GhAttestationVerifier = class {
     return null;
   }
 };
+function failureKind(exitCode, output) {
+  const unavailable = exitCode === 4 || UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output));
+  return unavailable ? "unavailable" : "rejected";
+}
 function isOlder(version, minimum) {
   for (const [i2, min] of minimum.entries()) {
     const part = version[i2] ?? 0;
@@ -122269,7 +122286,9 @@ var StubbedAttestationVerifier = class {
       case "success":
         return { success: true };
       case "fail":
-        return { success: false, error: "Stubbed failure" };
+        return { success: false, kind: "rejected", error: "Stubbed failure" };
+      case "unavailable":
+        return { success: false, kind: "unavailable", error: "Stubbed outage" };
       case "gh-missing":
         return {
           success: false,
@@ -122347,9 +122366,14 @@ var StubbedOutput = class {
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
 var AttestationError = class extends Error {
-  constructor(message) {
+  constructor({
+    message,
+    kind
+  }) {
     super(message);
+    __publicField(this, "kind");
     this.name = "AttestationError";
+    this.kind = kind;
   }
 };
 var Installer = class _Installer {
@@ -122416,9 +122440,12 @@ var Installer = class _Installer {
           { title: "Attestation Verification Skipped" }
         );
       } else {
-        throw new AttestationError(
-          `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`
-        );
+        const kind = attestationResult.kind ?? "rejected";
+        const outcome = kind === "unavailable" ? "was unavailable" : "failed";
+        throw new AttestationError({
+          message: `Sigstore attestation verification ${outcome}: ${attestationResult.error ?? "Unknown error"}`,
+          kind
+        });
       }
     } else {
       this._output.info("Attestation verified successfully");
@@ -134051,7 +134078,11 @@ var CoverageAction = class _CoverageAction {
       qltyBinary = await this._installer.install();
     } catch (error4) {
       if (error4 instanceof AttestationError) {
-        throw error4;
+        if (error4.kind === "rejected") {
+          throw error4;
+        }
+        this.reportOrFail([error4.message, "The Qlty CLI did not run."]);
+        return;
       }
       const errorMessage = error4 instanceof Error ? `: ${error4.message}.` : ".";
       this.reportOrFail([

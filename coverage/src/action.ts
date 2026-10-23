@@ -90,7 +90,11 @@ export class CoverageAction {
       qltyBinary = await this._installer.install();
     } catch (error) {
       if (error instanceof AttestationError) {
-        throw error;
+        if (error.kind === "rejected") {
+          throw error;
+        }
+        this.reportOrFail([error.message, "The Qlty CLI did not run."]);
+        return;
       }
       const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
       this.reportOrFail([
