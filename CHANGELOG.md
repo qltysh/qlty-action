@@ -4,8 +4,10 @@
 
 ### Improved
 
-- The Qlty CLI is now rejected before it runs if its artifact attestation is missing or cannot be verified, closing a gap where an unverified CLI could be executed. Pinning `cli-version` to a release older than 0.555.0 (which have no attestation) will now fail; remove `cli-version` or set a current release (#212)
-- When an attestation check cannot finish because GitHub or Sigstore is unavailable, the coverage action now respects `skip-errors`: with `skip-errors: true` it logs the error and passes the step without running the CLI. A check that finishes and rejects the CLI still fails the step (#216)
+- The Qlty CLI must now pass its attestation check before it runs. If no attestation matches the downloaded CLI, or the check rejects it, the step fails, including in the coverage action with `skip-errors: true`. Pinning `cli-version` to a release older than 0.555.0, which have no attestation, now fails; remove `cli-version` or set a current release (#212)
+- When the attestation check cannot finish because GitHub or Sigstore is unavailable, the coverage action follows `skip-errors`: with `skip-errors: true` it logs the error and passes the step without running the CLI. The install and fmt actions fail (#216)
+- The attestation check needs GitHub CLI (`gh`) 2.67.0 or later. Without a usable `gh`, as on many self-hosted runners and `container:` jobs, the actions log a warning that the run is unverified and continue (#212)
+- The attestation lookup always goes to github.com, even when `GH_HOST` points at GitHub Enterprise; in that case set `github-token` to a github.com token (#212)
 
 ## v2.4.0 (2026-09-24)
 
