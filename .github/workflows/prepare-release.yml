@@ -23,6 +23,7 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    environment: qlty-releases
     steps:
       - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # version 2.0.6
         id: app-token
@@ -31,6 +32,13 @@ jobs:
           private-key: ${{ secrets.QLTY_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Check the token reaches one repository
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test "$(gh api /installation/repositories --jq .total_count)" = 1
 
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # version 4.2.2
