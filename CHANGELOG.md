@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.5.1 (2026-11-11)
+
+- Internal release pipeline hardening with no user-facing changes. Thanks to @fhwang for the contribution! (#218)
+
 ## v2.5.0 (2026-10-23)
 
 ### Improved
