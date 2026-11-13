@@ -134123,42 +134123,12 @@ var CoverageAction = class _CoverageAction {
       return;
     }
     uploadArgs = uploadArgs.concat(files);
-    const token = await this._settings.getToken();
-    if (token) {
-      this._output.setSecret(token);
-    }
-    let qltyOutput = "";
-    try {
-      const env = {
-        ...this._env,
-        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
-        QLTY_CI_UPLOADER_VERSION: Version.readVersion() || ""
-      };
-      if (token) {
-        env["QLTY_COVERAGE_TOKEN"] = token;
-      }
-      this._emitter.emit(EXEC_EVENT, {
-        command: [qltyBinary, ...uploadArgs],
-        env
-      });
-      this._output.info(`Running: ${[qltyBinary, ...uploadArgs].join(" ")}`);
-      await this._executor.exec(qltyBinary, uploadArgs, {
-        env,
-        listeners: {
-          stdout: (data) => {
-            qltyOutput += data.toString();
-          },
-          stderr: (data) => {
-            qltyOutput += data.toString();
-          }
-        }
-      });
-    } catch (error4) {
-      this.outputCoverageError(qltyOutput, error4, token);
-    }
+    await this.runCoverageCommand(qltyBinary, uploadArgs);
   }
   async runComplete(qltyBinary) {
-    const completeArgs = this.buildCompleteArgs();
+    await this.runCoverageCommand(qltyBinary, this.buildCompleteArgs());
+  }
+  async runCoverageCommand(qltyBinary, args) {
     const token = await this._settings.getToken();
     if (token) {
       this._output.setSecret(token);
@@ -134174,11 +134144,11 @@ var CoverageAction = class _CoverageAction {
         env["QLTY_COVERAGE_TOKEN"] = token;
       }
       this._emitter.emit(EXEC_EVENT, {
-        command: [qltyBinary, ...completeArgs],
+        command: [qltyBinary, ...args],
         env
       });
-      this._output.info(`Running: ${[qltyBinary, ...completeArgs].join(" ")}`);
-      await this._executor.exec(qltyBinary, completeArgs, {
+      this._output.info(`Running: ${[qltyBinary, ...args].join(" ")}`);
+      await this._executor.exec(qltyBinary, args, {
         env,
         listeners: {
           stdout: (data) => {
