@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // Shared by every workspace so they all typecheck at the same strictness.
+  // Workspace tsconfigs extend this and set only paths, types and composite.
+  "compilerOptions": {
+    // Environment
+    "target": "ES2022",
+    "lib": ["ES2023"],
+
+    // Modules
+    "module": "NodeNext",
+
+    // Type checking
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+
+    // Interop
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Output formatting
+    "noErrorTruncation": true,
+
+    // Emit
+    "sourceMap": true,
+
+    // Completeness
+    "skipLibCheck": true
+  }
+}
