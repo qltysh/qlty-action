@@ -144,49 +144,17 @@ export class CoverageAction {
 
     uploadArgs = uploadArgs.concat(files);
 
-    const token = await this._settings.getToken();
-    if (token) {
-      this._output.setSecret(token);
-    }
-
-    let qltyOutput = "";
-
-    try {
-      const env: Record<string, string> = {
-        ...this._env,
-        QLTY_CI_UPLOADER_TOOL: "qltysh/qlty-action",
-        QLTY_CI_UPLOADER_VERSION: Version.readVersion() || "",
-      };
-
-      if (token) {
-        env["QLTY_COVERAGE_TOKEN"] = token;
-      }
-
-      this._emitter.emit(EXEC_EVENT, {
-        command: [qltyBinary, ...uploadArgs],
-        env,
-      });
-      this._output.info(`Running: ${[qltyBinary, ...uploadArgs].join(" ")}`);
-
-      await this._executor.exec(qltyBinary, uploadArgs, {
-        env,
-        listeners: {
-          stdout: (data: Buffer) => {
-            qltyOutput += data.toString();
-          },
-          stderr: (data: Buffer) => {
-            qltyOutput += data.toString();
-          },
-        },
-      });
-    } catch (error) {
-      this.outputCoverageError(qltyOutput, error);
-    }
+    await this.runCoverageCommand(qltyBinary, uploadArgs);
   }
 
   async runComplete(qltyBinary: string): Promise<void> {
-    const completeArgs = this.buildCompleteArgs();
+    await this.runCoverageCommand(qltyBinary, this.buildCompleteArgs());
+  }
 
+  private async runCoverageCommand(
+    qltyBinary: string,
+    args: string[],
+  ): Promise<void> {
     const token = await this._settings.getToken();
     if (token) {
       this._output.setSecret(token);
@@ -206,12 +174,12 @@ export class CoverageAction {
       }
 
       this._emitter.emit(EXEC_EVENT, {
-        command: [qltyBinary, ...completeArgs],
+        command: [qltyBinary, ...args],
         env,
       });
-      this._output.info(`Running: ${[qltyBinary, ...completeArgs].join(" ")}`);
+      this._output.info(`Running: ${[qltyBinary, ...args].join(" ")}`);
 
-      await this._executor.exec(qltyBinary, completeArgs, {
+      await this._executor.exec(qltyBinary, args, {
         env,
         listeners: {
           stdout: (data: Buffer) => {
@@ -223,15 +191,19 @@ export class CoverageAction {
         },
       });
     } catch (error) {
-      this.outputCoverageError(qltyOutput, error);
+      this.outputCoverageError(qltyOutput, error, token);
     }
   }
 
-  outputCoverageError(qltyOutput: string, error: unknown): void {
+  outputCoverageError(
+    qltyOutput: string,
+    error: unknown,
+    token: string | null,
+  ): void {
     if (qltyOutput) {
       this.reportOrFail([
         `Error executing coverage command. Output from the Qlty CLI follows:`,
-        qltyOutput,
+        redactToken(qltyOutput, token),
       ]);
     } else {
       let errorMessage = "";
@@ -244,7 +216,7 @@ export class CoverageAction {
 
       this.reportOrFail([
         `Unexpected error executing coverage command:`,
-        errorMessage,
+        redactToken(errorMessage, token),
       ]);
     }
   }
@@ -385,6 +357,12 @@ export class CoverageAction {
       env: Record<string, string>;
     }>(this._emitter, EXEC_EVENT);
   }
+}
+
+// setSecret masks the token in the job log only. The CoverageError message
+// also goes to Sentry, so the token is replaced before the message is built.
+function redactToken(text: string, token: string | null): string {
+  return token ? text.replaceAll(token, "***") : text;
 }
 
 export class CoverageError extends Error {
