@@ -13,6 +13,26 @@ permissions:
   attestations: read
 
 jobs:
+  test-shared:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install Dependencies (workspace root)
+        run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        working-directory: ./packages/shared
+        run: npm run typecheck
+
   test-install:
     runs-on: ubuntu-latest
 
@@ -28,6 +48,10 @@ jobs:
 
       - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        working-directory: ./install
+        run: npm run typecheck
 
       - name: Build dist/ Directory
         working-directory: ./install
@@ -63,6 +87,10 @@ jobs:
       - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
 
+      - name: Typecheck
+        working-directory: ./fmt
+        run: npm run typecheck
+
       - name: Build dist/ Directory
         working-directory: ./fmt
         run: npm run package
@@ -96,6 +124,10 @@ jobs:
 
       - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        working-directory: ./coverage
+        run: npm run typecheck
 
       - name: Build dist/ Directory
         working-directory: ./coverage
