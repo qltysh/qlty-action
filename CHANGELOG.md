@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.6.0 (2026-11-13)
+
+### Fixed
+
+- The coverage action now redacts the coverage token from the Qlty CLI output included in error messages, so the token is masked everywhere the message is reported, including Sentry. This applies to project, workspace and OIDC tokens (#221)
+
 ## v2.5.0 (2026-10-23)
 
 ### Improved
