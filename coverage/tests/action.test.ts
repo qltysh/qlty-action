@@ -1,4 +1,8 @@
-import { CoverageAction, StubbedActionContext } from "../src/action";
+import {
+  CoverageAction,
+  CoverageError,
+  StubbedActionContext,
+} from "../src/action";
 import { Installer } from "../src/installer";
 import { FileSystem, Settings, StubbedFileSystem } from "../src/settings";
 import { StubbedCommandExecutor } from "../src/util/exec";
@@ -528,6 +532,70 @@ describe("CoverageAction", () => {
       expect(output.errors).toEqual([
         "Error executing coverage command. Output from the Qlty CLI follows:",
         "STDOUT\nSTDERR\n",
+      ]);
+    });
+
+    test("redacts a coverage token from the error when skip-errors is false", async () => {
+      const { action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({
+          throwError: true,
+          stderr: "    Token: qltcp_1234567890\nUpload failed\n",
+        }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+      });
+
+      const error = await action.run().catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CoverageError);
+      expect((error as CoverageError).message).toBe(
+        "Error executing coverage command. Output from the Qlty CLI follows:; " +
+          "STDOUT\n    Token: ***\nUpload failed\n",
+      );
+    });
+
+    test("redacts an OIDC token from the error when skip-errors is false", async () => {
+      const { action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({
+          throwError: true,
+          stderr: "    Token: oidc-token:audience=https://qlty.sh\n",
+        }),
+        settings: Settings.createNull({
+          oidc: true,
+          command: "complete",
+          "skip-errors": false,
+        }),
+      });
+
+      const error = await action.run().catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CoverageError);
+      expect((error as CoverageError).message).toBe(
+        "Error executing coverage command. Output from the Qlty CLI follows:; " +
+          "STDOUT\n    Token: ***\n",
+      );
+    });
+
+    test("redacts the token from logged errors when skip-errors is true", async () => {
+      const { output, action } = createTrackedAction({
+        executor: new StubbedCommandExecutor({
+          throwError: true,
+          stdout: "",
+          stderr: "",
+          errorMessage: "qlty failed with token qltcp_1234567890",
+        }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+      });
+
+      await action.run();
+      expect(output.errors).toEqual([
+        "Unexpected error executing coverage command:",
+        "qlty failed with token ***",
       ]);
     });
 

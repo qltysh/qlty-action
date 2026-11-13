@@ -134154,7 +134154,7 @@ var CoverageAction = class _CoverageAction {
         }
       });
     } catch (error4) {
-      this.outputCoverageError(qltyOutput, error4);
+      this.outputCoverageError(qltyOutput, error4, token);
     }
   }
   async runComplete(qltyBinary) {
@@ -134190,14 +134190,14 @@ var CoverageAction = class _CoverageAction {
         }
       });
     } catch (error4) {
-      this.outputCoverageError(qltyOutput, error4);
+      this.outputCoverageError(qltyOutput, error4, token);
     }
   }
-  outputCoverageError(qltyOutput, error4) {
+  outputCoverageError(qltyOutput, error4, token) {
     if (qltyOutput) {
       this.reportOrFail([
         `Error executing coverage command. Output from the Qlty CLI follows:`,
-        qltyOutput
+        redactToken(qltyOutput, token)
       ]);
     } else {
       let errorMessage = "";
@@ -134208,7 +134208,7 @@ var CoverageAction = class _CoverageAction {
       }
       this.reportOrFail([
         `Unexpected error executing coverage command:`,
-        errorMessage
+        redactToken(errorMessage, token)
       ]);
     }
   }
@@ -134318,6 +134318,9 @@ var CoverageAction = class _CoverageAction {
     return OutputTracker.create(this._emitter, EXEC_EVENT);
   }
 };
+function redactToken(text, token) {
+  return token ? text.replaceAll(token, "***") : text;
+}
 var CoverageError = class extends Error {
   constructor(message) {
     super(message);

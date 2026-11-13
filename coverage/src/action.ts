@@ -180,7 +180,7 @@ export class CoverageAction {
         },
       });
     } catch (error) {
-      this.outputCoverageError(qltyOutput, error);
+      this.outputCoverageError(qltyOutput, error, token);
     }
   }
 
@@ -223,15 +223,19 @@ export class CoverageAction {
         },
       });
     } catch (error) {
-      this.outputCoverageError(qltyOutput, error);
+      this.outputCoverageError(qltyOutput, error, token);
     }
   }
 
-  outputCoverageError(qltyOutput: string, error: unknown): void {
+  outputCoverageError(
+    qltyOutput: string,
+    error: unknown,
+    token: string | null,
+  ): void {
     if (qltyOutput) {
       this.reportOrFail([
         `Error executing coverage command. Output from the Qlty CLI follows:`,
-        qltyOutput,
+        redactToken(qltyOutput, token),
       ]);
     } else {
       let errorMessage = "";
@@ -244,7 +248,7 @@ export class CoverageAction {
 
       this.reportOrFail([
         `Unexpected error executing coverage command:`,
-        errorMessage,
+        redactToken(errorMessage, token),
       ]);
     }
   }
@@ -385,6 +389,12 @@ export class CoverageAction {
       env: Record<string, string>;
     }>(this._emitter, EXEC_EVENT);
   }
+}
+
+// setSecret masks the token in the job log only. The CoverageError message
+// also goes to Sentry, so the token is replaced before the message is built.
+function redactToken(text: string, token: string | null): string {
+  return token ? text.replaceAll(token, "***") : text;
 }
 
 export class CoverageError extends Error {
