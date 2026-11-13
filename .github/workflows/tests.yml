@@ -13,6 +13,32 @@ permissions:
   attestations: read
 
 jobs:
+  test-shared:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install Dependencies (workspace root)
+        run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        working-directory: ./packages/shared
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: ./packages/shared
+        run: npm run test
+
   test-install:
     runs-on: ubuntu-latest
 
@@ -28,6 +54,10 @@ jobs:
 
       - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        working-directory: ./install
+        run: npm run typecheck
 
       - name: Build dist/ Directory
         working-directory: ./install
@@ -63,6 +93,10 @@ jobs:
       - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
 
+      - name: Typecheck
+        working-directory: ./fmt
+        run: npm run typecheck
+
       - name: Build dist/ Directory
         working-directory: ./fmt
         run: npm run package
@@ -96,6 +130,10 @@ jobs:
 
       - name: Install Dependencies (workspace root)
         run: npm ci --ignore-scripts
+
+      - name: Typecheck
+        working-directory: ./coverage
+        run: npm run typecheck
 
       - name: Build dist/ Directory
         working-directory: ./coverage
@@ -155,3 +193,29 @@ jobs:
           verbose: true
           skip-errors: false
           oidc: true
+
+  # The required status check on main. List every job in this workflow under
+  # `needs`. `always()` keeps this job from being skipped, because GitHub
+  # counts a skipped required check as passing.
+  tests-passed:
+    if: ${{ always() }}
+    needs:
+      - test-shared
+      - test-install
+      - test-fmt
+      - test-coverage
+      - test-windows-coverage
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - name: Check that every job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "::error::A job in this workflow finished with: $result"
+              exit 1
+            fi
+          done

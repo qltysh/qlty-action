@@ -27,7 +27,7 @@ case "$REL_PATH" in
   install/src/*|install/package.json|install/tsconfig.json)
     workspaces_to_package="install"
     ;;
-  packages/shared/*)
+  packages/shared/*|tsconfig.base.json)
     workspaces_to_package="coverage fmt install"
     ;;
 esac

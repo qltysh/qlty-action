@@ -8,7 +8,6 @@ import { Settings } from "./settings";
 import * as actionsExec from "@actions/exec";
 import * as actionsCore from "@actions/core";
 import * as actionsGithub from "@actions/github";
-import { WebhookPayload } from "@actions/github/lib/interfaces";
 import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import EventEmitter from "node:events";
@@ -17,6 +16,10 @@ import Version from "./version";
 const EXEC_EVENT = "exec";
 
 type ProcessEnv = Record<string, string | undefined>;
+
+// @actions/github 9.x exports only "." and "./lib/utils", so derive the
+// payload type from the public context instead of importing lib/interfaces.
+type WebhookPayload = typeof actionsGithub.context.payload;
 
 export class CoverageAction {
   private _output: ActionOutput;

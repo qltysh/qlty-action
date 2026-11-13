@@ -1,40 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    // Environment
-    "target": "ES2022",
-    "lib": ["ES2023"],
-
-    // Modules
-    "module": "NodeNext",
     "rootDir": "./",
     "baseUrl": "./",
     "types": ["vitest/globals"],
-
-    // Type checking
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "allowUnusedLabels": false,
-    "allowUnreachableCode": false,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
-
-    // Interop
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-
-    // Output formatting
-    "noErrorTruncation": true,
-
-    // Emit
-    "outDir": "./dist",
-    "sourceMap": true,
-
-    // Completeness
-    "skipLibCheck": true
+    "outDir": "./dist"
   },
   "include": ["src", "tests"],
   "exclude": ["./dist", "./node_modules", "./__tests__", "./coverage"]
