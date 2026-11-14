@@ -35,7 +35,6 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/exec": "^1.1.1",
-    "@qltysh-action/shared": "*",
-    "@sentry/node": "^10.63.0"
+    "@qltysh-action/shared": "*"
   }
 }

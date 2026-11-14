@@ -1,4 +1,9 @@
 import {
+  type FailureKind,
+  ReportableError,
+  Version,
+} from "@qltysh-action/shared";
+import {
   AttestationError,
   AttestationUnavailableError,
   Installer,
@@ -11,7 +16,6 @@ import * as actionsGithub from "@actions/github";
 import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import EventEmitter from "node:events";
-import Version from "./version";
 
 const EXEC_EVENT = "exec";
 
@@ -101,17 +105,26 @@ export class CoverageAction {
         throw error;
       }
       if (error instanceof AttestationUnavailableError) {
-        this.reportOrFail([error.message]);
+        this.reportOrFail([error.message], "attestation_unavailable");
         return;
       }
       const errorMessage = error instanceof Error ? `: ${error.message}.` : ".";
-      this.reportOrFail([
-        `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`,
-      ]);
+      this.reportOrFail(
+        [
+          `Error installing Qlty CLI${errorMessage} Please check the action's inputs. If you are using a 'cli-version', make sure it is correct.`,
+        ],
+        "install_failed",
+      );
       return;
     }
 
+    // The installer returns null after it has logged why, as for an
+    // unsupported platform. skip-errors still decides whether the step fails.
     if (!qltyBinary) {
+      this.reportOrFail(
+        ["The Qlty CLI could not be installed on this runner."],
+        "install_failed",
+      );
       return;
     }
 
@@ -128,18 +141,24 @@ export class CoverageAction {
 
     if (files.length === 0) {
       if (this._settings.input.files?.includes(" ")) {
-        this.reportOrFail([
-          "No code coverage data files were found. Please check the action's inputs.",
-          "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",
-          "If you are using a pattern, make sure it is correct.",
-          "If you are using a file, make sure it exists.",
-        ]);
+        this.reportOrFail(
+          [
+            "No code coverage data files were found. Please check the action's inputs.",
+            "NOTE: To specify multiple files, use a comma or newline separated list NOT spaces.",
+            "If you are using a pattern, make sure it is correct.",
+            "If you are using a file, make sure it exists.",
+          ],
+          "no_coverage_files",
+        );
       } else {
-        this.reportOrFail([
-          "No code coverage data files were found. Please check the action's inputs.",
-          "If you are using a pattern, make sure it is correct.",
-          "If you are using a file, make sure it exists.",
-        ]);
+        this.reportOrFail(
+          [
+            "No code coverage data files were found. Please check the action's inputs.",
+            "If you are using a pattern, make sure it is correct.",
+            "If you are using a file, make sure it exists.",
+          ],
+          "no_coverage_files",
+        );
       }
 
       return;
@@ -164,6 +183,7 @@ export class CoverageAction {
     }
 
     let qltyOutput = "";
+    let exitCode: number | null;
 
     try {
       const env: Record<string, string> = {
@@ -182,8 +202,11 @@ export class CoverageAction {
       });
       this._output.info(`Running: ${[qltyBinary, ...args].join(" ")}`);
 
-      await this._executor.exec(qltyBinary, args, {
+      // With ignoreReturnCode, exec resolves to the CLI's exit code, or null
+      // when a signal stopped it, and throws only when the CLI cannot start.
+      exitCode = await this._executor.exec(qltyBinary, args, {
         env,
+        ignoreReturnCode: true,
         listeners: {
           stdout: (data: Buffer) => {
             qltyOutput += data.toString();
@@ -194,33 +217,48 @@ export class CoverageAction {
         },
       });
     } catch (error) {
-      this.outputCoverageError(qltyOutput, error, token);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      this.reportOrFail(
+        [
+          `Unexpected error executing coverage command:`,
+          redactToken(errorMessage, token),
+        ],
+        "cli_start_failed",
+      );
+      return;
+    }
+
+    if (exitCode !== 0) {
+      this.outputCoverageError(qltyOutput, exitCode, token);
     }
   }
 
   outputCoverageError(
     qltyOutput: string,
-    error: unknown,
+    exitCode: number | null,
     token: string | null,
   ): void {
-    if (qltyOutput) {
-      this.reportOrFail([
-        `Error executing coverage command. Output from the Qlty CLI follows:`,
-        redactToken(qltyOutput, token),
-      ]);
+    const stopped =
+      exitCode === null
+        ? "was stopped by a signal"
+        : `exited with code ${exitCode}`;
+    const messages = qltyOutput
+      ? [
+          exitCode === null
+            ? `Error executing coverage command. The Qlty CLI ${stopped}. Output from the Qlty CLI follows:`
+            : `Error executing coverage command. Output from the Qlty CLI follows:`,
+          redactToken(qltyOutput, token),
+        ]
+      : [
+          `Error executing coverage command. The Qlty CLI ${stopped} and printed no output.`,
+        ];
+
+    if (exitCode === null) {
+      this.reportOrFail(messages, "cli_killed");
     } else {
-      let errorMessage = "";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
-
-      this.reportOrFail([
-        `Unexpected error executing coverage command:`,
-        redactToken(errorMessage, token),
-      ]);
+      this.reportOrFail(messages, "cli_failed", exitCode);
     }
   }
 
@@ -228,24 +266,27 @@ export class CoverageAction {
     const errors = this._settings.validate();
 
     if (errors.length > 0) {
-      this.reportOrFail([
-        "Error validating action input:",
-        ...errors,
-        "Please check the action's inputs.",
-      ]);
+      this.reportOrFail(
+        [
+          "Error validating action input:",
+          ...errors,
+          "Please check the action's inputs.",
+        ],
+        "invalid_input",
+      );
       return false;
     }
 
     return true;
   }
 
-  reportOrFail(messages: string[]): void {
+  reportOrFail(messages: string[], kind: FailureKind, exitCode?: number): void {
     if (this._settings.input.skipErrors) {
       for (const message of messages) {
         this._output.error(message);
       }
     } else {
-      throw new CoverageError(messages.join("; "));
+      throw new CoverageError(messages.join("; "), kind, exitCode);
     }
   }
 
@@ -362,15 +403,16 @@ export class CoverageAction {
   }
 }
 
-// setSecret masks the token in the job log only. The CoverageError message
-// also goes to Sentry, so the token is replaced before the message is built.
+// setSecret masks the token in the job log only, so the token is replaced
+// before it goes into a message that could be reported anywhere else.
 function redactToken(text: string, token: string | null): string {
   return token ? text.replaceAll(token, "***") : text;
 }
 
-export class CoverageError extends Error {
-  constructor(message: string) {
-    super(message);
+// Telemetry reports a CoverageError's kind and exit code, never its message.
+export class CoverageError extends ReportableError {
+  constructor(message: string, kind: FailureKind, exitCode?: number) {
+    super(message, kind, exitCode);
     this.name = "CoverageError";
   }
 }

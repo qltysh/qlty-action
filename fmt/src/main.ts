@@ -1,88 +1,66 @@
-import * as Sentry from "@sentry/node";
-
-Sentry.init({
-  dsn: "https://76f58a921c9d8561646a586e7d9df772@o4506826106929152.ingest.us.sentry.io/4506826142646272",
-  tracesSampleRate: 1.0,
-});
-
 import * as core from "@actions/core";
 import { exec } from "@actions/exec";
-import { Installer } from "@qltysh-action/shared";
+import {
+  AttestationError,
+  AttestationUnavailableError,
+  errorText,
+  type FailureKind,
+  Installer,
+  ReportableError,
+} from "@qltysh-action/shared";
 
-class FmtError extends Error {
-  constructor(message: string) {
-    super(message);
+// Telemetry reports an FmtError's kind and exit code, never its message.
+class FmtError extends ReportableError {
+  constructor(message: string, kind: FailureKind, exitCode?: number) {
+    super(message, kind, exitCode);
     this.name = "FmtError";
   }
 }
 
-export async function runWithTracing(): Promise<void> {
-  return await Sentry.startSpan(
-    {
-      op: "execute",
-      name: "qlty-action/fmt",
-    },
-    async () => {
-      Sentry.setTag("provider", "github");
-      Sentry.setTag(
-        "repository.full_name",
-        process.env["GITHUB_REPOSITORY"] || "unknown",
-      );
-      Sentry.setContext("CI", {
-        run_id: process.env["GITHUB_RUN_ID"],
-        run_url: `${process.env["GITHUB_SERVER_URL"]}/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
-      });
-
-      run()
-        .then(() => {
-          Sentry.close(2000).then(function () {
-            process.exit(0);
-          });
-        })
-        .catch((error) => {
-          core.setFailed(
-            error instanceof FmtError
-              ? `Action failed with error: ${error.name}`
-              : `Action failed with error: ${error.name}: ${error.message}`,
-          );
-          Sentry.addBreadcrumb({
-            category: "qlty-fmt.log",
-            level: "log",
-            type: "error",
-            message: error.message,
-          });
-          Sentry.captureException(error);
-          Sentry.close(2000).then(function () {
-            process.exit(1);
-          });
-        });
-    },
-  );
-}
-
-async function run(): Promise<void> {
-  const githubToken = core.getInput("github-token");
-  const installer = Installer.create(githubToken);
-  const qltyBinary = await installer.install();
-
-  if (!qltyBinary) {
-    throw new FmtError("Failed to install Qlty CLI");
-  }
-
-  let qltyOutput = "";
+export async function run(): Promise<void> {
+  const installer = Installer.create(core.getInput("github-token"));
+  let qltyBinary: string | null;
 
   try {
-    await exec("qlty", ["fmt", "--all"], {
-      listeners: {
-        stdout: (data: Buffer) => {
-          qltyOutput += data.toString();
-        },
-        stderr: (data: Buffer) => {
-          qltyOutput += data.toString();
-        },
-      },
-    });
-  } catch {
-    throw new FmtError(qltyOutput);
+    qltyBinary = await installer.install();
+  } catch (error) {
+    if (error instanceof AttestationError) {
+      throw error;
+    }
+    if (error instanceof AttestationUnavailableError) {
+      throw new FmtError(error.message, "attestation_unavailable");
+    }
+    throw new FmtError(
+      `Error installing Qlty CLI: ${errorText(error)}`,
+      "install_failed",
+    );
+  }
+
+  if (!qltyBinary) {
+    throw new FmtError("Failed to install Qlty CLI", "install_failed");
+  }
+
+  // exec streams the CLI's output to the job log. With ignoreReturnCode, it
+  // resolves to the CLI's exit code, or null when a signal stopped it, and
+  // throws only when the CLI cannot start.
+  let exitCode: number | null;
+  try {
+    exitCode = await exec("qlty", ["fmt", "--all"], { ignoreReturnCode: true });
+  } catch (error) {
+    throw new FmtError(
+      `Could not run the Qlty CLI: ${errorText(error)}`,
+      "cli_start_failed",
+    );
+  }
+
+  if (exitCode === null) {
+    throw new FmtError("qlty fmt was stopped by a signal", "cli_killed");
+  }
+  if (exitCode !== 0) {
+    throw new FmtError(
+      `qlty fmt exited with code ${exitCode}`,
+      "cli_failed",
+      exitCode,
+    );
   }
 }

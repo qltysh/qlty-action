@@ -32,6 +32,8 @@ jobs:
         working-directory: ./coverage
         run: npm run coverage
 
+      # telemetry: false keeps failures from in-progress branches out of the
+      # error reports customers' runs send.
       - name: Upload coverage
         uses: ./coverage
         with:
@@ -39,6 +41,7 @@ jobs:
           files: coverage/coverage/clover.xml
           incomplete: true
           skip-errors: false
+          telemetry: false
 
       - name: Complete coverage
         uses: ./coverage
@@ -46,9 +49,12 @@ jobs:
           oidc: true
           command: complete
           skip-errors: false
+          telemetry: false
 
       - name: Run fmt action
         uses: ./fmt
+        with:
+          telemetry: false
 
   test-install-without-token-permissions:
     runs-on: ubuntu-latest
