@@ -13,7 +13,7 @@ describe("CoverageAction", () => {
   describe("validation errors", async () => {
     test("logs warnings when skip-errors is true", async () => {
       const { output, action } = createTrackedAction({
-        executor: new StubbedCommandExecutor({ throwError: true }),
+        executor: new StubbedCommandExecutor({ exitCode: 1 }),
         settings: Settings.createNull({
           // Invalid configuration:
           "coverage-token": "",
@@ -32,13 +32,10 @@ describe("CoverageAction", () => {
       ]);
     });
 
-    test("logs unknown error when output from execution is empty", async () => {
+    test("logs an unexpected error when the CLI cannot start", async () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({
-          throwError: true,
-          stdout: "",
-          stderr: "",
-          errorMessage: "Crazy unknown error condition happened",
+          startError: "Crazy unknown error condition happened",
         }),
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
@@ -56,7 +53,7 @@ describe("CoverageAction", () => {
 
     test("raises errors when skip-errors is false", async () => {
       const { action } = createTrackedAction({
-        executor: new StubbedCommandExecutor({ throwError: true }),
+        executor: new StubbedCommandExecutor({ exitCode: 1 }),
         settings: Settings.createNull({
           // Invalid configuration:
           "coverage-token": "",
@@ -72,7 +69,7 @@ describe("CoverageAction", () => {
 
     test("logs warnings no paths found", async () => {
       const { output, action } = createTrackedAction({
-        executor: new StubbedCommandExecutor({ throwError: true }),
+        executor: new StubbedCommandExecutor({ exitCode: 1 }),
         settings: Settings.createNull(
           {
             oidc: true,
@@ -476,7 +473,7 @@ describe("CoverageAction", () => {
 
     test("throws an error if qlty fails when skip-errors is false", async () => {
       const { action } = createTrackedAction({
-        executor: new StubbedCommandExecutor({ throwError: true }),
+        executor: new StubbedCommandExecutor({ exitCode: 1 }),
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           command: "complete",
@@ -489,7 +486,7 @@ describe("CoverageAction", () => {
 
     test("logs a warning if qlty fails when skip-errors is true", async () => {
       const { output, action } = createTrackedAction({
-        executor: new StubbedCommandExecutor({ throwError: true }),
+        executor: new StubbedCommandExecutor({ exitCode: 1 }),
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           command: "complete",
@@ -508,7 +505,7 @@ describe("CoverageAction", () => {
   describe("error handling", () => {
     test("throws an error if qlty fails when skip-errors is false", async () => {
       const { action } = createTrackedAction({
-        executor: new StubbedCommandExecutor({ throwError: true }),
+        executor: new StubbedCommandExecutor({ exitCode: 1 }),
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           files: "info.lcov",
@@ -521,7 +518,7 @@ describe("CoverageAction", () => {
 
     test("logs a warning if qlty fails when skip-errors is true", async () => {
       const { output, action } = createTrackedAction({
-        executor: new StubbedCommandExecutor({ throwError: true }),
+        executor: new StubbedCommandExecutor({ exitCode: 1 }),
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           files: "info.lcov",
@@ -539,7 +536,7 @@ describe("CoverageAction", () => {
     test("redacts a coverage token from the error when skip-errors is false", async () => {
       const { action } = createTrackedAction({
         executor: new StubbedCommandExecutor({
-          throwError: true,
+          exitCode: 1,
           stderr: "    Token: qltcp_1234567890\nUpload failed\n",
         }),
         settings: Settings.createNull({
@@ -560,7 +557,7 @@ describe("CoverageAction", () => {
     test("redacts an OIDC token from the error when skip-errors is false", async () => {
       const { action } = createTrackedAction({
         executor: new StubbedCommandExecutor({
-          throwError: true,
+          exitCode: 1,
           stderr: "    Token: oidc-token:audience=https://qlty.sh\n",
         }),
         settings: Settings.createNull({
@@ -581,10 +578,7 @@ describe("CoverageAction", () => {
     test("redacts the token from logged errors when skip-errors is true", async () => {
       const { output, action } = createTrackedAction({
         executor: new StubbedCommandExecutor({
-          throwError: true,
-          stdout: "",
-          stderr: "",
-          errorMessage: "qlty failed with token qltcp_1234567890",
+          startError: "qlty failed with token qltcp_1234567890",
         }),
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
@@ -710,7 +704,7 @@ describe("CoverageAction", () => {
       { behavior: "gh-missing", tag: "skipped-gh-missing" },
       { behavior: "gh-too-old", tag: "skipped-gh-too-old" },
     ] as const)(
-      "tags the run $tag when the check returns $behavior",
+      "records $tag when the check returns $behavior",
       async ({ behavior, tag }) => {
         const { telemetry, action } = createTrackedAction({
           settings: Settings.createNull({
@@ -721,11 +715,11 @@ describe("CoverageAction", () => {
         });
 
         await action.run();
-        expect(telemetry.tags).toEqual({ attestation: tag });
+        expect(telemetry.attestation).toBe(tag);
       },
     );
 
-    test("tags the run failed when the check rejects the CLI", async () => {
+    test("records failed when the check rejects the CLI", async () => {
       const { telemetry, action } = createTrackedAction({
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
@@ -735,10 +729,10 @@ describe("CoverageAction", () => {
       });
 
       await expect(action.run()).rejects.toThrow();
-      expect(telemetry.tags).toEqual({ attestation: "failed" });
+      expect(telemetry.attestation).toBe("failed");
     });
 
-    test("tags the run unavailable when the check cannot finish and skip-errors is true", async () => {
+    test("records unavailable when the check cannot finish and skip-errors is true", async () => {
       const { telemetry, action } = createTrackedAction({
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
@@ -749,7 +743,193 @@ describe("CoverageAction", () => {
       });
 
       await action.run();
-      expect(telemetry.tags).toEqual({ attestation: "unavailable" });
+      expect(telemetry.attestation).toBe("unavailable");
+    });
+  });
+
+  describe("failure kind and exit code", () => {
+    async function failure(
+      options: Parameters<typeof createTrackedAction>[0],
+    ): Promise<CoverageError> {
+      const { action } = createTrackedAction(options);
+      const error = await action.run().catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CoverageError);
+      return error as CoverageError;
+    }
+
+    test("carries the CLI's exit code when the CLI fails", async () => {
+      const error = await failure({
+        executor: new StubbedCommandExecutor({ exitCode: 99 }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+      });
+
+      expect(error.kind).toBe("cli_failed");
+      expect(error.exitCode).toBe(99);
+    });
+
+    test("states the exit code when the CLI fails without output", async () => {
+      const error = await failure({
+        executor: new StubbedCommandExecutor({
+          exitCode: 3,
+          stdout: "",
+          stderr: "",
+        }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+          "skip-errors": false,
+        }),
+      });
+
+      expect(error.message).toBe(
+        "Error executing coverage command. The Qlty CLI exited with code 3 and printed no output.",
+      );
+      expect(error.kind).toBe("cli_failed");
+      expect(error.exitCode).toBe(3);
+    });
+
+    test("reports a CLI stopped by a signal without an exit code", async () => {
+      const error = await failure({
+        executor: new StubbedCommandExecutor({
+          exitCode: null,
+          stdout: "",
+          stderr: "",
+        }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+      });
+
+      expect(error.message).toBe(
+        "Error executing coverage command. The Qlty CLI was stopped by a signal and printed no output.",
+      );
+      expect(error.kind).toBe("cli_killed");
+      expect(error.exitCode).toBeUndefined();
+    });
+
+    test("says the CLI was stopped by a signal before its output", async () => {
+      const error = await failure({
+        executor: new StubbedCommandExecutor({ exitCode: null }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          command: "complete",
+          "skip-errors": false,
+        }),
+      });
+
+      expect(error.message).toBe(
+        "Error executing coverage command. The Qlty CLI was stopped by a signal. Output from the Qlty CLI follows:; STDOUT\nSTDERR\n",
+      );
+      expect(error.kind).toBe("cli_killed");
+    });
+
+    test("fails on an unsupported platform when skip-errors is false", async () => {
+      const { commands, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+        installer: Installer.createNull({ platform: "win32", arch: "arm64" }),
+      });
+
+      const error = await action.run().catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(CoverageError);
+      expect((error as CoverageError).kind).toBe("install_failed");
+      expect(commands.clear()).toEqual([]);
+    });
+
+    test("logs an unsupported platform when skip-errors is true", async () => {
+      const { output, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+        installer: Installer.createNull({ platform: "win32", arch: "arm64" }),
+      });
+
+      await action.run();
+      expect(output.errors).toEqual([
+        "The Qlty CLI could not be installed on this runner.",
+      ]);
+    });
+
+    test("has no exit code when the CLI cannot start", async () => {
+      const error = await failure({
+        executor: new StubbedCommandExecutor({ startError: "spawn ENOENT" }),
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+        }),
+      });
+
+      expect(error.kind).toBe("cli_start_failed");
+      expect(error.exitCode).toBeUndefined();
+    });
+
+    test.each([
+      [
+        "invalid_input",
+        {
+          settings: Settings.createNull({
+            "coverage-token": "",
+            token: "",
+            oidc: false,
+            files: "info.lcov",
+            "skip-errors": false,
+          }),
+        },
+      ],
+      [
+        "install_failed",
+        {
+          settings: Settings.createNull({
+            "coverage-token": "qltcp_1234567890",
+            files: "info.lcov",
+            "skip-errors": false,
+          }),
+          installer: Installer.createNull({ downloadError: true }),
+        },
+      ],
+      [
+        "attestation_unavailable",
+        {
+          settings: Settings.createNull({
+            "coverage-token": "qltcp_1234567890",
+            files: "info.lcov",
+            "skip-errors": false,
+          }),
+          installer: Installer.createNull({
+            attestationBehavior: "unavailable",
+          }),
+        },
+      ],
+      [
+        "no_coverage_files",
+        {
+          settings: Settings.createNull(
+            {
+              "coverage-token": "qltcp_1234567890",
+              files: "missing.lcov",
+              "skip-errors": false,
+            },
+            FileSystem.createNull([]),
+          ),
+        },
+      ],
+    ] as const)("reports %s", async (kind, options) => {
+      const error = await failure(options);
+
+      expect(error.kind).toBe(kind);
+      expect(error.exitCode).toBeUndefined();
     });
   });
 

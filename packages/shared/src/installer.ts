@@ -35,6 +35,25 @@ export type AttestationOutcome =
   | "unavailable"
   | "failed";
 
+// Every outcome, so telemetry can check a value before it sends it. The
+// Record type makes adding an outcome without listing it here a type error.
+const ATTESTATION_OUTCOMES: Record<AttestationOutcome, true> = {
+  verified: true,
+  "skipped-gh-missing": true,
+  "skipped-gh-too-old": true,
+  "skipped-gh-version-unknown": true,
+  unavailable: true,
+  failed: true,
+};
+
+export function isAttestationOutcome(
+  value: unknown,
+): value is AttestationOutcome {
+  return (
+    typeof value === "string" && Object.hasOwn(ATTESTATION_OUTCOMES, value)
+  );
+}
+
 export class AttestationError extends Error {
   constructor(message: string) {
     super(message);

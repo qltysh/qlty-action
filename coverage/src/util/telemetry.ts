@@ -1,19 +1,18 @@
-import { setTag } from "@sentry/node";
+import type { AttestationOutcome } from "@qltysh-action/shared";
+import { recordAttestation } from "@qltysh-action/shared/telemetry";
 
-// The part of the Sentry API the action uses. Tags go to Sentry, so a value
-// must never contain a token, a path or other customer data.
+// Where the action reports the attestation check's outcome. Error reports
+// carry it; a run that succeeds sends nothing.
 export interface Telemetry {
-  setTag(key: string, value: string): void;
+  recordAttestation(outcome: AttestationOutcome): void;
 }
 
-// A named import rather than the Sentry namespace, so esbuild can still drop
-// the parts of @sentry/node the action doesn't use.
-export const sentryTelemetry: Telemetry = { setTag };
+export const sentryTelemetry: Telemetry = { recordAttestation };
 
 export class StubbedTelemetry implements Telemetry {
-  tags: Record<string, string> = {};
+  attestation: AttestationOutcome | undefined;
 
-  setTag(key: string, value: string): void {
-    this.tags[key] = value;
+  recordAttestation(outcome: AttestationOutcome): void {
+    this.attestation = outcome;
   }
 }

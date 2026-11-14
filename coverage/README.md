@@ -95,6 +95,7 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 | `name`                    | Name to identify this coverage upload                                                                                                                                                                                  | No       | -         |
 | `validate`                | Validate the coverage data                                                                                                                                                                                             | No       | `false`   |
 | `validate-file-threshold` | Custom threshold percentage for validation (0-100). Only applies when validate is used.                                                                                                                                | No       | -         |
+| `telemetry`               | Send Qlty an error report when the step fails. Set to `false` to send nothing. See [Telemetry](#telemetry)                                                                                                             | No       | `true`    |
 
 \*Required when command is 'publish'. Not applicable when command is 'complete'.
 
@@ -119,6 +120,34 @@ The check needs `gh` 2.67.0 or later on the machine that runs the step. GitHub-h
 To verify the CLI on a self-hosted runner, install `gh` on the runner. In a `container:` job the step runs inside the container, so install `gh` in the container image or in an earlier step. See the GitHub CLI [installation instructions](https://github.com/cli/cli#installation). On Linux, use GitHub's package repository as described in [Installing gh on Linux](https://github.com/cli/cli/blob/trunk/docs/install_linux.md): some distributions' own `gh` packages are older than 2.67.0.
 
 If you set `cli-version`, use a release with an attestation (0.555.0 or later). We recommend the latest release.
+
+## Telemetry
+
+When the step fails, the action sends Qlty an error report, which we use to find problems in the action and the Qlty CLI. A step that succeeds sends nothing.
+
+A report holds:
+
+- The error's type, such as `CoverageError`, and the kind of failure, such as `cli_failed` or `no_coverage_files`.
+- The Qlty CLI's exit code, when the CLI ran.
+- The outcome of the Qlty CLI's attestation check, such as `verified` or `skipped-gh-missing`, when the action reached the check.
+- The action's name and version.
+- The runner's operating system and Node.js version.
+
+A report never holds the Qlty CLI's output, error messages, a stack trace, your coverage token, your repository's name, the run's URL, your commit, or the runner's hostname.
+
+With `skip-errors: true`, the default, the errors listed under [What `skip-errors` covers](#what-skip-errors-covers) are only logged, so they send no report.
+
+To send nothing, set `telemetry: false`:
+
+```yaml
+- uses: qltysh/qlty-action/coverage@v2
+  with:
+    token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+    files: coverage/lcov.info
+    telemetry: false
+```
+
+The Qlty CLI has its own telemetry, which the `QLTY_TELEMETRY` environment variable controls. `telemetry: false` also sets `QLTY_TELEMETRY=off` for the CLI that the action runs. Setting `QLTY_TELEMETRY: off` in the job's environment turns off both the action's error reports and the CLI's telemetry.
 
 ---
 
