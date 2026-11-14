@@ -74,27 +74,29 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 
 ## ⚙️ Inputs
 
-| Input                     | Description                                                                                                                                                                                                            | Required | Default   |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------- |
-| `token`                   | Coverage token for coverage submission. Required unless using `oidc`                                                                                                                                                   | No       | -         |
-| `files`                   | Files to process (supports glob patterns and comma-separated paths)                                                                                                                                                    | Yes\*    | -         |
-| `oidc`                    | Use OpenID Connect (OIDC) for authentication instead of a coverage token. [Learn more](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect) | No       | `false`   |
-| `command`                 | The command to execute (`publish` or `complete`). Use `complete` to mark coverage collection as complete.                                                                                                              | No       | `publish` |
-| `format`                  | The format of the coverage data (options: clover, cobertura, coverprofile, jacoco, lcov, qlty, simplecov)                                                                                                              | No       | -         |
-| `total-parts-count`       | The total number of coverage uploads that qlty cloud should expect                                                                                                                                                     | No       |           |
-| `verbose`                 | Display debug logs along with coverage data                                                                                                                                                                            | No       | `false`   |
-| `add-prefix`              | Prefix to add to file paths                                                                                                                                                                                            | No       | -         |
-| `strip-prefix`            | Prefix to remove from file paths                                                                                                                                                                                       | No       | -         |
-| `skip-errors`             | Report coverage errors without failing the CI build. See [What `skip-errors` covers](#what-skip-errors-covers)                                                                                                         | No       | `true`    |
-| `skip-missing-files`      | Files not in the directory are skipped                                                                                                                                                                                 | No       | `false`   |
-| `tag`                     | Tag to associate with the coverage data                                                                                                                                                                                | No       | -         |
-| `cli-version`             | Specific version of the Qlty CLI to use (e.g., '1.0.1'). If not specified, will install the latest version.                                                                                                            | No       |           |
-| `dry-run`                 | Run in dry run mode without uploading coverage data                                                                                                                                                                    | No       | `false`   |
-| `incomplete`              | Mark the coverage data as incomplete                                                                                                                                                                                   | No       | `false`   |
-| `selected`                | Mark the coverage data as coming from a selected subset of the test suite (diff coverage only). Pass to both `publish` and `complete`.                                                                                 | No       | `false`   |
-| `name`                    | Name to identify this coverage upload                                                                                                                                                                                  | No       | -         |
-| `validate`                | Validate the coverage data                                                                                                                                                                                             | No       | `false`   |
-| `validate-file-threshold` | Custom threshold percentage for validation (0-100). Only applies when validate is used.                                                                                                                                | No       | -         |
+| Input                     | Description                                                                                                                                                                                                            | Required | Default               |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------- |
+| `token`                   | Coverage token for coverage submission. Required unless using `oidc`                                                                                                                                                   | No       | -                     |
+| `files`                   | Files to process (supports glob patterns and comma-separated paths)                                                                                                                                                    | Yes\*    | -                     |
+| `oidc`                    | Use OpenID Connect (OIDC) for authentication instead of a coverage token. [Learn more](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect) | No       | `false`               |
+| `command`                 | The command to execute (`publish` or `complete`). Use `complete` to mark coverage collection as complete.                                                                                                              | No       | `publish`             |
+| `format`                  | The format of the coverage data (options: clover, cobertura, coverprofile, jacoco, lcov, qlty, simplecov)                                                                                                              | No       | -                     |
+| `total-parts-count`       | The total number of coverage uploads that qlty cloud should expect                                                                                                                                                     | No       |                       |
+| `verbose`                 | Display debug logs along with coverage data                                                                                                                                                                            | No       | `false`               |
+| `add-prefix`              | Prefix to add to file paths                                                                                                                                                                                            | No       | -                     |
+| `strip-prefix`            | Prefix to remove from file paths                                                                                                                                                                                       | No       | -                     |
+| `skip-errors`             | Report coverage errors without failing the CI build. See [What `skip-errors` covers](#what-skip-errors-covers)                                                                                                         | No       | `true`                |
+| `skip-missing-files`      | Files not in the directory are skipped                                                                                                                                                                                 | No       | `false`               |
+| `tag`                     | Tag to associate with the coverage data                                                                                                                                                                                | No       | -                     |
+| `cli-version`             | Specific version of the Qlty CLI to use (e.g., '1.0.1'). If not specified, will install the latest version.                                                                                                            | No       |                       |
+| `verify-attestation`      | Verify the Qlty CLI's attestation before running it. Set to `false` only if verification can't run on your runner. See [Verifying the Qlty CLI](#verifying-the-qlty-cli)                                               | No       | `true`                |
+| `github-token`            | GitHub token for looking up the Qlty CLI's attestation on github.com                                                                                                                                                   | No       | `${{ github.token }}` |
+| `dry-run`                 | Run in dry run mode without uploading coverage data                                                                                                                                                                    | No       | `false`               |
+| `incomplete`              | Mark the coverage data as incomplete                                                                                                                                                                                   | No       | `false`               |
+| `selected`                | Mark the coverage data as coming from a selected subset of the test suite (diff coverage only). Pass to both `publish` and `complete`.                                                                                 | No       | `false`               |
+| `name`                    | Name to identify this coverage upload                                                                                                                                                                                  | No       | -                     |
+| `validate`                | Validate the coverage data                                                                                                                                                                                             | No       | `false`               |
+| `validate-file-threshold` | Custom threshold percentage for validation (0-100). Only applies when validate is used.                                                                                                                                | No       | -                     |
 
 \*Required when command is 'publish'. Not applicable when command is 'complete'.
 
@@ -106,15 +108,42 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 - The Qlty CLI can't be downloaded, or it exits with an error.
 - The attestation check can't finish because GitHub or Sigstore is unavailable, for example a 5xx response, a rate limit or a timeout. The action doesn't run the CLI, so that run uploads no coverage.
 
-`skip-errors` never lets an unverified Qlty CLI run. If the attestation check finishes and rejects the CLI, for example because no attestation matches the downloaded archive, the step fails even with `skip-errors: true`.
+`skip-errors` never lets an unverified Qlty CLI run. If the attestation check finishes and rejects the CLI, for example because no attestation matches the downloaded archive, the step fails even with `skip-errors: true`. Only `verify-attestation: false` runs the CLI without verifying it.
 
 ## Verifying the Qlty CLI
 
-Before it runs the Qlty CLI, the action checks the CLI's attestation with the [GitHub CLI](https://cli.github.com/) (`gh`). If the check rejects the CLI, the step fails, even with `skip-errors: true`, and the CLI never runs. If the check can't finish because GitHub is unavailable, the CLI doesn't run either, and `skip-errors` decides whether the step fails.
+Before it runs the Qlty CLI, the action verifies the CLI's [artifact attestation](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) itself, with [sigstore-js](https://github.com/sigstore/sigstore-js). It doesn't need the GitHub CLI (`gh`), so it verifies the same way on GitHub-hosted runners, self-hosted runners and `container:` jobs. The check passes only for SLSA provenance of the downloaded archive, signed by a GitHub Actions workflow in the `qltysh` organization: the policy of `gh attestation verify --owner qltysh`. The step's log names the workflow that signed the CLI.
 
-The check needs `gh` 2.67.0 or later on the machine that runs the step. GitHub-hosted runners include it. Self-hosted runners and `container:` jobs often don't; without a usable `gh`, the action logs a warning that the run is unverified and continues. Install `gh` there to verify.
+- If the check rejects the CLI, the step fails, even with `skip-errors: true`, and the CLI never runs.
+- If the check can't finish, for example because GitHub or Sigstore is unavailable, the CLI doesn't run either, and `skip-errors` decides whether the step fails.
+
+The runner needs to reach these hosts, directly or through the proxy set in `https_proxy`:
+
+| Host                             | Used for                                                      |
+| -------------------------------- | ------------------------------------------------------------- |
+| `qlty-releases.s3.amazonaws.com` | Downloading the Qlty CLI                                      |
+| `api.github.com`                 | Looking up the CLI's attestation, with `github-token`         |
+| `tuf-repo-cdn.sigstore.dev`      | Sigstore's current certificate authorities and log keys (TUF) |
+
+If GitHub links to an attestation instead of including it in its API response, the action also downloads it from the storage host in that link.
+
+The lookup always goes to github.com. On GitHub Enterprise Server, set `github-token` to a github.com token.
 
 If you set `cli-version`, use a release with an attestation (0.555.0 or later). We recommend the latest release.
+
+### Turning verification off
+
+If verification can't run on your runner, for example because the runner can't reach `api.github.com` or `tuf-repo-cdn.sigstore.dev`, set `verify-attestation: false`:
+
+```yaml
+- uses: qltysh/qlty-action/coverage@v2
+  with:
+    oidc: true
+    files: lcov.info
+    verify-attestation: false
+```
+
+The action then runs the Qlty CLI without verifying it and logs a warning saying so. Keep verification on wherever it can run.
 
 ---
 

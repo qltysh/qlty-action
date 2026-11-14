@@ -62,7 +62,9 @@ export async function runWithTracing(): Promise<void> {
 
 async function run(): Promise<void> {
   const githubToken = core.getInput("github-token");
-  const installer = Installer.create(githubToken);
+  const installer = Installer.create(githubToken, {
+    verifyAttestation: core.getBooleanInput("verify-attestation"),
+  });
   const qltyBinary = await installer.install();
 
   if (!qltyBinary) {

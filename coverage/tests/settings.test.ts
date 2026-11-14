@@ -22,6 +22,7 @@ describe("Settings", () => {
       validate: true,
       "validate-file-threshold": "75",
       command: "publish",
+      "verify-attestation": false,
     });
 
     expect(settings.input).toMatchObject({
@@ -44,6 +45,7 @@ describe("Settings", () => {
       validate: true,
       validateFileThreshold: 75,
       command: "publish",
+      verifyAttestation: false,
     });
   });
 
@@ -76,6 +78,7 @@ describe("Settings", () => {
       validate: false,
       validateFileThreshold: undefined,
       command: "publish", // Default value
+      verifyAttestation: true, // Default value
     });
   });
 

@@ -5,7 +5,7 @@ export {
   Installer,
   type InstallerOptions,
   type NullInstallerOptions,
-  GhAttestationVerifier,
+  SigstoreAttestationVerifier,
   type AttestationResult,
   type AttestationVerifier,
   planDownload,

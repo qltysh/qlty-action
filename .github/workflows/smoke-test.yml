@@ -77,6 +77,72 @@ jobs:
       - name: Install xz for the CLI archive
         run: apt-get update -qq && apt-get install -y -qq xz-utils
 
+      - name: Check that gh is not installed
+        run: |
+          if command -v gh; then
+            echo "::error::gh is installed, so this job no longer tests verification without it"
+            exit 1
+          fi
+
+      # The install fails unless the attestation verifies, so this job passing
+      # means the action verified the CLI without gh. true is the default; it
+      # is set here so the job keeps testing verification if that changes.
+      - name: Install Qlty CLI
+        uses: ./install
+        with:
+          verify-attestation: true
+
+      - name: Run Qlty CLI
+        run: qlty --version
+
+  test-install-without-verification:
+    runs-on: ubuntu-latest
+    container: debian:13-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install xz for the CLI archive
+        run: apt-get update -qq && apt-get install -y -qq xz-utils
+
+      - name: Block the hosts verification needs
+        run: echo "127.0.0.1 api.github.com tuf-repo-cdn.sigstore.dev" >> /etc/hosts
+
+      - name: Install Qlty CLI with verification on
+        id: verified
+        continue-on-error: true
+        uses: ./install
+
+      - name: Check that the install failed closed
+        env:
+          OUTCOME: ${{ steps.verified.outcome }}
+        run: |
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "::error::The install finished without reaching api.github.com, so it could not have verified the Qlty CLI"
+            exit 1
+          fi
+
+      - name: Install Qlty CLI with verification off
+        uses: ./install
+        with:
+          verify-attestation: false
+
+      - name: Run Qlty CLI
+        run: qlty --version
+
+  test-install-on-macos-and-windows:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - name: Install Qlty CLI
         uses: ./install
 
@@ -92,6 +158,8 @@ jobs:
       - test-coverage
       - test-install-without-token-permissions
       - test-install-in-container-without-gh
+      - test-install-without-verification
+      - test-install-on-macos-and-windows
     runs-on: ubuntu-latest
     permissions: {}
 

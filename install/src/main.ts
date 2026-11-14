@@ -4,7 +4,9 @@ import { Installer } from "./installer.js";
 export async function run(): Promise<void> {
   try {
     const token = core.getInput("github-token");
-    const installer = Installer.create(token);
+    const installer = Installer.create(token, {
+      verifyAttestation: core.getBooleanInput("verify-attestation"),
+    });
     const result = await installer.install();
 
     if (!result) {

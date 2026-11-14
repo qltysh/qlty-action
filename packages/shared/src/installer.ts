@@ -6,7 +6,7 @@ import EventEmitter from "node:events";
 
 import type { ToolCache, OperatingSystem, ActionOutput } from "./interfaces.js";
 import type { AttestationVerifier } from "./attestation.js";
-import { GhAttestationVerifier } from "./attestation.js";
+import { SigstoreAttestationVerifier } from "./attestation.js";
 import { planDownload, type DownloadPlan } from "./platform.js";
 import OutputTracker from "./output-tracker.js";
 import {
@@ -18,6 +18,9 @@ import {
 } from "./stubs.js";
 
 const DOWNLOAD_EVENT = "download";
+
+// Only workflows in this GitHub organization can sign a Qlty CLI attestation.
+const ATTESTATION_OWNER = "qltysh";
 
 export class AttestationError extends Error {
   constructor(message: string) {
@@ -35,6 +38,8 @@ export class AttestationUnavailableError extends Error {
 
 export interface InstallerOptions {
   version?: string | undefined;
+  // Defaults to true. False installs the Qlty CLI without verifying it.
+  verifyAttestation?: boolean | undefined;
 }
 
 export interface NullInstallerOptions {
@@ -43,6 +48,7 @@ export interface NullInstallerOptions {
   version?: string | undefined;
   downloadError?: boolean | undefined;
   attestationBehavior?: AttestationBehavior | undefined;
+  verifyAttestation?: boolean | undefined;
 }
 
 export class Installer {
@@ -52,14 +58,16 @@ export class Installer {
   private _attestationVerifier: AttestationVerifier;
   private _emitter: EventEmitter = new EventEmitter();
   private _version: string | undefined;
+  private _verifyAttestation: boolean;
 
-  static create(token: string, options?: InstallerOptions): Installer {
+  static create(token: string, options: InstallerOptions = {}): Installer {
     return new Installer(
       os,
       core,
       tc,
-      new GhAttestationVerifier(token),
-      options?.version,
+      SigstoreAttestationVerifier.create(token),
+      options.version,
+      options.verifyAttestation ?? true,
     );
   }
 
@@ -70,6 +78,7 @@ export class Installer {
       version,
       downloadError = false,
       attestationBehavior = "success",
+      verifyAttestation = true,
     } = options;
 
     return new Installer(
@@ -78,6 +87,7 @@ export class Installer {
       new StubbedToolCache(downloadError),
       new StubbedAttestationVerifier(attestationBehavior),
       version,
+      verifyAttestation,
     );
   }
 
@@ -87,12 +97,14 @@ export class Installer {
     toolCache: ToolCache,
     attestationVerifier: AttestationVerifier,
     version?: string,
+    verifyAttestation = true,
   ) {
     this._os = os;
     this._output = output;
     this._tc = toolCache;
     this._attestationVerifier = attestationVerifier;
     this._version = version;
+    this._verifyAttestation = verifyAttestation;
   }
 
   trackOutput(): OutputTracker<string> {
@@ -111,37 +123,7 @@ export class Installer {
 
     const archivePath = await this._tc.downloadTool(download.url);
 
-    // Verify attestation
-    this._output.info("Verifying sigstore attestation...");
-    const attestationResult = await this._attestationVerifier.verify(
-      archivePath,
-      "qltysh",
-    );
-
-    if (!attestationResult.success) {
-      if (attestationResult.skipped) {
-        // Skipped verification - warn but proceed
-        const warningDetails = attestationResult.error
-          ? ` ${attestationResult.error}`
-          : "";
-        this._output.warning(
-          "Sigstore attestation verification was skipped, so this run is unverified." +
-            warningDetails +
-            " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
-          { title: "Attestation Verification Skipped" },
-        );
-      } else if (attestationResult.unavailable) {
-        throw new AttestationUnavailableError(
-          `Sigstore attestation verification could not finish, so the Qlty CLI was not installed: ${attestationResult.error ?? "Unknown error"}`,
-        );
-      } else {
-        throw new AttestationError(
-          `Sigstore attestation verification failed: ${attestationResult.error ?? "Unknown error"}`,
-        );
-      }
-    } else {
-      this._output.info("Attestation verified successfully");
-    }
+    await this.verifyAttestation(archivePath);
 
     let extractedFolder;
 
@@ -168,7 +150,46 @@ export class Installer {
     return download.binaryName;
   }
 
+  // Throws unless the archive's attestation verifies, so an unverified Qlty
+  // CLI is never extracted or added to PATH. verify-attestation: false is the
+  // only way past it.
+  private async verifyAttestation(archivePath: string): Promise<void> {
+    if (!this._verifyAttestation) {
+      this._output.warning(
+        "Skipped verifying the Qlty CLI's attestation because verify-attestation is false, so this run uses a Qlty CLI that was not verified.",
+        { title: "Attestation verification turned off" },
+      );
+      return;
+    }
+
+    this._output.info(
+      "Verifying the Qlty CLI's Sigstore attestation in the action (no GitHub CLI needed)...",
+    );
+    const result = await this._attestationVerifier.verify(
+      archivePath,
+      ATTESTATION_OWNER,
+    );
+
+    if (result.success) {
+      this._output.info(
+        `Verified the Qlty CLI: SLSA provenance for sha256:${result.digest}, signed by ${result.signer}`,
+      );
+    } else if (result.unavailable) {
+      throw new AttestationUnavailableError(
+        `Sigstore attestation verification could not finish, so the Qlty CLI was not installed: ${asSentence(result.error)} To install without verifying, set verify-attestation: false.`,
+      );
+    } else {
+      throw new AttestationError(
+        `Sigstore attestation verification failed: ${result.error}`,
+      );
+    }
+  }
+
   planDownload(): DownloadPlan | null {
     return planDownload(this._os, this._version);
   }
+}
+
+function asSentence(text: string): string {
+  return /[.!?]$/.test(text) ? text : `${text}.`;
 }

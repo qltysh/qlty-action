@@ -33,6 +33,7 @@ interface ActionInputKeys {
   validate: boolean;
   "validate-file-threshold": string;
   command: string;
+  "verify-attestation": boolean;
 }
 
 function preprocessBlanks<T extends ZodType>(zType: T) {
@@ -81,6 +82,7 @@ const settingsParser = z.object({
     z.coerce.number().gte(1).lte(100).optional(),
   ),
   command: preprocessBlanks(z.enum(["publish", "complete"]).default("publish")),
+  verifyAttestation: z.boolean(),
 });
 
 export type SettingsOutput = z.output<typeof settingsParser>;
@@ -119,6 +121,7 @@ export class Settings {
         validate: input.getBooleanInput("validate"),
         validateFileThreshold: input.getInput("validate-file-threshold"),
         command: input.getInput("command"),
+        verifyAttestation: input.getBooleanInput("verify-attestation"),
       }),
       input,
       fs,
@@ -334,6 +337,8 @@ export class StubbedInputProvider implements InputProvider {
       validate: data.validate || false,
       "validate-file-threshold": data["validate-file-threshold"] || "",
       command: data.command || "",
+      // Matches the default in action.yml.
+      "verify-attestation": data["verify-attestation"] ?? true,
     };
   }
 

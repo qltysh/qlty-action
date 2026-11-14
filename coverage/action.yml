@@ -8,9 +8,18 @@ branding:
 
 inputs:
   github-token:
-    description: "GitHub token for sigstore attestation verification"
+    description: "GitHub token for looking up the Qlty CLI's attestation on github.com"
     required: false
     default: ${{ github.token }}
+
+  verify-attestation:
+    description: >-
+      Verify the Qlty CLI's Sigstore attestation before running it. With true,
+      the default, a Qlty CLI that was not verified never runs. Set it to
+      false only if the check cannot run where your workflow runs; the Qlty
+      CLI then runs without being verified.
+    required: false
+    default: true
 
   token:
     description: "The Qlty Cloud coverage token"
@@ -76,8 +85,10 @@ inputs:
     description: >-
       Keep coverage errors from failing the build: a failed upload, a Qlty
       CLI error, or an attestation check that cannot finish because GitHub
-      is unavailable. It never lets an unverified Qlty CLI run, and an
-      attestation check that rejects the CLI always fails the step.
+      or Sigstore is unavailable. In that last case the Qlty CLI does not
+      run. skip-errors never lets an unverified Qlty CLI run, and an
+      attestation check that rejects the CLI always fails the step. Only
+      verify-attestation: false runs the CLI without verifying it.
     required: false
     default: true
 

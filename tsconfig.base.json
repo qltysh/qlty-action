@@ -9,6 +9,7 @@
 
     // Modules
     "module": "NodeNext",
+    "resolveJsonModule": true,
 
     // Type checking
     "strict": true,

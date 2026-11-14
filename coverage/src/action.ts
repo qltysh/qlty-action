@@ -3,6 +3,8 @@ import {
   AttestationUnavailableError,
   Installer,
   OutputTracker,
+  type AttestationBehavior,
+  type InstallerOptions,
 } from "./installer";
 import { Settings } from "./settings";
 import * as actionsExec from "@actions/exec";
@@ -35,6 +37,7 @@ export class CoverageAction {
     context = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
     installer,
+    attestationBehavior = "success",
     settings = Settings.createNull(),
     env = process.env,
   }: {
@@ -42,6 +45,7 @@ export class CoverageAction {
     context?: ActionContext;
     executor?: CommandExecutor;
     installer?: Installer;
+    attestationBehavior?: AttestationBehavior;
     settings?: Settings;
     env?: ProcessEnv;
   } = {}): CoverageAction {
@@ -51,12 +55,20 @@ export class CoverageAction {
       executor,
       installer:
         installer ||
-        Installer.createNull(
-          settings.getVersion() ? { version: settings.getVersion() } : {},
-        ),
+        Installer.createNull({
+          ...CoverageAction.installerOptions(settings),
+          attestationBehavior,
+        }),
       settings,
       env,
     });
+  }
+
+  static installerOptions(settings: Settings): InstallerOptions {
+    return {
+      version: settings.getVersion(),
+      verifyAttestation: settings.input.verifyAttestation,
+    };
   }
 
   constructor({
@@ -79,10 +91,9 @@ export class CoverageAction {
     this._output = output;
     this._context = context;
     this._executor = executor;
-    const version = settings.getVersion();
     this._installer =
       installer ||
-      Installer.create(githubToken, version ? { version } : undefined);
+      Installer.create(githubToken, CoverageAction.installerOptions(settings));
     this._settings = settings;
     this._env = env;
   }

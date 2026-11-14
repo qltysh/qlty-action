@@ -1,58 +1,10 @@
-import type { ExecOptions } from "@actions/exec";
+import type { IncomingHttpHeaders } from "node:http";
+import { Readable } from "node:stream";
 import type { OperatingSystem, ToolCache, ActionOutput } from "./interfaces.js";
-import type {
-  AttestationResult,
-  AttestationVerifier,
-  CommandRunner,
-} from "./attestation.js";
+import type { AttestationResult, AttestationVerifier } from "./attestation.js";
+import type { HttpResponse, HttpTransport } from "./http.js";
 
-export type AttestationBehavior =
-  | "success"
-  | "fail"
-  | "unavailable"
-  | "gh-missing";
-
-export interface StubbedCommandResult {
-  exitCode?: number;
-  output?: string;
-  spawnError?: string;
-}
-
-export class StubbedGhRunner implements CommandRunner {
-  calls: {
-    command: string;
-    args: string[];
-    env: Record<string, string> | undefined;
-  }[] = [];
-
-  constructor(
-    private responses: {
-      version?: StubbedCommandResult;
-      verify?: StubbedCommandResult;
-    } = {},
-  ) {}
-
-  async exec(
-    command: string,
-    args: string[],
-    options: ExecOptions,
-  ): Promise<number> {
-    this.calls.push({ command, args, env: options.env });
-    const response =
-      args[0] === "--version"
-        ? (this.responses.version ?? {
-            output: "gh version 2.97.0 (2026-07-31)\n",
-          })
-        : (this.responses.verify ?? {});
-    if (response.spawnError) {
-      throw new Error(response.spawnError);
-    }
-    if (response.output) {
-      options.listeners?.stdout?.(Buffer.from(response.output));
-    }
-    return response.exitCode ?? 0;
-  }
-}
+export type AttestationBehavior = "success" | "fail" | "unavailable";
 
 export class StubbedAttestationVerifier implements AttestationVerifier {
   verifiedFiles: string[] = [];
@@ -62,18 +14,56 @@ export class StubbedAttestationVerifier implements AttestationVerifier {
     this.verifiedFiles.push(filePath);
     switch (this.behavior) {
       case "success":
-        return { success: true };
+        return {
+          success: true,
+          digest: "0123abcd",
+          signer:
+            "https://github.com/qltysh/qlty/.github/workflows/build.yml@refs/heads/main",
+        };
       case "fail":
-        return { success: false, error: "Stubbed failure" };
+        return { success: false, unavailable: false, error: "Stubbed failure" };
       case "unavailable":
         return { success: false, unavailable: true, error: "Stubbed outage" };
-      case "gh-missing":
-        return {
-          success: false,
-          skipped: true,
-          error: "GitHub CLI (gh) is not installed.",
-        };
     }
+  }
+}
+
+export interface StubbedHttpResponse {
+  statusCode?: number;
+  headers?: IncomingHttpHeaders;
+  body?: string | Buffer;
+  error?: Error;
+}
+
+// Answers each URL with its stubbed response, or the next one when the URL
+// has a list. Any other URL gets `fallback`, by default a 404.
+export class StubbedHttpTransport implements HttpTransport {
+  requests: { url: string; headers: Record<string, string> }[] = [];
+
+  constructor(
+    private responses: Record<
+      string,
+      StubbedHttpResponse | StubbedHttpResponse[]
+    > = {},
+    private fallback: StubbedHttpResponse = { statusCode: 404 },
+  ) {}
+
+  async get(
+    url: string,
+    headers: Record<string, string> = {},
+  ): Promise<HttpResponse> {
+    this.requests.push({ url, headers });
+    const stubbed = this.responses[url];
+    const response =
+      (Array.isArray(stubbed) ? stubbed.shift() : stubbed) ?? this.fallback;
+    if (response.error) {
+      throw response.error;
+    }
+    return {
+      statusCode: response.statusCode ?? 200,
+      headers: response.headers ?? {},
+      body: Readable.from([Buffer.from(response.body ?? "")]),
+    };
   }
 }
 

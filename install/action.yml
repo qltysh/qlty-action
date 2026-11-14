@@ -8,9 +8,19 @@ branding:
 
 inputs:
   github-token:
-    description: "GitHub token for sigstore attestation verification"
+    description: "GitHub token for looking up the Qlty CLI's attestation on github.com"
     required: false
     default: ${{ github.token }}
+
+  verify-attestation:
+    description: >-
+      Verify the Qlty CLI's Sigstore attestation before installing it. With
+      true, the default, the step fails instead of installing a Qlty CLI it
+      could not verify. Set it to false only if the check cannot run where
+      your workflow runs; the Qlty CLI is then installed without being
+      verified.
+    required: false
+    default: "true"
 
 runs:
   using: node24

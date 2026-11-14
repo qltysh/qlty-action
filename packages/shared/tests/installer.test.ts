@@ -119,7 +119,7 @@ describe("Installer", () => {
       await expect(installer.install()).rejects.toMatchObject({
         name: "AttestationUnavailableError",
         message:
-          "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage",
+          "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage. To install without verifying, set verify-attestation: false.",
       });
       expect(output.paths).toEqual([]);
     });
@@ -135,22 +135,42 @@ describe("Installer", () => {
       expect(attestationVerifier.verifiedFiles).toHaveLength(1);
     });
 
-    test("warns that the run is unverified but installs when gh is missing", async () => {
-      const { output, downloads, installer } = createTrackedInstaller({
+    test("installs without verifying when verify-attestation is false", async () => {
+      const attestationVerifier = new StubbedAttestationVerifier("fail");
+      const { output, installer } = createTrackedInstaller({
         os: new StubbedOperatingSystem("linux", "x64"),
-        attestationVerifier: new StubbedAttestationVerifier("gh-missing"),
+        attestationVerifier,
+        verifyAttestation: false,
       });
       const result = await installer.install();
       expect(result).toBe("qlty");
-      expect(downloads.clear()).toHaveLength(1);
-      expect(output.failures).toEqual([]);
+      expect(output.paths).toHaveLength(1);
+      expect(attestationVerifier.verifiedFiles).toEqual([]);
       expect(output.warnings).toEqual([
         {
-          title: "Attestation Verification Skipped",
+          title: "Attestation verification turned off",
           message:
-            "Sigstore attestation verification was skipped, so this run is unverified. GitHub CLI (gh) is not installed. Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
+            "Skipped verifying the Qlty CLI's attestation because verify-attestation is false, so this run uses a Qlty CLI that was not verified.",
         },
       ]);
+    });
+
+    test("logs the check that verified the CLI", async () => {
+      const { output, installer } = createTrackedInstaller({
+        os: new StubbedOperatingSystem("linux", "x64"),
+      });
+      await installer.install();
+      expect(output.infos).toEqual([
+        "Verifying the Qlty CLI's Sigstore attestation in the action (no GitHub CLI needed)...",
+        "Verified the Qlty CLI: SLSA provenance for sha256:0123abcd, signed by https://github.com/qltysh/qlty/.github/workflows/build.yml@refs/heads/main",
+      ]);
+      expect(output.warnings).toEqual([]);
+    });
+
+    test("verifies unless verify-attestation is false", async () => {
+      await expect(
+        Installer.createNull({ attestationBehavior: "fail" }).install(),
+      ).rejects.toThrow("Sigstore attestation verification failed");
     });
   });
 
@@ -159,12 +179,14 @@ describe("Installer", () => {
     os = new StubbedOperatingSystem(),
     output = new StubbedOutput(),
     attestationVerifier = new StubbedAttestationVerifier("success"),
+    verifyAttestation = true,
     version = undefined,
   }: {
     toolCache?: StubbedToolCache;
     os?: StubbedOperatingSystem;
     output?: StubbedOutput;
     attestationVerifier?: StubbedAttestationVerifier;
+    verifyAttestation?: boolean;
     version?: string;
   } = {}) {
     const installer = new Installer(
@@ -173,6 +195,7 @@ describe("Installer", () => {
       toolCache,
       attestationVerifier,
       version,
+      verifyAttestation,
     );
     const downloads = installer.trackOutput();
     return { installer, downloads, output, attestationVerifier };

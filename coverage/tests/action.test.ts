@@ -3,7 +3,7 @@ import {
   CoverageError,
   StubbedActionContext,
 } from "../src/action";
-import { Installer } from "../src/installer";
+import { Installer, type AttestationBehavior } from "../src/installer";
 import { FileSystem, Settings, StubbedFileSystem } from "../src/settings";
 import { StubbedCommandExecutor } from "../src/util/exec";
 import { StubbedOutput } from "../src/util/output";
@@ -646,7 +646,7 @@ describe("CoverageAction", () => {
 
       await action.run();
       expect(output.errors).toEqual([
-        "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage",
+        "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage. To install without verifying, set verify-attestation: false.",
       ]);
       expect(commands.clear()).toEqual([]);
     });
@@ -662,23 +662,40 @@ describe("CoverageAction", () => {
       });
 
       await expect(action.run()).rejects.toThrow(
-        "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage",
+        "Sigstore attestation verification could not finish, so the Qlty CLI was not installed: Stubbed outage. To install without verifying, set verify-attestation: false.",
       );
       expect(commands.clear()).toEqual([]);
     });
 
-    test("publishes when gh is missing and skip-errors is true", async () => {
+    test("publishes without verifying the CLI when verify-attestation is false", async () => {
+      const { commands, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": false,
+          "verify-attestation": false,
+        }),
+        attestationBehavior: "fail",
+      });
+
+      await action.run();
+      expect(commands.clear()).toHaveLength(1);
+    });
+
+    test("verifies the CLI by default", async () => {
       const { commands, action } = createTrackedAction({
         settings: Settings.createNull({
           "coverage-token": "qltcp_1234567890",
           files: "info.lcov",
           "skip-errors": true,
         }),
-        installer: Installer.createNull({ attestationBehavior: "gh-missing" }),
+        attestationBehavior: "fail",
       });
 
-      await action.run();
-      expect(commands.clear()).toHaveLength(1);
+      await expect(action.run()).rejects.toThrow(
+        "Sigstore attestation verification failed: Stubbed failure",
+      );
+      expect(commands.clear()).toEqual([]);
     });
 
     test("handles empty files array with spaces in the files input", async () => {
@@ -708,15 +725,18 @@ describe("CoverageAction", () => {
     context = new StubbedActionContext(),
     executor = new StubbedCommandExecutor(),
     output = new StubbedOutput(),
-    installer = Installer.createNull(),
+    installer = undefined as Installer | undefined,
+    attestationBehavior = "success" as AttestationBehavior,
     env = {},
   } = {}) {
+    // Without an installer, createNull builds one from the settings.
     const action = CoverageAction.createNull({
       output,
       settings,
       context,
       executor,
-      installer,
+      ...(installer ? { installer } : {}),
+      attestationBehavior,
       env,
     });
     const commands = action.trackOutput();

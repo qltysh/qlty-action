@@ -1,6 +1,6 @@
 # Qlty Install Action
 
-Installs the [Qlty CLI](https://github.com/qltysh/qlty) and adds it to `PATH`. The action checks the CLI's attestation with the GitHub CLI (`gh`) 2.67.0 or later before installing it; see [Verifying the Qlty CLI](../coverage/README.md#verifying-the-qlty-cli).
+Installs the [Qlty CLI](https://github.com/qltysh/qlty) and adds it to `PATH`. Before installing it, the action verifies the CLI's attestation itself, without the GitHub CLI (`gh`), and fails the step if it can't. See [Verifying the Qlty CLI](../coverage/README.md#verifying-the-qlty-cli).
 
 ## Usage
 
@@ -12,6 +12,7 @@ steps:
 
 ## Inputs
 
-| Input          | Description                                        | Required | Default               |
-| -------------- | -------------------------------------------------- | -------- | --------------------- |
-| `github-token` | GitHub token for sigstore attestation verification | No       | `${{ github.token }}` |
+| Input                | Description                                                                                                          | Required | Default               |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | --------------------- |
+| `github-token`       | GitHub token for looking up the Qlty CLI's attestation on github.com                                                 | No       | `${{ github.token }}` |
+| `verify-attestation` | Verify the Qlty CLI's attestation before installing it. Set to `false` only if verification can't run on your runner | No       | `true`                |
