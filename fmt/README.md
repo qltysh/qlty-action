@@ -30,9 +30,8 @@ A report holds:
 - The Qlty CLI's exit code, when the CLI ran.
 - The action's name and version.
 - The runner's operating system and Node.js version.
-- A stack trace through the action's code, with file names but not directories.
 
-A report never holds the output of `qlty fmt`, error messages, your repository's name, the run's URL, your commit, or the runner's hostname.
+A report never holds the output of `qlty fmt`, error messages, a stack trace, your repository's name, the run's URL, your commit, or the runner's hostname.
 
 To send nothing, set `telemetry: false`:
 

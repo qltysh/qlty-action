@@ -152,15 +152,6 @@ describe("Sentry events", () => {
     return JSON.parse(lines[eventIndex + 1] ?? "{}");
   }
 
-  function framesOf(event: Record<string, unknown>): Record<string, unknown>[] {
-    const [exception] = (
-      event["exception"] as {
-        values: { stacktrace?: { frames: Record<string, unknown>[] } }[];
-      }
-    ).values;
-    return exception?.stacktrace?.frames ?? [];
-  }
-
   test("carries the class, kind and exit code, not the message", async () => {
     const event = await capture(new CoverageError(CLI_OUTPUT, 99));
 
@@ -191,37 +182,16 @@ describe("Sentry events", () => {
       (event["sdk"] as { integrations: string[] }).integrations,
     ).not.toContain("Spotlight");
 
-    const [exception] = (event["exception"] as { values: object[] }).values;
-    expect(exception).toMatchObject({
-      type: "CoverageError",
-      value: "cli_failed",
-      mechanism: { type: "generic", handled: true },
+    // No stacktrace: the SDK would parse frames out of the message.
+    expect(event["exception"]).toEqual({
+      values: [
+        {
+          type: "CoverageError",
+          value: "cli_failed",
+          mechanism: { type: "generic", handled: true },
+        },
+      ],
     });
-  });
-
-  test("keeps the real stack frames and none from the message", async () => {
-    const frames = framesOf(await capture(new CoverageError(CLI_OUTPUT, 1)));
-
-    expect(frames.map((frame) => frame["filename"])).toContain(
-      "telemetry.test.ts",
-    );
-    for (const frame of frames) {
-      expect(
-        Object.keys(frame).every((key) =>
-          ["filename", "function", "lineno", "colno", "in_app"].includes(key),
-        ),
-      ).toBe(true);
-      expect(frame["filename"]).not.toMatch(/[/\\]/);
-    }
-  });
-
-  test("sends no frames when the message changed after the stack was taken", async () => {
-    const error = new CoverageError("original", 1);
-    // V8 builds the stack text, with the message at the time, on first read.
-    expect(error.stack).toContain("original");
-    error.message = CLI_OUTPUT;
-
-    expect(framesOf(await capture(error))).toEqual([]);
   });
 
   test("leaves out the exit code when the CLI did not run", async () => {
@@ -237,8 +207,10 @@ describe("Sentry events", () => {
     const event = await capture(new TypeError(CLI_OUTPUT));
 
     expect(event["tags"]).toEqual({ action: "coverage" });
-    const [exception] = (event["exception"] as { values: object[] }).values;
-    expect(exception).toMatchObject({ type: "TypeError" });
-    expect(exception).not.toHaveProperty("value");
+    expect(event["exception"]).toEqual({
+      values: [
+        { type: "TypeError", mechanism: { type: "generic", handled: true } },
+      ],
+    });
   });
 });

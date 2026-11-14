@@ -1,12 +1,6 @@
 import * as core from "@actions/core";
 import * as Sentry from "@sentry/node";
-import type {
-  ErrorEvent,
-  Exception,
-  NodeOptions,
-  StackFrame,
-} from "@sentry/node";
-import path from "node:path";
+import type { ErrorEvent, Exception, NodeOptions } from "@sentry/node";
 import { errorText, ReportableError } from "./errors.js";
 import Version from "./version.js";
 
@@ -82,7 +76,8 @@ export function resolveTelemetry(input: string, env: Env): TelemetrySetting {
 /**
  * Sentry options that send only the error's class, its failure kind and the
  * CLI's exit code, plus the action's name and version and the runner's OS
- * and Node.js version. Nothing is sent when the step succeeds.
+ * and Node.js version, with no stack trace. Nothing is sent when the step
+ * succeeds.
  *
  * Options the SDK would otherwise read from the job's environment are set
  * here, because the customer's job controls that environment.
@@ -180,16 +175,19 @@ function minimalEvent(
   const thrown = event.exception?.values?.at(-1);
   if (thrown) {
     minimal.exception = {
-      values: [minimalException(thrown, error, reportable?.kind)],
+      values: [minimalException(thrown, reportable?.kind)],
     };
   }
 
   return minimal;
 }
 
+// No stack trace is sent. The SDK parses frames out of `error.stack`, which
+// starts with the error's message, so any message line containing "at "
+// becomes a frame, and messages can hold CLI output. Without frames, Sentry
+// groups reports by their type and kind.
 function minimalException(
   exception: Exception,
-  error: unknown,
   kind: string | undefined,
 ): Exception {
   const minimal: Exception = {};
@@ -205,57 +203,6 @@ function minimalException(
     if (exception.mechanism.handled !== undefined) {
       minimal.mechanism.handled = exception.mechanism.handled;
     }
-  }
-
-  const frames = stackFrames(error);
-  if (frames.length > 0) {
-    minimal.stacktrace = { frames: frames.map(minimalFrame) };
-  }
-
-  return minimal;
-}
-
-/**
- * Parses the thrown error's stack frames without its message. V8 starts
- * `error.stack` with the message, which can hold CLI output, and the SDK's
- * parser turns any message line containing "at " into a frame. The SDK's
- * own frames are not used for that reason.
- */
-function stackFrames(error: unknown): StackFrame[] {
-  if (!(error instanceof Error) || typeof error.stack !== "string") {
-    return [];
-  }
-
-  const { stack, message } = error;
-  const start = stack.indexOf(message);
-  // The message was changed after the stack was captured, so there is no
-  // safe place to cut.
-  if (start === -1) {
-    return [];
-  }
-
-  return Sentry.defaultStackParser(stack.slice(start + message.length));
-}
-
-function minimalFrame(frame: StackFrame): StackFrame {
-  const minimal: StackFrame = {};
-
-  // A self-hosted runner's path can include a user name, so keep only the
-  // file name. path.win32 splits on both "/" and "\".
-  if (frame.filename !== undefined) {
-    minimal.filename = path.win32.basename(frame.filename);
-  }
-  if (frame.function !== undefined) {
-    minimal.function = frame.function;
-  }
-  if (frame.lineno !== undefined) {
-    minimal.lineno = frame.lineno;
-  }
-  if (frame.colno !== undefined) {
-    minimal.colno = frame.colno;
-  }
-  if (frame.in_app !== undefined) {
-    minimal.in_app = frame.in_app;
   }
 
   return minimal;

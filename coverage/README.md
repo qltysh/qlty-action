@@ -127,9 +127,8 @@ A report holds:
 - The Qlty CLI's exit code, when the CLI ran.
 - The action's name and version.
 - The runner's operating system and Node.js version.
-- A stack trace through the action's code, with file names but not directories.
 
-A report never holds the Qlty CLI's output, error messages, your coverage token, your repository's name, the run's URL, your commit, or the runner's hostname.
+A report never holds the Qlty CLI's output, error messages, a stack trace, your coverage token, your repository's name, the run's URL, your commit, or the runner's hostname.
 
 With `skip-errors: true`, the default, the errors listed under [What `skip-errors` covers](#what-skip-errors-covers) are only logged, so they send no report.
 
