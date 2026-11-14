@@ -45008,9 +45008,9 @@ var GhAttestationVerifier = class {
     this.env = env;
   }
   async verify(filePath, owner) {
-    const unusable = await this.unusableGhReason();
+    const unusable = await this.unusableGh();
     if (unusable) {
-      return { success: false, skipped: true, error: unusable };
+      return { success: false, ...unusable };
     }
     const env = { GH_TOKEN: this.token };
     for (const [key, value] of Object.entries(this.env)) {
@@ -45064,7 +45064,7 @@ var GhAttestationVerifier = class {
     }
     return { success: false, error: error3 };
   }
-  async unusableGhReason() {
+  async unusableGh() {
     let output = "";
     try {
       await this.runner.exec("gh", ["--version"], {
@@ -45077,15 +45077,24 @@ var GhAttestationVerifier = class {
         }
       });
     } catch {
-      return "GitHub CLI (gh) is not installed.";
+      return {
+        skipped: "gh-missing",
+        error: "GitHub CLI (gh) is not installed."
+      };
     }
     const match = output.match(/gh version (\d+)\.(\d+)\.(\d+)/);
     if (!match) {
-      return "GitHub CLI (gh) did not report its version.";
+      return {
+        skipped: "gh-version-unknown",
+        error: "GitHub CLI (gh) did not report its version."
+      };
     }
     const version = match.slice(1, 4).map(Number);
     if (isOlder(version, MINIMUM_GH_VERSION)) {
-      return `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`;
+      return {
+        skipped: "gh-too-old",
+        error: `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`
+      };
     }
     return null;
   }
@@ -45176,8 +45185,14 @@ var StubbedAttestationVerifier = class {
       case "gh-missing":
         return {
           success: false,
-          skipped: true,
+          skipped: "gh-missing",
           error: "GitHub CLI (gh) is not installed."
+        };
+      case "gh-too-old":
+        return {
+          success: false,
+          skipped: "gh-too-old",
+          error: "GitHub CLI (gh) 2.45.0 is older than 2.67.0."
         };
     }
   }
@@ -45249,6 +45264,8 @@ var StubbedOutput = class {
 
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
+var ATTESTATION_EVENT = "attestation";
+var ATTESTATION_DOCS_URL = "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli";
 var AttestationError = class extends Error {
   constructor(message) {
     super(message);
@@ -45303,6 +45320,17 @@ var Installer = class _Installer {
   trackOutput() {
     return OutputTracker.create(this._emitter, DOWNLOAD_EVENT);
   }
+  trackAttestation() {
+    return OutputTracker.create(
+      this._emitter,
+      ATTESTATION_EVENT
+    );
+  }
+  // Called once per install(), before it returns or throws, with the outcome
+  // of the attestation check.
+  onAttestation(listener) {
+    this._emitter.on(ATTESTATION_EVENT, listener);
+  }
   async install() {
     const download = this.planDownload();
     if (!download) {
@@ -45312,17 +45340,23 @@ var Installer = class _Installer {
       return null;
     }
     const archivePath = await this._tc.downloadTool(download.url);
-    this._output.info("Verifying sigstore attestation...");
+    this._output.info(
+      "Attempting to verify the Qlty CLI's Sigstore attestation..."
+    );
     const attestationResult = await this._attestationVerifier.verify(
       archivePath,
       "qltysh"
     );
+    this._emitter.emit(
+      ATTESTATION_EVENT,
+      attestationOutcome(attestationResult)
+    );
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
-        const warningDetails = attestationResult.error ? ` ${attestationResult.error}` : "";
+        const reason = attestationResult.error ? ` ${attestationResult.error}` : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped, so this run is unverified." + warningDetails + " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
-          { title: "Attestation Verification Skipped" }
+          "Installing the Qlty CLI without checking its Sigstore attestation. The unverified CLI runs with access to this job's tokens and secrets." + reason + ` Install GitHub CLI 2.67.0 or later to verify the Qlty CLI. See ${ATTESTATION_DOCS_URL}`,
+          { title: "Qlty CLI Not Verified" }
         );
       } else if (attestationResult.unavailable) {
         throw new AttestationUnavailableError(
@@ -45359,6 +45393,15 @@ var Installer = class _Installer {
     return planDownload(this._os, this._version);
   }
 };
+function attestationOutcome(result) {
+  if (result.success) {
+    return "verified";
+  }
+  if (result.skipped) {
+    return `skipped-${result.skipped}`;
+  }
+  return result.unavailable ? "unavailable" : "failed";
+}
 
 // src/main.ts
 async function run() {

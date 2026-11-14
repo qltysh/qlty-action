@@ -76,8 +76,9 @@ inputs:
     description: >-
       Keep coverage errors from failing the build: a failed upload, a Qlty
       CLI error, or an attestation check that cannot finish because GitHub
-      is unavailable. It never lets an unverified Qlty CLI run, and an
-      attestation check that rejects the CLI always fails the step.
+      is unavailable. An attestation check that rejects the Qlty CLI always
+      fails the step. Without GitHub CLI (gh) 2.67.0 or later on the runner,
+      the check is skipped and the CLI runs unverified with either setting.
     required: false
     default: true
 

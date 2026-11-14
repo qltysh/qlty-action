@@ -35,9 +35,23 @@ describe("GhAttestationVerifier", () => {
     const result = await createVerifier(runner).verify("qlty.tar.xz", "qltysh");
     expect(result).toEqual({
       success: false,
-      skipped: true,
+      skipped: "gh-missing",
       error: "GitHub CLI (gh) is not installed.",
     });
+  });
+
+  test("skips when gh does not report its version", async () => {
+    const runner = new StubbedGhRunner({
+      version: { output: "gh dev\n" },
+      verify: { exitCode: 0 },
+    });
+    const result = await createVerifier(runner).verify("qlty.tar.xz", "qltysh");
+    expect(result).toEqual({
+      success: false,
+      skipped: "gh-version-unknown",
+      error: "GitHub CLI (gh) did not report its version.",
+    });
+    expect(runner.calls).toHaveLength(1);
   });
 
   test.each(["2.66.0", "2.45.0"])(
@@ -53,7 +67,7 @@ describe("GhAttestationVerifier", () => {
       );
       expect(result).toEqual({
         success: false,
-        skipped: true,
+        skipped: "gh-too-old",
         error: `GitHub CLI (gh) ${version} is older than 2.67.0.`,
       });
       expect(runner.calls).toHaveLength(1);

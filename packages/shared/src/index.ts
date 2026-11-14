@@ -3,6 +3,7 @@ export {
   AttestationError,
   AttestationUnavailableError,
   Installer,
+  type AttestationOutcome,
   type InstallerOptions,
   type NullInstallerOptions,
 } from "./installer.js";
@@ -11,6 +12,7 @@ export {
 export {
   GhAttestationVerifier,
   type AttestationResult,
+  type AttestationSkipReason,
   type AttestationVerifier,
   type CommandRunner,
 } from "./attestation.js";

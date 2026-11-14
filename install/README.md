@@ -1,6 +1,6 @@
 # Qlty Install Action
 
-Installs the [Qlty CLI](https://github.com/qltysh/qlty) and adds it to `PATH`. The action checks the CLI's attestation with the GitHub CLI (`gh`) 2.67.0 or later before installing it; see [Verifying the Qlty CLI](../coverage/README.md#verifying-the-qlty-cli).
+Installs the [Qlty CLI](https://github.com/qltysh/qlty) and adds it to `PATH`. Before installing the CLI, the action checks its attestation with the GitHub CLI (`gh`) 2.67.0 or later. If the runner has no usable `gh`, the action logs a warning and installs the CLI unverified. See [Verifying the Qlty CLI](../coverage/README.md#verifying-the-qlty-cli).
 
 ## Usage
 

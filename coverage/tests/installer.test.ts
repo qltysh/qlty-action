@@ -122,7 +122,7 @@ describe("Installer", () => {
       expect(attestationVerifier.verifiedFiles).toHaveLength(1);
     });
 
-    test("warns that the run is unverified but installs when gh is missing", async () => {
+    test("warns that the Qlty CLI is unverified but installs it when gh is missing", async () => {
       const { output, installer } = createTrackedInstaller({
         os: new StubbedOperatingSystem("linux", "x64"),
         attestationVerifier: new StubbedAttestationVerifier("gh-missing"),
@@ -131,10 +131,13 @@ describe("Installer", () => {
       expect(result).toBe("qlty");
       expect(output.failures).toEqual([]);
       expect(output.warnings).toHaveLength(1);
-      expect(output.warnings[0]?.title).toBe(
-        "Attestation Verification Skipped",
+      expect(output.warnings[0]?.title).toBe("Qlty CLI Not Verified");
+      expect(output.warnings[0]?.message).toContain(
+        "Installing the Qlty CLI without checking its Sigstore attestation.",
       );
-      expect(output.warnings[0]?.message).toContain("this run is unverified");
+      expect(output.warnings[0]?.message).toContain(
+        "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli",
+      );
     });
   });
 

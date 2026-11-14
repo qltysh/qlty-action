@@ -7,6 +7,7 @@ import { Installer } from "../src/installer";
 import { FileSystem, Settings, StubbedFileSystem } from "../src/settings";
 import { StubbedCommandExecutor } from "../src/util/exec";
 import { StubbedOutput } from "../src/util/output";
+import { StubbedTelemetry } from "../src/util/telemetry";
 
 describe("CoverageAction", () => {
   describe("validation errors", async () => {
@@ -703,6 +704,55 @@ describe("CoverageAction", () => {
     });
   });
 
+  describe("attestation telemetry", () => {
+    test.each([
+      { behavior: "success", tag: "verified" },
+      { behavior: "gh-missing", tag: "skipped-gh-missing" },
+      { behavior: "gh-too-old", tag: "skipped-gh-too-old" },
+    ] as const)(
+      "tags the run $tag when the check returns $behavior",
+      async ({ behavior, tag }) => {
+        const { telemetry, action } = createTrackedAction({
+          settings: Settings.createNull({
+            "coverage-token": "qltcp_1234567890",
+            files: "info.lcov",
+          }),
+          installer: Installer.createNull({ attestationBehavior: behavior }),
+        });
+
+        await action.run();
+        expect(telemetry.tags).toEqual({ attestation: tag });
+      },
+    );
+
+    test("tags the run failed when the check rejects the CLI", async () => {
+      const { telemetry, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+        }),
+        installer: Installer.createNull({ attestationBehavior: "fail" }),
+      });
+
+      await expect(action.run()).rejects.toThrow();
+      expect(telemetry.tags).toEqual({ attestation: "failed" });
+    });
+
+    test("tags the run unavailable when the check cannot finish and skip-errors is true", async () => {
+      const { telemetry, action } = createTrackedAction({
+        settings: Settings.createNull({
+          "coverage-token": "qltcp_1234567890",
+          files: "info.lcov",
+          "skip-errors": true,
+        }),
+        installer: Installer.createNull({ attestationBehavior: "unavailable" }),
+      });
+
+      await action.run();
+      expect(telemetry.tags).toEqual({ attestation: "unavailable" });
+    });
+  });
+
   function createTrackedAction({
     settings = Settings.createNull(),
     context = new StubbedActionContext(),
@@ -710,6 +760,7 @@ describe("CoverageAction", () => {
     output = new StubbedOutput(),
     installer = Installer.createNull(),
     env = {},
+    telemetry = new StubbedTelemetry(),
   } = {}) {
     const action = CoverageAction.createNull({
       output,
@@ -718,8 +769,9 @@ describe("CoverageAction", () => {
       executor,
       installer,
       env,
+      telemetry,
     });
     const commands = action.trackOutput();
-    return { commands, action, output };
+    return { commands, action, output, telemetry };
   }
 });

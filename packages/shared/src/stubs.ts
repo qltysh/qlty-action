@@ -10,7 +10,8 @@ export type AttestationBehavior =
   | "success"
   | "fail"
   | "unavailable"
-  | "gh-missing";
+  | "gh-missing"
+  | "gh-too-old";
 
 export interface StubbedCommandResult {
   exitCode?: number;
@@ -70,8 +71,14 @@ export class StubbedAttestationVerifier implements AttestationVerifier {
       case "gh-missing":
         return {
           success: false,
-          skipped: true,
+          skipped: "gh-missing",
           error: "GitHub CLI (gh) is not installed.",
+        };
+      case "gh-too-old":
+        return {
+          success: false,
+          skipped: "gh-too-old",
+          error: "GitHub CLI (gh) 2.45.0 is older than 2.67.0.",
         };
     }
   }

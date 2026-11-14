@@ -1,8 +1,15 @@
 import * as actionsExec from "@actions/exec";
 
+// Why the check didn't run. These values go to telemetry, so keep them fixed
+// strings with no versions, paths or other details from the runner.
+export type AttestationSkipReason =
+  | "gh-missing"
+  | "gh-too-old"
+  | "gh-version-unknown";
+
 export interface AttestationResult {
   success: boolean;
-  skipped?: boolean;
+  skipped?: AttestationSkipReason;
   unavailable?: boolean;
   error?: string;
 }
@@ -54,9 +61,9 @@ export class GhAttestationVerifier implements AttestationVerifier {
   }
 
   async verify(filePath: string, owner: string): Promise<AttestationResult> {
-    const unusable = await this.unusableGhReason();
+    const unusable = await this.unusableGh();
     if (unusable) {
-      return { success: false, skipped: true, error: unusable };
+      return { success: false, ...unusable };
     }
 
     const env: Record<string, string> = { GH_TOKEN: this.token };
@@ -116,7 +123,10 @@ export class GhAttestationVerifier implements AttestationVerifier {
     return { success: false, error };
   }
 
-  private async unusableGhReason(): Promise<string | null> {
+  private async unusableGh(): Promise<{
+    skipped: AttestationSkipReason;
+    error: string;
+  } | null> {
     let output = "";
     try {
       await this.runner.exec("gh", ["--version"], {
@@ -129,17 +139,26 @@ export class GhAttestationVerifier implements AttestationVerifier {
         },
       });
     } catch {
-      return "GitHub CLI (gh) is not installed.";
+      return {
+        skipped: "gh-missing",
+        error: "GitHub CLI (gh) is not installed.",
+      };
     }
 
     const match = output.match(/gh version (\d+)\.(\d+)\.(\d+)/);
     if (!match) {
-      return "GitHub CLI (gh) did not report its version.";
+      return {
+        skipped: "gh-version-unknown",
+        error: "GitHub CLI (gh) did not report its version.",
+      };
     }
 
     const version = match.slice(1, 4).map(Number);
     if (isOlder(version, MINIMUM_GH_VERSION)) {
-      return `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`;
+      return {
+        skipped: "gh-too-old",
+        error: `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`,
+      };
     }
 
     return null;

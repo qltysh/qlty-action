@@ -106,13 +106,17 @@ The Qlty Cloud offers free plans, including for commercial projects, with no lim
 - The Qlty CLI can't be downloaded, or it exits with an error.
 - The attestation check can't finish because GitHub or Sigstore is unavailable, for example a 5xx response, a rate limit or a timeout. The action doesn't run the CLI, so that run uploads no coverage.
 
-`skip-errors` never lets an unverified Qlty CLI run. If the attestation check finishes and rejects the CLI, for example because no attestation matches the downloaded archive, the step fails even with `skip-errors: true`.
+If the attestation check finishes and rejects the Qlty CLI, for example because no attestation matches the downloaded archive, the step fails even with `skip-errors: true`, and the CLI doesn't run.
+
+`skip-errors` doesn't cover a runner without `gh` 2.67.0 or later, where the check can't run. With either setting, the action logs a warning and runs the CLI unverified. See [Verifying the Qlty CLI](#verifying-the-qlty-cli).
 
 ## Verifying the Qlty CLI
 
 Before it runs the Qlty CLI, the action checks the CLI's attestation with the [GitHub CLI](https://cli.github.com/) (`gh`). If the check rejects the CLI, the step fails, even with `skip-errors: true`, and the CLI never runs. If the check can't finish because GitHub is unavailable, the CLI doesn't run either, and `skip-errors` decides whether the step fails.
 
-The check needs `gh` 2.67.0 or later on the machine that runs the step. GitHub-hosted runners include it. Self-hosted runners and `container:` jobs often don't; without a usable `gh`, the action logs a warning that the run is unverified and continues. Install `gh` there to verify.
+The check needs `gh` 2.67.0 or later on the machine that runs the step. GitHub-hosted runners include it. Self-hosted runners and `container:` jobs often don't. Without a usable `gh`, the action skips the check, logs a "Qlty CLI Not Verified" warning, and installs the CLI anyway. The unverified CLI runs with access to the job's tokens and secrets.
+
+To verify the CLI on a self-hosted runner, install `gh` on the runner. In a `container:` job the step runs inside the container, so install `gh` in the container image or in an earlier step. See the GitHub CLI [installation instructions](https://github.com/cli/cli#installation). On Linux, use GitHub's package repository as described in [Installing gh on Linux](https://github.com/cli/cli/blob/trunk/docs/install_linux.md): some distributions' own `gh` packages are older than 2.67.0.
 
 If you set `cli-version`, use a release with an attestation (0.555.0 or later). We recommend the latest release.
 

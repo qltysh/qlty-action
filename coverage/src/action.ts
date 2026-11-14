@@ -10,6 +10,7 @@ import * as actionsCore from "@actions/core";
 import * as actionsGithub from "@actions/github";
 import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
+import { sentryTelemetry, StubbedTelemetry, Telemetry } from "./util/telemetry";
 import EventEmitter from "node:events";
 import Version from "./version";
 
@@ -37,6 +38,7 @@ export class CoverageAction {
     installer,
     settings = Settings.createNull(),
     env = process.env,
+    telemetry = new StubbedTelemetry(),
   }: {
     output?: ActionOutput;
     context?: ActionContext;
@@ -44,6 +46,7 @@ export class CoverageAction {
     installer?: Installer;
     settings?: Settings;
     env?: ProcessEnv;
+    telemetry?: Telemetry;
   } = {}): CoverageAction {
     return new CoverageAction({
       output,
@@ -56,6 +59,7 @@ export class CoverageAction {
         ),
       settings,
       env,
+      telemetry,
     });
   }
 
@@ -67,6 +71,7 @@ export class CoverageAction {
     settings = Settings.create(),
     env = process.env,
     githubToken = actionsCore.getInput("github-token"),
+    telemetry = sentryTelemetry,
   }: {
     output?: ActionOutput;
     context?: ActionContext;
@@ -75,6 +80,7 @@ export class CoverageAction {
     settings?: Settings;
     env?: ProcessEnv;
     githubToken?: string;
+    telemetry?: Telemetry;
   } = {}) {
     this._output = output;
     this._context = context;
@@ -83,6 +89,9 @@ export class CoverageAction {
     this._installer =
       installer ||
       Installer.create(githubToken, version ? { version } : undefined);
+    this._installer.onAttestation((outcome) =>
+      telemetry.setTag("attestation", outcome),
+    );
     this._settings = settings;
     this._env = env;
   }

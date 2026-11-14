@@ -15,7 +15,9 @@ runWithTracing(async () => {
 });
 
 async function runWithTracing(main: () => Promise<void>): Promise<void> {
-  return await Sentry.startSpan(
+  // main() runs to completion inside the span, so the transaction covers the
+  // whole run and carries tags set during it, such as the attestation outcome.
+  const exitCode = await Sentry.startSpan(
     {
       op: "execute",
       name: "qlty-action/coverage",
@@ -31,12 +33,8 @@ async function runWithTracing(main: () => Promise<void>): Promise<void> {
         run_url: `${process.env["GITHUB_SERVER_URL"]}/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
       });
 
-      main()
-        .then(() => {
-          Sentry.close(2000).then(function () {
-            process.exit(0);
-          });
-        })
+      return main()
+        .then(() => 0)
         .catch((error) => {
           core.setFailed(
             `Action failed with error: ${error.name}: ${error.message}`,
@@ -48,10 +46,11 @@ async function runWithTracing(main: () => Promise<void>): Promise<void> {
             message: error.message,
           });
           Sentry.captureException(error);
-          Sentry.close(2000).then(function () {
-            process.exit(1);
-          });
+          return 1;
         });
     },
   );
+
+  await Sentry.close(2000);
+  process.exit(exitCode);
 }

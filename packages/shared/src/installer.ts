@@ -5,7 +5,11 @@ import path from "node:path";
 import EventEmitter from "node:events";
 
 import type { ToolCache, OperatingSystem, ActionOutput } from "./interfaces.js";
-import type { AttestationVerifier } from "./attestation.js";
+import type {
+  AttestationResult,
+  AttestationSkipReason,
+  AttestationVerifier,
+} from "./attestation.js";
 import { GhAttestationVerifier } from "./attestation.js";
 import { planDownload, type DownloadPlan } from "./platform.js";
 import OutputTracker from "./output-tracker.js";
@@ -18,6 +22,18 @@ import {
 } from "./stubs.js";
 
 const DOWNLOAD_EVENT = "download";
+const ATTESTATION_EVENT = "attestation";
+
+const ATTESTATION_DOCS_URL =
+  "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli";
+
+// The result of the attestation check, reported to telemetry so skipped runs
+// can be counted. Fixed strings only: never add versions, paths or messages.
+export type AttestationOutcome =
+  | "verified"
+  | `skipped-${AttestationSkipReason}`
+  | "unavailable"
+  | "failed";
 
 export class AttestationError extends Error {
   constructor(message: string) {
@@ -99,6 +115,19 @@ export class Installer {
     return OutputTracker.create<string>(this._emitter, DOWNLOAD_EVENT);
   }
 
+  trackAttestation(): OutputTracker<AttestationOutcome> {
+    return OutputTracker.create<AttestationOutcome>(
+      this._emitter,
+      ATTESTATION_EVENT,
+    );
+  }
+
+  // Called once per install(), before it returns or throws, with the outcome
+  // of the attestation check.
+  onAttestation(listener: (outcome: AttestationOutcome) => void): void {
+    this._emitter.on(ATTESTATION_EVENT, listener);
+  }
+
   async install(): Promise<string | null> {
     const download = this.planDownload();
 
@@ -111,24 +140,31 @@ export class Installer {
 
     const archivePath = await this._tc.downloadTool(download.url);
 
-    // Verify attestation
-    this._output.info("Verifying sigstore attestation...");
+    this._output.info(
+      "Attempting to verify the Qlty CLI's Sigstore attestation...",
+    );
     const attestationResult = await this._attestationVerifier.verify(
       archivePath,
       "qltysh",
     );
+    this._emitter.emit(
+      ATTESTATION_EVENT,
+      attestationOutcome(attestationResult),
+    );
 
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
-        // Skipped verification - warn but proceed
-        const warningDetails = attestationResult.error
+        // Without a usable gh the check can't run. Install anyway, and say so.
+        const reason = attestationResult.error
           ? ` ${attestationResult.error}`
           : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped, so this run is unverified." +
-            warningDetails +
-            " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
-          { title: "Attestation Verification Skipped" },
+          "Installing the Qlty CLI without checking its Sigstore attestation. " +
+            "The unverified CLI runs with access to this job's tokens and secrets." +
+            reason +
+            " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI." +
+            ` See ${ATTESTATION_DOCS_URL}`,
+          { title: "Qlty CLI Not Verified" },
         );
       } else if (attestationResult.unavailable) {
         throw new AttestationUnavailableError(
@@ -171,4 +207,14 @@ export class Installer {
   planDownload(): DownloadPlan | null {
     return planDownload(this._os, this._version);
   }
+}
+
+function attestationOutcome(result: AttestationResult): AttestationOutcome {
+  if (result.success) {
+    return "verified";
+  }
+  if (result.skipped) {
+    return `skipped-${result.skipped}`;
+  }
+  return result.unavailable ? "unavailable" : "failed";
 }
