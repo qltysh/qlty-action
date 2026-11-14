@@ -8,24 +8,30 @@ export interface CommandExecutor {
   ): Promise<number>;
 }
 
+// Behaves like @actions/exec: a nonzero exit code rejects unless
+// ignoreReturnCode is set, and a command that cannot start always rejects.
 export class StubbedCommandExecutor implements CommandExecutor {
-  private throwError: boolean;
-  private errorMessage: string = "Command execution failed";
+  private exitCode: number = 0;
+  private startError: string | undefined;
   private stdout: string = "STDOUT\n";
   private stderr: string = "STDERR\n";
 
   constructor({
-    throwError,
+    exitCode,
+    startError,
     stdout,
     stderr,
-    errorMessage,
   }: {
-    throwError?: boolean;
+    exitCode?: number;
+    startError?: string;
     stdout?: string;
     stderr?: string;
-    errorMessage?: string;
   } = {}) {
-    this.throwError = !!throwError;
+    if (exitCode !== undefined) {
+      this.exitCode = exitCode;
+    }
+
+    this.startError = startError;
 
     if (stdout !== undefined) {
       this.stdout = stdout;
@@ -34,29 +40,35 @@ export class StubbedCommandExecutor implements CommandExecutor {
     if (stderr !== undefined) {
       this.stderr = stderr;
     }
-
-    if (errorMessage !== undefined) {
-      this.errorMessage = errorMessage;
-    }
   }
 
   async exec(
-    _command: string,
+    command: string,
     _args?: string[],
     options?: actionsExec.ExecOptions,
   ): Promise<number> {
-    if (this.throwError) {
-      if (options?.listeners?.stdout) {
-        options.listeners.stdout(Buffer.from(this.stdout));
-      }
+    if (this.startError !== undefined) {
+      throw new Error(this.startError);
+    }
 
-      if (options?.listeners?.stderr) {
-        options.listeners.stderr(Buffer.from(this.stderr));
-      }
-
-      throw new Error(this.errorMessage);
-    } else {
+    if (this.exitCode === 0) {
       return 0;
     }
+
+    if (options?.listeners?.stdout) {
+      options.listeners.stdout(Buffer.from(this.stdout));
+    }
+
+    if (options?.listeners?.stderr) {
+      options.listeners.stderr(Buffer.from(this.stderr));
+    }
+
+    if (!options?.ignoreReturnCode) {
+      throw new Error(
+        `The process '${command}' failed with exit code ${this.exitCode}`,
+      );
+    }
+
+    return this.exitCode;
   }
 }

@@ -4,7 +4,8 @@
   "description": "Shared installer for Qlty CLI",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./telemetry": "./src/telemetry.ts"
   },
   "engines": {
     "node": ">=20"
@@ -17,6 +18,7 @@
   "dependencies": {
     "@actions/core": "^3.0.1",
     "@actions/exec": "^1.1.1",
-    "@actions/tool-cache": "^4.0.0"
+    "@actions/tool-cache": "^4.0.0",
+    "@sentry/node": "^10.63.0"
   }
 }

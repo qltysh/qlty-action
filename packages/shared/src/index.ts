@@ -1,3 +1,6 @@
+// Errors reported to Qlty's error tracking
+export { ReportableError, type FailureKind } from "./errors.js";
+
 // Main exports
 export {
   AttestationError,

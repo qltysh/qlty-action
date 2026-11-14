@@ -1,63 +1,50 @@
-import * as Sentry from "@sentry/node";
-
-Sentry.init({
-  dsn: "https://76f58a921c9d8561646a586e7d9df772@o4506826106929152.ingest.us.sentry.io/4506826142646272",
-  tracesSampleRate: 1.0,
-});
-
 import * as core from "@actions/core";
 import { exec } from "@actions/exec";
-import { Installer } from "@qltysh-action/shared";
+import {
+  type FailureKind,
+  Installer,
+  ReportableError,
+} from "@qltysh-action/shared";
+import {
+  closeTelemetry,
+  reportError,
+  resolveTelemetry,
+  startTelemetry,
+} from "@qltysh-action/shared/telemetry";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
-class FmtError extends Error {
-  constructor(message: string) {
-    super(message);
+// Telemetry reports an FmtError's kind and exit code, never its message.
+class FmtError extends ReportableError {
+  constructor(message: string, kind: FailureKind, exitCode?: number) {
+    super(message, kind, exitCode);
     this.name = "FmtError";
   }
 }
 
-export async function runWithTracing(): Promise<void> {
-  return await Sentry.startSpan(
-    {
-      op: "execute",
-      name: "qlty-action/fmt",
-    },
-    async () => {
-      Sentry.setTag("provider", "github");
-      Sentry.setTag(
-        "repository.full_name",
-        process.env["GITHUB_REPOSITORY"] || "unknown",
-      );
-      Sentry.setContext("CI", {
-        run_id: process.env["GITHUB_RUN_ID"],
-        run_url: `${process.env["GITHUB_SERVER_URL"]}/${process.env["GITHUB_REPOSITORY"]}/actions/runs/${process.env["GITHUB_RUN_ID"]}`,
-      });
+export async function main(): Promise<void> {
+  const telemetry = resolveTelemetry(core.getInput("telemetry"), process.env);
+  if (telemetry.warning) {
+    core.warning(telemetry.warning);
+  }
+  if (telemetry.enabled) {
+    startTelemetry("fmt", readVersion());
+  }
 
-      run()
-        .then(() => {
-          Sentry.close(2000).then(function () {
-            process.exit(0);
-          });
-        })
-        .catch((error) => {
-          core.setFailed(
-            error instanceof FmtError
-              ? `Action failed with error: ${error.name}`
-              : `Action failed with error: ${error.name}: ${error.message}`,
-          );
-          Sentry.addBreadcrumb({
-            category: "qlty-fmt.log",
-            level: "log",
-            type: "error",
-            message: error.message,
-          });
-          Sentry.captureException(error);
-          Sentry.close(2000).then(function () {
-            process.exit(1);
-          });
-        });
-    },
-  );
+  try {
+    await run();
+  } catch (error) {
+    core.setFailed(
+      error instanceof FmtError
+        ? `Action failed with error: ${error.name}`
+        : `Action failed with error: ${errorText(error)}`,
+    );
+    await reportError(error);
+    process.exit(1);
+  }
+
+  await closeTelemetry();
+  process.exit(0);
 }
 
 async function run(): Promise<void> {
@@ -66,13 +53,17 @@ async function run(): Promise<void> {
   const qltyBinary = await installer.install();
 
   if (!qltyBinary) {
-    throw new FmtError("Failed to install Qlty CLI");
+    throw new FmtError("Failed to install Qlty CLI", "install_failed");
   }
 
   let qltyOutput = "";
+  let exitCode: number;
 
   try {
-    await exec("qlty", ["fmt", "--all"], {
+    // With ignoreReturnCode, exec resolves to the CLI's exit code instead of
+    // throwing, and throws only when the CLI cannot start.
+    exitCode = await exec("qlty", ["fmt", "--all"], {
+      ignoreReturnCode: true,
       listeners: {
         stdout: (data: Buffer) => {
           qltyOutput += data.toString();
@@ -82,7 +73,31 @@ async function run(): Promise<void> {
         },
       },
     });
+  } catch (error) {
+    throw new FmtError(
+      `Could not run the Qlty CLI: ${errorText(error)}`,
+      "cli_start_failed",
+    );
+  }
+
+  if (exitCode !== 0) {
+    throw new FmtError(qltyOutput, "cli_failed", exitCode);
+  }
+}
+
+function errorText(error: unknown): string {
+  return error instanceof Error
+    ? `${error.name}: ${error.message}`
+    : `${error}`;
+}
+
+function readVersion(): string | null {
+  try {
+    const packageJson = JSON.parse(
+      readFileSync(path.join(__dirname, "../package.json"), "utf-8"),
+    );
+    return typeof packageJson.version === "string" ? packageJson.version : null;
   } catch {
-    throw new FmtError(qltyOutput);
+    return null;
   }
 }
