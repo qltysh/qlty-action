@@ -1,11 +1,7 @@
 import * as Sentry from "@sentry/node";
 import os from "node:os";
 import { ReportableError } from "../src/errors.js";
-import {
-  recordAttestation,
-  resolveTelemetry,
-  sentryOptions,
-} from "../src/telemetry.js";
+import { resolveTelemetry, sentryOptions } from "../src/telemetry.js";
 
 describe("resolveTelemetry", () => {
   test.each(["", "true", "True", "TRUE", " true "])("is on for %j", (input) => {
@@ -130,8 +126,6 @@ describe("Sentry events", () => {
 
   afterEach(async () => {
     await Sentry.close(2000);
-    // Tags live on the isolation scope, which outlasts Sentry.init.
-    Sentry.getIsolationScope().clear();
     for (const [name, value] of Object.entries(savedEnv)) {
       if (value === undefined) {
         delete process.env[name];
@@ -218,34 +212,5 @@ describe("Sentry events", () => {
         { type: "TypeError", mechanism: { type: "generic", handled: true } },
       ],
     });
-  });
-
-  test.each([
-    "verified",
-    "skipped-gh-missing",
-    "skipped-gh-too-old",
-    "skipped-gh-version-unknown",
-    "unavailable",
-    "failed",
-  ] as const)(
-    "carries the attestation outcome %s once it is recorded",
-    async (outcome) => {
-      recordAttestation(outcome);
-      const event = await capture(new CoverageError(CLI_OUTPUT, 99));
-
-      expect(event["tags"]).toEqual({
-        action: "coverage",
-        "error.kind": "cli_failed",
-        "cli.exit_code": "99",
-        attestation: outcome,
-      });
-    },
-  );
-
-  test("drops an attestation tag that is not a known outcome", async () => {
-    Sentry.setTag("attestation", CUSTOMER_PATH);
-    const event = await capture(new TypeError(CLI_OUTPUT));
-
-    expect(event["tags"]).toEqual({ action: "coverage" });
   });
 });

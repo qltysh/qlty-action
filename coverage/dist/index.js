@@ -96503,9 +96503,6 @@ function captureException(exception, hint) {
 function captureEvent(event, hint) {
   return getCurrentScope().captureEvent(event, hint);
 }
-function setTag(key, value) {
-  getIsolationScope().setTag(key, value);
-}
 async function flush(timeout) {
   const client = getClient();
   if (client) {
@@ -118650,6 +118647,153 @@ function errorText(error4) {
   return error4 instanceof Error ? `${error4.name}: ${error4.message}` : `${error4}`;
 }
 
+// ../packages/shared/src/version.ts
+var import_path3 = __toESM(require("path"), 1);
+var nodeFs = __toESM(require("fs"), 1);
+var Version = class {
+  static readVersion(fileSystem, logger = console) {
+    try {
+      const fs10 = fileSystem ?? nodeFs;
+      const packageJsonPath = import_path3.default.join(__dirname, "../package.json");
+      const packageJsonContent = fs10.readFileSync(packageJsonPath, "utf-8");
+      const packageJson = JSON.parse(packageJsonContent);
+      return packageJson.version;
+    } catch (error4) {
+      logger.error("Error reading version from package.json:", error4);
+      return null;
+    }
+  }
+};
+
+// ../packages/shared/src/telemetry.ts
+var SENTRY_DSN = "https://76f58a921c9d8561646a586e7d9df772@o4506826106929152.ingest.us.sentry.io/4506826142646272";
+async function runAction(action, run) {
+  const telemetry = resolveTelemetry(getInput("telemetry"), process.env);
+  if (telemetry.warning) {
+    warning(telemetry.warning);
+  }
+  if (telemetry.enabled) {
+    init2(sentryOptions(action, Version.readVersion()));
+  }
+  let exitCode = 0;
+  try {
+    await run();
+  } catch (error4) {
+    setFailed(`Action failed with error: ${errorText(error4)}`);
+    captureException(error4);
+    exitCode = 1;
+  }
+  await close(2e3);
+  process.exit(exitCode);
+}
+function resolveTelemetry(input, env) {
+  const value = input.trim();
+  if (["", "true", "True", "TRUE"].includes(value)) {
+    return { enabled: env["QLTY_TELEMETRY"] !== "off" };
+  }
+  env["QLTY_TELEMETRY"] = "off";
+  if (["false", "False", "FALSE"].includes(value)) {
+    return { enabled: false };
+  }
+  return {
+    enabled: false,
+    warning: `The telemetry input must be true or false, not "${value}". Telemetry is off.`
+  };
+}
+function sentryOptions(action, version) {
+  return {
+    dsn: SENTRY_DSN,
+    // Unset, these come from GITHUB_SHA (the customer's commit) and
+    // SENTRY_ENVIRONMENT.
+    release: `qlty-action-${action}@${version ?? "unknown"}`,
+    environment: "production",
+    // Unset, SENTRY_SPOTLIGHT sends each report to a second URL and
+    // SENTRY_DEBUG prints the error's message to the job log.
+    spotlight: false,
+    debug: false,
+    // The default integrations add breadcrumbs, HTTP request URLs, a session
+    // on every run, and details about the runner's machine.
+    defaultIntegrations: false,
+    integrations: [
+      onUncaughtExceptionIntegration(),
+      // Fail the step on an unhandled rejection, as Node does without
+      // Sentry, instead of only logging it.
+      onUnhandledRejectionIntegration({ mode: "strict" }),
+      nodeContextIntegration({
+        app: false,
+        device: false,
+        culture: false,
+        cloudResource: false
+      })
+    ],
+    // No integration needs the ESM loader hook, and registering it from the
+    // CommonJS bundle fails after starting a worker thread.
+    registerEsmLoaderHooks: false,
+    includeServerName: false,
+    sendDefaultPii: false,
+    sendClientReports: false,
+    maxBreadcrumbs: 0,
+    beforeSend: (event, hint) => minimalEvent(event, hint.originalException, action),
+    beforeSendTransaction: () => null
+  };
+}
+var KEPT_EVENT_FIELDS = [
+  "event_id",
+  "timestamp",
+  "platform",
+  "level",
+  "release",
+  "environment",
+  "sdk"
+];
+function minimalEvent(event, error4, action) {
+  const kept = Object.fromEntries(
+    KEPT_EVENT_FIELDS.filter((field) => event[field] !== void 0).map(
+      (field) => [field, event[field]]
+    )
+  );
+  const reportable = error4 instanceof ReportableError ? error4 : void 0;
+  const tags = { action };
+  if (reportable) {
+    tags["error.kind"] = reportable.kind;
+    if (typeof reportable.exitCode === "number") {
+      tags["cli.exit_code"] = String(reportable.exitCode);
+    }
+  }
+  const { os: os21, runtime } = event.contexts ?? {};
+  const contexts = {};
+  if (os21) {
+    contexts.os = os21;
+  }
+  if (runtime) {
+    contexts["runtime"] = runtime;
+  }
+  const minimal = { ...kept, type: void 0, tags, contexts };
+  const thrown = event.exception?.values?.at(-1);
+  if (thrown) {
+    minimal.exception = {
+      values: [minimalException(thrown, reportable?.kind)]
+    };
+  }
+  return minimal;
+}
+function minimalException(exception, kind) {
+  const minimal = {};
+  if (exception.type !== void 0) {
+    minimal.type = exception.type;
+  }
+  if (kind !== void 0) {
+    minimal.value = kind;
+  }
+  if (exception.mechanism) {
+    minimal.mechanism = { type: exception.mechanism.type };
+    if (exception.mechanism.handled !== void 0) {
+      minimal.mechanism.handled = exception.mechanism.handled;
+    }
+  }
+  return minimal;
+}
+
 // ../packages/shared/node_modules/@actions/tool-cache/lib/tool-cache.js
 var tool_cache_exports = {};
 __export(tool_cache_exports, {
@@ -118776,7 +118920,7 @@ function _getOsVersion() {
 
 // ../packages/shared/node_modules/@actions/tool-cache/lib/tool-cache.js
 var os11 = __toESM(require("os"), 1);
-var path7 = __toESM(require("path"), 1);
+var path8 = __toESM(require("path"), 1);
 var semver2 = __toESM(require_semver3(), 1);
 var stream = __toESM(require("stream"), 1);
 var util2 = __toESM(require("util"), 1);
@@ -118786,7 +118930,7 @@ var import_assert2 = require("assert");
 var os10 = __toESM(require("os"), 1);
 var events2 = __toESM(require("events"), 1);
 var child2 = __toESM(require("child_process"), 1);
-var path6 = __toESM(require("path"), 1);
+var path7 = __toESM(require("path"), 1);
 var import_timers2 = require("timers");
 var __awaiter12 = function(thisArg, _arguments, P2, generator) {
   function adopt(value) {
@@ -119026,7 +119170,7 @@ var ToolRunner2 = class extends events2.EventEmitter {
   exec() {
     return __awaiter12(this, void 0, void 0, function* () {
       if (!isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS3 && this.toolPath.includes("\\"))) {
-        this.toolPath = path6.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+        this.toolPath = path7.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
       }
       this.toolPath = yield which(this.toolPath, true);
       return new Promise((resolve5, reject) => __awaiter12(this, void 0, void 0, function* () {
@@ -119383,8 +119527,8 @@ var IS_MAC = process.platform === "darwin";
 var userAgent = "actions/tool-cache";
 function downloadTool(url, dest, auth2, headers) {
   return __awaiter15(this, void 0, void 0, function* () {
-    dest = dest || path7.join(_getTempDirectory(), crypto2.randomUUID());
-    yield mkdirP(path7.dirname(dest));
+    dest = dest || path8.join(_getTempDirectory(), crypto2.randomUUID());
+    yield mkdirP(path8.dirname(dest));
     debug(`Downloading ${url}`);
     debug(`Destination ${dest}`);
     const maxAttempts = 3;
@@ -119474,7 +119618,7 @@ function extract7z(file, dest, _7zPath) {
         process.chdir(originalCwd);
       }
     } else {
-      const escapedScript = path7.join(__dirname, "..", "scripts", "Invoke-7zdec.ps1").replace(/'/g, "''").replace(/"|\n|\r/g, "");
+      const escapedScript = path8.join(__dirname, "..", "scripts", "Invoke-7zdec.ps1").replace(/'/g, "''").replace(/"|\n|\r/g, "");
       const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, "");
       const escapedTarget = dest.replace(/'/g, "''").replace(/"|\n|\r/g, "");
       const command = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}'`;
@@ -119646,7 +119790,7 @@ function cacheDir(sourceDir, tool, version, arch6) {
     }
     const destPath = yield _createToolPath(tool, version, arch6);
     for (const itemName of fs5.readdirSync(sourceDir)) {
-      const s2 = path7.join(sourceDir, itemName);
+      const s2 = path8.join(sourceDir, itemName);
       yield cp(s2, destPath, { recursive: true });
     }
     _completeToolPath(tool, version, arch6);
@@ -119663,7 +119807,7 @@ function cacheFile(sourceFile, targetFile, tool, version, arch6) {
       throw new Error("sourceFile is not a file");
     }
     const destFolder = yield _createToolPath(tool, version, arch6);
-    const destPath = path7.join(destFolder, targetFile);
+    const destPath = path8.join(destFolder, targetFile);
     debug(`destination file ${destPath}`);
     yield cp(sourceFile, destPath);
     _completeToolPath(tool, version, arch6);
@@ -119686,7 +119830,7 @@ function find(toolName, versionSpec, arch6) {
   let toolPath = "";
   if (versionSpec) {
     versionSpec = semver2.clean(versionSpec) || "";
-    const cachePath = path7.join(_getCacheDirectory(), toolName, versionSpec, arch6);
+    const cachePath = path8.join(_getCacheDirectory(), toolName, versionSpec, arch6);
     debug(`checking cache: ${cachePath}`);
     if (fs5.existsSync(cachePath) && fs5.existsSync(`${cachePath}.complete`)) {
       debug(`Found tool in cache ${toolName} ${versionSpec} ${arch6}`);
@@ -119700,12 +119844,12 @@ function find(toolName, versionSpec, arch6) {
 function findAllVersions(toolName, arch6) {
   const versions = [];
   arch6 = arch6 || os11.arch();
-  const toolPath = path7.join(_getCacheDirectory(), toolName);
+  const toolPath = path8.join(_getCacheDirectory(), toolName);
   if (fs5.existsSync(toolPath)) {
     const children = fs5.readdirSync(toolPath);
     for (const child4 of children) {
       if (isExplicitVersion(child4)) {
-        const fullPath = path7.join(toolPath, child4, arch6 || "");
+        const fullPath = path8.join(toolPath, child4, arch6 || "");
         if (fs5.existsSync(fullPath) && fs5.existsSync(`${fullPath}.complete`)) {
           versions.push(child4);
         }
@@ -119757,7 +119901,7 @@ function findFromManifest(versionSpec_1, stable_1, manifest_1) {
 function _createExtractFolder(dest) {
   return __awaiter15(this, void 0, void 0, function* () {
     if (!dest) {
-      dest = path7.join(_getTempDirectory(), crypto2.randomUUID());
+      dest = path8.join(_getTempDirectory(), crypto2.randomUUID());
     }
     yield mkdirP(dest);
     return dest;
@@ -119765,7 +119909,7 @@ function _createExtractFolder(dest) {
 }
 function _createToolPath(tool, version, arch6) {
   return __awaiter15(this, void 0, void 0, function* () {
-    const folderPath = path7.join(_getCacheDirectory(), tool, semver2.clean(version) || version, arch6 || "");
+    const folderPath = path8.join(_getCacheDirectory(), tool, semver2.clean(version) || version, arch6 || "");
     debug(`destination ${folderPath}`);
     const markerPath = `${folderPath}.complete`;
     yield rmRF(folderPath);
@@ -119775,7 +119919,7 @@ function _createToolPath(tool, version, arch6) {
   });
 }
 function _completeToolPath(tool, version, arch6) {
-  const folderPath = path7.join(_getCacheDirectory(), tool, semver2.clean(version) || version, arch6 || "");
+  const folderPath = path8.join(_getCacheDirectory(), tool, semver2.clean(version) || version, arch6 || "");
   const markerPath = `${folderPath}.complete`;
   fs5.writeFileSync(markerPath, "");
   debug("finished caching tool");
@@ -119862,9 +120006,9 @@ var GhAttestationVerifier = class {
     this.env = env;
   }
   async verify(filePath, owner) {
-    const unusable = await this.unusableGh();
+    const unusable = await this.unusableGhReason();
     if (unusable) {
-      return { success: false, ...unusable };
+      return { success: false, skipped: true, error: unusable };
     }
     const env = { GH_TOKEN: this.token };
     for (const [key, value] of Object.entries(this.env)) {
@@ -119905,7 +120049,7 @@ var GhAttestationVerifier = class {
     }
     return ghVerifyResult(exitCode, output);
   }
-  async unusableGh() {
+  async unusableGhReason() {
     let output = "";
     try {
       await this.runner.exec("gh", ["--version"], {
@@ -119918,24 +120062,15 @@ var GhAttestationVerifier = class {
         }
       });
     } catch {
-      return {
-        skipped: "gh-missing",
-        error: "GitHub CLI (gh) is not installed."
-      };
+      return "GitHub CLI (gh) is not installed.";
     }
     const match3 = output.match(/gh version (\d+)\.(\d+)\.(\d+)/);
     if (!match3) {
-      return {
-        skipped: "gh-version-unknown",
-        error: "GitHub CLI (gh) did not report its version."
-      };
+      return "GitHub CLI (gh) did not report its version.";
     }
     const version = match3.slice(1, 4).map(Number);
     if (isOlder(version, MINIMUM_GH_VERSION)) {
-      return {
-        skipped: "gh-too-old",
-        error: `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`
-      };
+      return `GitHub CLI (gh) ${version.join(".")} is older than ${MINIMUM_GH_VERSION.join(".")}.`;
     }
     return null;
   }
@@ -120042,14 +120177,8 @@ var StubbedAttestationVerifier = class {
       case "gh-missing":
         return {
           success: false,
-          skipped: "gh-missing",
+          skipped: true,
           error: "GitHub CLI (gh) is not installed."
-        };
-      case "gh-too-old":
-        return {
-          success: false,
-          skipped: "gh-too-old",
-          error: "GitHub CLI (gh) 2.45.0 is older than 2.67.0."
         };
     }
   }
@@ -120121,19 +120250,7 @@ var StubbedOutput = class {
 
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
-var ATTESTATION_EVENT = "attestation";
 var ATTESTATION_DOCS_URL = "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli";
-var ATTESTATION_OUTCOMES = {
-  verified: true,
-  "skipped-gh-missing": true,
-  "skipped-gh-too-old": true,
-  "skipped-gh-version-unknown": true,
-  unavailable: true,
-  failed: true
-};
-function isAttestationOutcome(value) {
-  return typeof value === "string" && Object.hasOwn(ATTESTATION_OUTCOMES, value);
-}
 var AttestationError = class extends Error {
   constructor(message) {
     super(message);
@@ -120188,17 +120305,6 @@ var Installer = class _Installer {
   trackOutput() {
     return OutputTracker.create(this._emitter, DOWNLOAD_EVENT);
   }
-  trackAttestation() {
-    return OutputTracker.create(
-      this._emitter,
-      ATTESTATION_EVENT
-    );
-  }
-  // Called once per install(), before it returns or throws, with the outcome
-  // of the attestation check.
-  onAttestation(listener) {
-    this._emitter.on(ATTESTATION_EVENT, listener);
-  }
   async install() {
     const download = this.planDownload();
     if (!download) {
@@ -120214,10 +120320,6 @@ var Installer = class _Installer {
     const attestationResult = await this._attestationVerifier.verify(
       archivePath,
       "qltysh"
-    );
-    this._emitter.emit(
-      ATTESTATION_EVENT,
-      attestationOutcome(attestationResult)
     );
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
@@ -120261,170 +120363,6 @@ var Installer = class _Installer {
     return planDownload(this._os, this._version);
   }
 };
-function attestationOutcome(result) {
-  if (result.success) {
-    return "verified";
-  }
-  if (result.skipped) {
-    return `skipped-${result.skipped}`;
-  }
-  return result.unavailable ? "unavailable" : "failed";
-}
-
-// ../packages/shared/src/version.ts
-var import_path3 = __toESM(require("path"), 1);
-var nodeFs = __toESM(require("fs"), 1);
-var Version = class {
-  static readVersion(fileSystem, logger = console) {
-    try {
-      const fs10 = fileSystem ?? nodeFs;
-      const packageJsonPath = import_path3.default.join(__dirname, "../package.json");
-      const packageJsonContent = fs10.readFileSync(packageJsonPath, "utf-8");
-      const packageJson = JSON.parse(packageJsonContent);
-      return packageJson.version;
-    } catch (error4) {
-      logger.error("Error reading version from package.json:", error4);
-      return null;
-    }
-  }
-};
-
-// ../packages/shared/src/telemetry.ts
-var SENTRY_DSN = "https://76f58a921c9d8561646a586e7d9df772@o4506826106929152.ingest.us.sentry.io/4506826142646272";
-var ATTESTATION_TAG = "attestation";
-async function runAction(action, run) {
-  const telemetry = resolveTelemetry(getInput("telemetry"), process.env);
-  if (telemetry.warning) {
-    warning(telemetry.warning);
-  }
-  if (telemetry.enabled) {
-    init2(sentryOptions(action, Version.readVersion()));
-  }
-  let exitCode = 0;
-  try {
-    await run();
-  } catch (error4) {
-    setFailed(`Action failed with error: ${errorText(error4)}`);
-    captureException(error4);
-    exitCode = 1;
-  }
-  await close(2e3);
-  process.exit(exitCode);
-}
-function recordAttestation(outcome) {
-  setTag(ATTESTATION_TAG, outcome);
-}
-function resolveTelemetry(input, env) {
-  const value = input.trim();
-  if (["", "true", "True", "TRUE"].includes(value)) {
-    return { enabled: env["QLTY_TELEMETRY"] !== "off" };
-  }
-  env["QLTY_TELEMETRY"] = "off";
-  if (["false", "False", "FALSE"].includes(value)) {
-    return { enabled: false };
-  }
-  return {
-    enabled: false,
-    warning: `The telemetry input must be true or false, not "${value}". Telemetry is off.`
-  };
-}
-function sentryOptions(action, version) {
-  return {
-    dsn: SENTRY_DSN,
-    // Unset, these come from GITHUB_SHA (the customer's commit) and
-    // SENTRY_ENVIRONMENT.
-    release: `qlty-action-${action}@${version ?? "unknown"}`,
-    environment: "production",
-    // Unset, SENTRY_SPOTLIGHT sends each report to a second URL and
-    // SENTRY_DEBUG prints the error's message to the job log.
-    spotlight: false,
-    debug: false,
-    // The default integrations add breadcrumbs, HTTP request URLs, a session
-    // on every run, and details about the runner's machine.
-    defaultIntegrations: false,
-    integrations: [
-      onUncaughtExceptionIntegration(),
-      // Fail the step on an unhandled rejection, as Node does without
-      // Sentry, instead of only logging it.
-      onUnhandledRejectionIntegration({ mode: "strict" }),
-      nodeContextIntegration({
-        app: false,
-        device: false,
-        culture: false,
-        cloudResource: false
-      })
-    ],
-    // No integration needs the ESM loader hook, and registering it from the
-    // CommonJS bundle fails after starting a worker thread.
-    registerEsmLoaderHooks: false,
-    includeServerName: false,
-    sendDefaultPii: false,
-    sendClientReports: false,
-    maxBreadcrumbs: 0,
-    beforeSend: (event, hint) => minimalEvent(event, hint.originalException, action),
-    beforeSendTransaction: () => null
-  };
-}
-var KEPT_EVENT_FIELDS = [
-  "event_id",
-  "timestamp",
-  "platform",
-  "level",
-  "release",
-  "environment",
-  "sdk"
-];
-function minimalEvent(event, error4, action) {
-  const kept = Object.fromEntries(
-    KEPT_EVENT_FIELDS.filter((field) => event[field] !== void 0).map(
-      (field) => [field, event[field]]
-    )
-  );
-  const reportable = error4 instanceof ReportableError ? error4 : void 0;
-  const tags = { action };
-  if (reportable) {
-    tags["error.kind"] = reportable.kind;
-    if (typeof reportable.exitCode === "number") {
-      tags["cli.exit_code"] = String(reportable.exitCode);
-    }
-  }
-  const attestation = event.tags?.[ATTESTATION_TAG];
-  if (isAttestationOutcome(attestation)) {
-    tags[ATTESTATION_TAG] = attestation;
-  }
-  const { os: os21, runtime } = event.contexts ?? {};
-  const contexts = {};
-  if (os21) {
-    contexts.os = os21;
-  }
-  if (runtime) {
-    contexts["runtime"] = runtime;
-  }
-  const minimal = { ...kept, type: void 0, tags, contexts };
-  const thrown = event.exception?.values?.at(-1);
-  if (thrown) {
-    minimal.exception = {
-      values: [minimalException(thrown, reportable?.kind)]
-    };
-  }
-  return minimal;
-}
-function minimalException(exception, kind) {
-  const minimal = {};
-  if (exception.type !== void 0) {
-    minimal.type = exception.type;
-  }
-  if (kind !== void 0) {
-    minimal.value = kind;
-  }
-  if (exception.mechanism) {
-    minimal.mechanism = { type: exception.mechanism.type };
-    if (exception.mechanism.handled !== void 0) {
-      minimal.mechanism.handled = exception.mechanism.handled;
-    }
-  }
-  return minimal;
-}
 
 // node_modules/zod/lib/index.mjs
 var util3;
@@ -134234,17 +134172,6 @@ var StubbedCommandExecutor = class {
   }
 };
 
-// src/util/telemetry.ts
-var sentryTelemetry = { recordAttestation };
-var StubbedTelemetry = class {
-  constructor() {
-    __publicField(this, "attestation");
-  }
-  recordAttestation(outcome) {
-    this.attestation = outcome;
-  }
-};
-
 // src/action.ts
 var import_node_events5 = __toESM(require("node:events"));
 var EXEC_EVENT = "exec";
@@ -134256,8 +134183,7 @@ var CoverageAction = class _CoverageAction {
     installer,
     settings = Settings.create(),
     env = process.env,
-    githubToken = getInput2("github-token"),
-    telemetry = sentryTelemetry
+    githubToken = getInput2("github-token")
   } = {}) {
     __publicField(this, "_output");
     __publicField(this, "_context");
@@ -134271,9 +134197,6 @@ var CoverageAction = class _CoverageAction {
     this._executor = executor;
     const version = settings.getVersion();
     this._installer = installer || Installer.create(githubToken, version ? { version } : void 0);
-    this._installer.onAttestation(
-      (outcome) => telemetry.recordAttestation(outcome)
-    );
     this._settings = settings;
     this._env = env;
   }
@@ -134283,8 +134206,7 @@ var CoverageAction = class _CoverageAction {
     executor = new StubbedCommandExecutor(),
     installer,
     settings = Settings.createNull(),
-    env = process.env,
-    telemetry = new StubbedTelemetry()
+    env = process.env
   } = {}) {
     return new _CoverageAction({
       output,
@@ -134294,8 +134216,7 @@ var CoverageAction = class _CoverageAction {
         settings.getVersion() ? { version: settings.getVersion() } : {}
       ),
       settings,
-      env,
-      telemetry
+      env
     });
   }
   async run() {

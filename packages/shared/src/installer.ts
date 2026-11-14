@@ -5,11 +5,7 @@ import path from "node:path";
 import EventEmitter from "node:events";
 
 import type { ToolCache, OperatingSystem, ActionOutput } from "./interfaces.js";
-import type {
-  AttestationResult,
-  AttestationSkipReason,
-  AttestationVerifier,
-} from "./attestation.js";
+import type { AttestationVerifier } from "./attestation.js";
 import { GhAttestationVerifier } from "./attestation.js";
 import { planDownload, type DownloadPlan } from "./platform.js";
 import OutputTracker from "./output-tracker.js";
@@ -22,37 +18,9 @@ import {
 } from "./stubs.js";
 
 const DOWNLOAD_EVENT = "download";
-const ATTESTATION_EVENT = "attestation";
 
 const ATTESTATION_DOCS_URL =
   "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli";
-
-// The result of the attestation check, reported to telemetry so skipped runs
-// can be counted. Fixed strings only: never add versions, paths or messages.
-export type AttestationOutcome =
-  | "verified"
-  | `skipped-${AttestationSkipReason}`
-  | "unavailable"
-  | "failed";
-
-// Every outcome, so telemetry can check a value before it sends it. The
-// Record type makes adding an outcome without listing it here a type error.
-const ATTESTATION_OUTCOMES: Record<AttestationOutcome, true> = {
-  verified: true,
-  "skipped-gh-missing": true,
-  "skipped-gh-too-old": true,
-  "skipped-gh-version-unknown": true,
-  unavailable: true,
-  failed: true,
-};
-
-export function isAttestationOutcome(
-  value: unknown,
-): value is AttestationOutcome {
-  return (
-    typeof value === "string" && Object.hasOwn(ATTESTATION_OUTCOMES, value)
-  );
-}
 
 export class AttestationError extends Error {
   constructor(message: string) {
@@ -134,19 +102,6 @@ export class Installer {
     return OutputTracker.create<string>(this._emitter, DOWNLOAD_EVENT);
   }
 
-  trackAttestation(): OutputTracker<AttestationOutcome> {
-    return OutputTracker.create<AttestationOutcome>(
-      this._emitter,
-      ATTESTATION_EVENT,
-    );
-  }
-
-  // Called once per install(), before it returns or throws, with the outcome
-  // of the attestation check.
-  onAttestation(listener: (outcome: AttestationOutcome) => void): void {
-    this._emitter.on(ATTESTATION_EVENT, listener);
-  }
-
   async install(): Promise<string | null> {
     const download = this.planDownload();
 
@@ -165,10 +120,6 @@ export class Installer {
     const attestationResult = await this._attestationVerifier.verify(
       archivePath,
       "qltysh",
-    );
-    this._emitter.emit(
-      ATTESTATION_EVENT,
-      attestationOutcome(attestationResult),
     );
 
     if (!attestationResult.success) {
@@ -226,14 +177,4 @@ export class Installer {
   planDownload(): DownloadPlan | null {
     return planDownload(this._os, this._version);
   }
-}
-
-function attestationOutcome(result: AttestationResult): AttestationOutcome {
-  if (result.success) {
-    return "verified";
-  }
-  if (result.skipped) {
-    return `skipped-${result.skipped}`;
-  }
-  return result.unavailable ? "unavailable" : "failed";
 }

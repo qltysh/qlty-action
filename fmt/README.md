@@ -30,7 +30,6 @@ A report holds:
 
 - The error's type, such as `FmtError`, and the kind of failure, such as `cli_failed` or `install_failed`.
 - The Qlty CLI's exit code, when the CLI ran.
-- The outcome of the Qlty CLI's attestation check, such as `verified` or `skipped-gh-missing`, when the action reached the check.
 - The action's name and version.
 - The runner's operating system and Node.js version.
 

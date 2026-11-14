@@ -2,15 +2,12 @@ import * as core from "@actions/core";
 import * as Sentry from "@sentry/node";
 import type { ErrorEvent, Exception, NodeOptions } from "@sentry/node";
 import { errorText, ReportableError } from "./errors.js";
-import { isAttestationOutcome, type AttestationOutcome } from "./installer.js";
 import Version from "./version.js";
 
 const SENTRY_DSN =
   "https://76f58a921c9d8561646a586e7d9df772@o4506826106929152.ingest.us.sentry.io/4506826142646272";
 
 type Env = Record<string, string | undefined>;
-
-const ATTESTATION_TAG = "attestation";
 
 /**
  * Runs an action. Reads the `telemetry` input first, so QLTY_TELEMETRY=off
@@ -46,14 +43,6 @@ export async function runAction(
   process.exit(exitCode);
 }
 
-/**
- * Records the outcome of the Qlty CLI's attestation check. An error report
- * sent later in the run carries it. A run that succeeds still sends nothing.
- */
-export function recordAttestation(outcome: AttestationOutcome): void {
-  Sentry.setTag(ATTESTATION_TAG, outcome);
-}
-
 export interface TelemetrySetting {
   enabled: boolean;
   warning?: string;
@@ -85,10 +74,10 @@ export function resolveTelemetry(input: string, env: Env): TelemetrySetting {
 }
 
 /**
- * Sentry options that send only the error's class, its failure kind, the
- * CLI's exit code and the attestation check's outcome, plus the action's name
- * and version and the runner's OS and Node.js version, with no stack trace.
- * Nothing is sent when the step succeeds.
+ * Sentry options that send only the error's class, its failure kind and the
+ * CLI's exit code, plus the action's name and version and the runner's OS
+ * and Node.js version, with no stack trace. Nothing is sent when the step
+ * succeeds.
  *
  * Options the SDK would otherwise read from the job's environment are set
  * here, because the customer's job controls that environment.
@@ -169,11 +158,6 @@ function minimalEvent(
     if (typeof reportable.exitCode === "number") {
       tags["cli.exit_code"] = String(reportable.exitCode);
     }
-  }
-  // Set by recordAttestation. Any value other than a known outcome is dropped.
-  const attestation = event.tags?.[ATTESTATION_TAG];
-  if (isAttestationOutcome(attestation)) {
-    tags[ATTESTATION_TAG] = attestation;
   }
 
   const { os, runtime } = event.contexts ?? {};

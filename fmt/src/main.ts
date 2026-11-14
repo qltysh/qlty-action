@@ -8,7 +8,6 @@ import {
   Installer,
   ReportableError,
 } from "@qltysh-action/shared";
-import { recordAttestation } from "@qltysh-action/shared/telemetry";
 
 // Telemetry reports an FmtError's kind and exit code, never its message.
 class FmtError extends ReportableError {
@@ -20,7 +19,6 @@ class FmtError extends ReportableError {
 
 export async function run(): Promise<void> {
   const installer = Installer.create(core.getInput("github-token"));
-  installer.onAttestation(recordAttestation);
   let qltyBinary: string | null;
 
   try {
