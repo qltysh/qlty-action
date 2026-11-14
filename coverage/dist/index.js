@@ -122162,24 +122162,11 @@ var GhAttestationVerifier = class {
           }
         }
       );
-    } catch (error5) {
-      const message = error5 instanceof Error ? error5.message : String(error5);
+    } catch (error4) {
+      const message = error4 instanceof Error ? error4.message : String(error4);
       return { success: false, error: message || "Verification failed" };
     }
-    if (exitCode === 0) {
-      return { success: true };
-    }
-    if (output.includes("HTTP 404")) {
-      return {
-        success: false,
-        error: `gh exited with code ${exitCode}. No attestation was found for this archive.`
-      };
-    }
-    const error4 = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
-    if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
-      return { success: false, unavailable: true, error: error4 };
-    }
-    return { success: false, error: error4 };
+    return ghVerifyResult(exitCode, output);
   }
   async unusableGh() {
     let output = "";
@@ -122216,6 +122203,22 @@ var GhAttestationVerifier = class {
     return null;
   }
 };
+function ghVerifyResult(exitCode, output) {
+  if (exitCode === 0) {
+    return { success: true };
+  }
+  if (output.includes("HTTP 404")) {
+    return {
+      success: false,
+      error: `gh exited with code ${exitCode}. No attestation was found for this archive.`
+    };
+  }
+  const error4 = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
+  if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
+    return { success: false, unavailable: true, error: error4 };
+  }
+  return { success: false, error: error4 };
+}
 function isOlder(version, minimum) {
   for (const [i2, min] of minimum.entries()) {
     const part = version[i2] ?? 0;
