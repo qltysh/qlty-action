@@ -208,13 +208,8 @@ export class CoverageAction {
         },
       });
     } catch (error) {
-      let errorMessage = "";
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       this.reportOrFail(
         [

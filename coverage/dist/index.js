@@ -134326,12 +134326,7 @@ var CoverageAction = class _CoverageAction {
         }
       });
     } catch (error4) {
-      let errorMessage = "";
-      if (error4 instanceof Error) {
-        errorMessage = error4.message;
-      } else if (typeof error4 === "string") {
-        errorMessage = error4;
-      }
+      const errorMessage = error4 instanceof Error ? error4.message : String(error4);
       this.reportOrFail(
         [
           `Unexpected error executing coverage command:`,
