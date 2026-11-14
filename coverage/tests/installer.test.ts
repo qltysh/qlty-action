@@ -131,13 +131,8 @@ describe("Installer", () => {
       expect(result).toBe("qlty");
       expect(output.failures).toEqual([]);
       expect(output.warnings).toHaveLength(1);
+      // packages/shared/tests/installer.test.ts pins the exact message.
       expect(output.warnings[0]?.title).toBe("Qlty CLI Not Verified");
-      expect(output.warnings[0]?.message).toContain(
-        "Installing the Qlty CLI without checking its Sigstore attestation.",
-      );
-      expect(output.warnings[0]?.message).toContain(
-        "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli",
-      );
     });
   });
 

@@ -45252,7 +45252,7 @@ var StubbedOutput = class {
 
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
-var ATTESTATION_DOCS_URL = "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli";
+var ATTESTATION_DOCS_URL = "https://github.com/qltysh/qlty-action#verifying-the-qlty-cli";
 var AttestationError = class extends Error {
   constructor(message) {
     super(message);

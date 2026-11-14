@@ -20,7 +20,7 @@ import {
 const DOWNLOAD_EVENT = "download";
 
 const ATTESTATION_DOCS_URL =
-  "https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli";
+  "https://github.com/qltysh/qlty-action#verifying-the-qlty-cli";
 
 export class AttestationError extends Error {
   constructor(message: string) {

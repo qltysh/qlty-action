@@ -154,7 +154,7 @@ describe("Installer", () => {
         {
           title: "Qlty CLI Not Verified",
           message:
-            "Installing the Qlty CLI without checking its Sigstore attestation. The unverified CLI runs with access to this job's tokens and secrets. GitHub CLI (gh) is not installed. Install GitHub CLI 2.67.0 or later to verify the Qlty CLI. See https://github.com/qltysh/qlty-action/blob/main/coverage/README.md#verifying-the-qlty-cli",
+            "Installing the Qlty CLI without checking its Sigstore attestation. The unverified CLI runs with access to this job's tokens and secrets. GitHub CLI (gh) is not installed. Install GitHub CLI 2.67.0 or later to verify the Qlty CLI. See https://github.com/qltysh/qlty-action#verifying-the-qlty-cli",
         },
       ]);
     });
