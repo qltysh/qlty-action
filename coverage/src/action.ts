@@ -1,4 +1,8 @@
-import { type FailureKind, ReportableError } from "@qltysh-action/shared";
+import {
+  type FailureKind,
+  ReportableError,
+  Version,
+} from "@qltysh-action/shared";
 import {
   AttestationError,
   AttestationUnavailableError,
@@ -12,7 +16,6 @@ import * as actionsGithub from "@actions/github";
 import { ActionOutput, StubbedOutput } from "./util/output";
 import { CommandExecutor, StubbedCommandExecutor } from "./util/exec";
 import EventEmitter from "node:events";
-import Version from "./version";
 
 const EXEC_EVENT = "exec";
 
@@ -115,7 +118,13 @@ export class CoverageAction {
       return;
     }
 
+    // The installer returns null after it has logged why, as for an
+    // unsupported platform. skip-errors still decides whether the step fails.
     if (!qltyBinary) {
+      this.reportOrFail(
+        ["The Qlty CLI could not be installed on this runner."],
+        "install_failed",
+      );
       return;
     }
 
@@ -174,7 +183,7 @@ export class CoverageAction {
     }
 
     let qltyOutput = "";
-    let exitCode: number;
+    let exitCode: number | null;
 
     try {
       const env: Record<string, string> = {
@@ -193,8 +202,8 @@ export class CoverageAction {
       });
       this._output.info(`Running: ${[qltyBinary, ...args].join(" ")}`);
 
-      // With ignoreReturnCode, exec resolves to the CLI's exit code instead of
-      // throwing, and throws only when the CLI cannot start.
+      // With ignoreReturnCode, exec resolves to the CLI's exit code, or null
+      // when a signal stopped it, and throws only when the CLI cannot start.
       exitCode = await this._executor.exec(qltyBinary, args, {
         env,
         ignoreReturnCode: true,
@@ -228,26 +237,28 @@ export class CoverageAction {
 
   outputCoverageError(
     qltyOutput: string,
-    exitCode: number,
+    exitCode: number | null,
     token: string | null,
   ): void {
-    if (qltyOutput) {
-      this.reportOrFail(
-        [
-          `Error executing coverage command. Output from the Qlty CLI follows:`,
+    const stopped =
+      exitCode === null
+        ? "was stopped by a signal"
+        : `exited with code ${exitCode}`;
+    const messages = qltyOutput
+      ? [
+          exitCode === null
+            ? `Error executing coverage command. The Qlty CLI ${stopped}. Output from the Qlty CLI follows:`
+            : `Error executing coverage command. Output from the Qlty CLI follows:`,
           redactToken(qltyOutput, token),
-        ],
-        "cli_failed",
-        exitCode,
-      );
+        ]
+      : [
+          `Error executing coverage command. The Qlty CLI ${stopped} and printed no output.`,
+        ];
+
+    if (exitCode === null) {
+      this.reportOrFail(messages, "cli_killed");
     } else {
-      this.reportOrFail(
-        [
-          `Error executing coverage command. The Qlty CLI exited with code ${exitCode} and printed no output.`,
-        ],
-        "cli_failed",
-        exitCode,
-      );
+      this.reportOrFail(messages, "cli_failed", exitCode);
     }
   }
 

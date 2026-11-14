@@ -1,17 +1,19 @@
 import * as actionsExec from "@actions/exec";
 
+// @actions/exec types its result as a number, but resolves null when a
+// signal stopped the command and ignoreReturnCode is set.
 export interface CommandExecutor {
   exec(
     command: string,
     args?: string[],
     options?: actionsExec.ExecOptions,
-  ): Promise<number>;
+  ): Promise<number | null>;
 }
 
-// Behaves like @actions/exec: a nonzero exit code rejects unless
+// Behaves like @actions/exec: a nonzero or null exit code rejects unless
 // ignoreReturnCode is set, and a command that cannot start always rejects.
 export class StubbedCommandExecutor implements CommandExecutor {
-  private exitCode: number = 0;
+  private exitCode: number | null = 0;
   private startError: string | undefined;
   private stdout: string = "STDOUT\n";
   private stderr: string = "STDERR\n";
@@ -22,7 +24,7 @@ export class StubbedCommandExecutor implements CommandExecutor {
     stdout,
     stderr,
   }: {
-    exitCode?: number;
+    exitCode?: number | null;
     startError?: string;
     stdout?: string;
     stderr?: string;
@@ -46,7 +48,7 @@ export class StubbedCommandExecutor implements CommandExecutor {
     command: string,
     _args?: string[],
     options?: actionsExec.ExecOptions,
-  ): Promise<number> {
+  ): Promise<number | null> {
     if (this.startError !== undefined) {
       throw new Error(this.startError);
     }

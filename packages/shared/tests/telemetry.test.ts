@@ -50,7 +50,39 @@ describe("resolveTelemetry", () => {
 describe("Sentry events", () => {
   const SECRET = "qltcp_secret_token";
   const CUSTOMER = "customer-org/customer-repo";
+  const CUSTOMER_PATH = "/home/jdoe/work/customer-repo/coverage/lcov.info";
   const CUSTOMER_SHA = "0123456789abcdef0123456789abcdef01234567";
+  const CUSTOMER_ENVIRONMENT = "customer-staging-pr-42";
+
+  // CLI output as it appears in a CoverageError message. Lines containing
+  // "at " are what the SDK's stack parser would turn into frames.
+  const CLI_OUTPUT = [
+    "Error executing coverage command. Output from the Qlty CLI follows:",
+    `    Token: ${SECRET}`,
+    `    0: Failed to parse coverage file at ${CUSTOMER_PATH} (os error 2)`,
+    `    1: No such file or directory at ${CUSTOMER}/src/billing.ts:42:7`,
+    "        at printAcmeNode (/home/jdoe/work/customer-repo/node_modules/acme/index.js:42:17)",
+  ].join("\n");
+
+  // Variables a customer's job can set that the SDK would otherwise read.
+  const JOB_ENV: Record<string, string> = {
+    GITHUB_SHA: CUSTOMER_SHA,
+    SENTRY_ENVIRONMENT: CUSTOMER_ENVIRONMENT,
+    SENTRY_SPOTLIGHT: "1",
+  };
+
+  // Text that must never appear anywhere in what is sent.
+  const FORBIDDEN = [
+    SECRET,
+    CUSTOMER,
+    CUSTOMER_PATH,
+    CUSTOMER_SHA,
+    CUSTOMER_ENVIRONMENT,
+    "os error",
+    "printAcmeNode",
+    // A home directory of "/" would match any path.
+    ...(os.homedir().length > 1 ? [os.homedir()] : []),
+  ];
 
   class CoverageError extends ReportableError {
     constructor(message: string, exitCode?: number) {
@@ -60,12 +92,15 @@ describe("Sentry events", () => {
   }
 
   let envelopes: string[];
-  let githubSha: string | undefined;
+  let savedEnv: Record<string, string | undefined>;
 
   beforeEach(() => {
     envelopes = [];
-    githubSha = process.env["GITHUB_SHA"];
-    process.env["GITHUB_SHA"] = CUSTOMER_SHA;
+    savedEnv = {};
+    for (const [name, value] of Object.entries(JOB_ENV)) {
+      savedEnv[name] = process.env[name];
+      process.env[name] = value;
+    }
 
     Sentry.init({
       ...sentryOptions("coverage", "2.6.0"),
@@ -91,10 +126,12 @@ describe("Sentry events", () => {
 
   afterEach(async () => {
     await Sentry.close(2000);
-    if (githubSha === undefined) {
-      delete process.env["GITHUB_SHA"];
-    } else {
-      process.env["GITHUB_SHA"] = githubSha;
+    for (const [name, value] of Object.entries(savedEnv)) {
+      if (value === undefined) {
+        delete process.env[name];
+      } else {
+        process.env[name] = value;
+      }
     }
   });
 
@@ -104,7 +141,7 @@ describe("Sentry events", () => {
 
     expect(envelopes).toHaveLength(1);
     const envelope = envelopes[0] ?? "";
-    for (const text of [SECRET, CUSTOMER, CUSTOMER_SHA, os.homedir()]) {
+    for (const text of FORBIDDEN) {
       expect(envelope).not.toContain(text);
     }
 
@@ -115,13 +152,17 @@ describe("Sentry events", () => {
     return JSON.parse(lines[eventIndex + 1] ?? "{}");
   }
 
+  function framesOf(event: Record<string, unknown>): Record<string, unknown>[] {
+    const [exception] = (
+      event["exception"] as {
+        values: { stacktrace?: { frames: Record<string, unknown>[] } }[];
+      }
+    ).values;
+    return exception?.stacktrace?.frames ?? [];
+  }
+
   test("carries the class, kind and exit code, not the message", async () => {
-    const event = await capture(
-      new CoverageError(
-        `Error executing coverage command. Output from the Qlty CLI follows:; Token: ${SECRET}`,
-        99,
-      ),
-    );
+    const event = await capture(new CoverageError(CLI_OUTPUT, 99));
 
     expect(Object.keys(event).sort()).toEqual([
       "contexts",
@@ -136,6 +177,7 @@ describe("Sentry events", () => {
       "timestamp",
     ]);
     expect(event["release"]).toBe("qlty-action-coverage@2.6.0");
+    expect(event["environment"]).toBe("production");
     expect(event["tags"]).toEqual({
       action: "coverage",
       "error.kind": "cli_failed",
@@ -145,6 +187,9 @@ describe("Sentry events", () => {
       "os",
       "runtime",
     ]);
+    expect(
+      (event["sdk"] as { integrations: string[] }).integrations,
+    ).not.toContain("Spotlight");
 
     const [exception] = (event["exception"] as { values: object[] }).values;
     expect(exception).toMatchObject({
@@ -152,11 +197,14 @@ describe("Sentry events", () => {
       value: "cli_failed",
       mechanism: { type: "generic", handled: true },
     });
+  });
 
-    const frames = (
-      exception as { stacktrace: { frames: Record<string, unknown>[] } }
-    ).stacktrace.frames;
-    expect(frames.length).toBeGreaterThan(0);
+  test("keeps the real stack frames and none from the message", async () => {
+    const frames = framesOf(await capture(new CoverageError(CLI_OUTPUT, 1)));
+
+    expect(frames.map((frame) => frame["filename"])).toContain(
+      "telemetry.test.ts",
+    );
     for (const frame of frames) {
       expect(
         Object.keys(frame).every((key) =>
@@ -165,6 +213,15 @@ describe("Sentry events", () => {
       ).toBe(true);
       expect(frame["filename"]).not.toMatch(/[/\\]/);
     }
+  });
+
+  test("sends no frames when the message changed after the stack was taken", async () => {
+    const error = new CoverageError("original", 1);
+    // V8 builds the stack text, with the message at the time, on first read.
+    expect(error.stack).toContain("original");
+    error.message = CLI_OUTPUT;
+
+    expect(framesOf(await capture(error))).toEqual([]);
   });
 
   test("leaves out the exit code when the CLI did not run", async () => {
@@ -177,7 +234,7 @@ describe("Sentry events", () => {
   });
 
   test("carries only the class of any other error", async () => {
-    const event = await capture(new TypeError(`fetch ${SECRET} failed`));
+    const event = await capture(new TypeError(CLI_OUTPUT));
 
     expect(event["tags"]).toEqual({ action: "coverage" });
     const [exception] = (event["exception"] as { values: object[] }).values;

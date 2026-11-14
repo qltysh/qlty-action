@@ -1,7 +1,8 @@
 /**
  * The entrypoint for the action.
  */
-import { main } from "./main";
+import { runAction } from "@qltysh-action/shared/telemetry";
+import { run } from "./main";
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
-main();
+runAction("fmt", run);

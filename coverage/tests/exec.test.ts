@@ -19,6 +19,14 @@ describe("StubbedCommandExecutor", () => {
     );
   });
 
+  test("returns null for a signal with ignoreReturnCode", async () => {
+    const executor = new StubbedCommandExecutor({ exitCode: null });
+
+    await expect(
+      executor.exec("qlty", [], { ignoreReturnCode: true }),
+    ).resolves.toBeNull();
+  });
+
   test("rejects when the command cannot start, even with ignoreReturnCode", async () => {
     const executor = new StubbedCommandExecutor({ startError: "spawn ENOENT" });
 

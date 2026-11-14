@@ -1,3 +1,4 @@
+import * as core from "@actions/core";
 import * as Sentry from "@sentry/node";
 import type {
   ErrorEvent,
@@ -6,12 +7,47 @@ import type {
   StackFrame,
 } from "@sentry/node";
 import path from "node:path";
-import { ReportableError } from "./errors.js";
+import { errorText, ReportableError } from "./errors.js";
+import Version from "./version.js";
 
 const SENTRY_DSN =
   "https://76f58a921c9d8561646a586e7d9df772@o4506826106929152.ingest.us.sentry.io/4506826142646272";
 
 type Env = Record<string, string | undefined>;
+
+/**
+ * Runs an action. Reads the `telemetry` input first, so QLTY_TELEMETRY=off
+ * reaches every CLI the action starts. If `run` throws, including while it
+ * builds the action from its inputs, the step fails and, when telemetry is
+ * on, the error is reported.
+ */
+export async function runAction(
+  action: "coverage" | "fmt",
+  run: () => Promise<void>,
+): Promise<void> {
+  const telemetry = resolveTelemetry(core.getInput("telemetry"), process.env);
+  if (telemetry.warning) {
+    core.warning(telemetry.warning);
+  }
+  if (telemetry.enabled) {
+    Sentry.init(sentryOptions(action, Version.readVersion()));
+  }
+
+  let exitCode = 0;
+  try {
+    await run();
+  } catch (error) {
+    core.setFailed(`Action failed with error: ${errorText(error)}`);
+    Sentry.captureException(error);
+    exitCode = 1;
+  }
+
+  // Waits up to 2 seconds for a report to send; returns at once when
+  // telemetry is off. The explicit exit code keeps a skip-errors: true step
+  // passing after the installer has called setFailed.
+  await Sentry.close(2000);
+  process.exit(exitCode);
+}
 
 export interface TelemetrySetting {
   enabled: boolean;
@@ -47,6 +83,9 @@ export function resolveTelemetry(input: string, env: Env): TelemetrySetting {
  * Sentry options that send only the error's class, its failure kind and the
  * CLI's exit code, plus the action's name and version and the runner's OS
  * and Node.js version. Nothing is sent when the step succeeds.
+ *
+ * Options the SDK would otherwise read from the job's environment are set
+ * here, because the customer's job controls that environment.
  */
 export function sentryOptions(
   action: string,
@@ -54,14 +93,22 @@ export function sentryOptions(
 ): NodeOptions {
   return {
     dsn: SENTRY_DSN,
-    // Without a release, the SDK uses GITHUB_SHA, the customer's commit.
+    // Unset, these come from GITHUB_SHA (the customer's commit) and
+    // SENTRY_ENVIRONMENT.
     release: `qlty-action-${action}@${version ?? "unknown"}`,
+    environment: "production",
+    // Unset, SENTRY_SPOTLIGHT sends each report to a second URL and
+    // SENTRY_DEBUG prints the error's message to the job log.
+    spotlight: false,
+    debug: false,
     // The default integrations add breadcrumbs, HTTP request URLs, a session
     // on every run, and details about the runner's machine.
     defaultIntegrations: false,
     integrations: [
       Sentry.onUncaughtExceptionIntegration(),
-      Sentry.onUnhandledRejectionIntegration(),
+      // Fail the step on an unhandled rejection, as Node does without
+      // Sentry, instead of only logging it.
+      Sentry.onUnhandledRejectionIntegration({ mode: "strict" }),
       Sentry.nodeContextIntegration({
         app: false,
         device: false,
@@ -69,6 +116,9 @@ export function sentryOptions(
         cloudResource: false,
       }),
     ],
+    // No integration needs the ESM loader hook, and registering it from the
+    // CommonJS bundle fails after starting a worker thread.
+    registerEsmLoaderHooks: false,
     includeServerName: false,
     sendDefaultPii: false,
     sendClientReports: false,
@@ -77,19 +127,6 @@ export function sentryOptions(
       minimalEvent(event, hint.originalException, action),
     beforeSendTransaction: () => null,
   };
-}
-
-export function startTelemetry(action: string, version: string | null): void {
-  Sentry.init(sentryOptions(action, version));
-}
-
-export async function reportError(error: unknown): Promise<void> {
-  Sentry.captureException(error);
-  await closeTelemetry();
-}
-
-export async function closeTelemetry(): Promise<void> {
-  await Sentry.close(2000);
 }
 
 const KEPT_EVENT_FIELDS = [
@@ -108,7 +145,7 @@ type KeptEventFields = Pick<ErrorEvent, (typeof KEPT_EVENT_FIELDS)[number]>;
  * Rebuilds the event from an allowlist, so anything the SDK or other code
  * adds, such as the error's message, is dropped.
  */
-export function minimalEvent(
+function minimalEvent(
   event: ErrorEvent,
   error: unknown,
   action: string,
@@ -123,19 +160,10 @@ export function minimalEvent(
   const tags: Record<string, string> = { action };
   if (reportable) {
     tags["error.kind"] = reportable.kind;
-    if (reportable.exitCode !== undefined) {
+    if (typeof reportable.exitCode === "number") {
       tags["cli.exit_code"] = String(reportable.exitCode);
     }
   }
-
-  // The thrown error is the last value; earlier values are its causes.
-  const values = event.exception?.values ?? [];
-  const exceptions = values.map((value, index) =>
-    minimalException(
-      value,
-      index === values.length - 1 ? reportable?.kind : undefined,
-    ),
-  );
 
   const { os, runtime } = event.contexts ?? {};
   const contexts: NonNullable<ErrorEvent["contexts"]> = {};
@@ -146,17 +174,22 @@ export function minimalEvent(
     contexts["runtime"] = runtime;
   }
 
-  return {
-    ...kept,
-    type: undefined,
-    exception: { values: exceptions },
-    tags,
-    contexts,
-  };
+  const minimal: ErrorEvent = { ...kept, type: undefined, tags, contexts };
+
+  // The thrown error is the last value.
+  const thrown = event.exception?.values?.at(-1);
+  if (thrown) {
+    minimal.exception = {
+      values: [minimalException(thrown, error, reportable?.kind)],
+    };
+  }
+
+  return minimal;
 }
 
 function minimalException(
   exception: Exception,
+  error: unknown,
   kind: string | undefined,
 ): Exception {
   const minimal: Exception = {};
@@ -173,13 +206,35 @@ function minimalException(
       minimal.mechanism.handled = exception.mechanism.handled;
     }
   }
-  if (exception.stacktrace?.frames) {
-    minimal.stacktrace = {
-      frames: exception.stacktrace.frames.map(minimalFrame),
-    };
+
+  const frames = stackFrames(error);
+  if (frames.length > 0) {
+    minimal.stacktrace = { frames: frames.map(minimalFrame) };
   }
 
   return minimal;
+}
+
+/**
+ * Parses the thrown error's stack frames without its message. V8 starts
+ * `error.stack` with the message, which can hold CLI output, and the SDK's
+ * parser turns any message line containing "at " into a frame. The SDK's
+ * own frames are not used for that reason.
+ */
+function stackFrames(error: unknown): StackFrame[] {
+  if (!(error instanceof Error) || typeof error.stack !== "string") {
+    return [];
+  }
+
+  const { stack, message } = error;
+  const start = stack.indexOf(message);
+  // The message was changed after the stack was captured, so there is no
+  // safe place to cut.
+  if (start === -1) {
+    return [];
+  }
+
+  return Sentry.defaultStackParser(stack.slice(start + message.length));
 }
 
 function minimalFrame(frame: StackFrame): StackFrame {

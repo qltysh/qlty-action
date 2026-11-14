@@ -1,18 +1,13 @@
 import * as core from "@actions/core";
 import { exec } from "@actions/exec";
 import {
+  AttestationError,
+  AttestationUnavailableError,
+  errorText,
   type FailureKind,
   Installer,
   ReportableError,
 } from "@qltysh-action/shared";
-import {
-  closeTelemetry,
-  reportError,
-  resolveTelemetry,
-  startTelemetry,
-} from "@qltysh-action/shared/telemetry";
-import { readFileSync } from "node:fs";
-import path from "node:path";
 
 // Telemetry reports an FmtError's kind and exit code, never its message.
 class FmtError extends ReportableError {
@@ -22,57 +17,35 @@ class FmtError extends ReportableError {
   }
 }
 
-export async function main(): Promise<void> {
-  const telemetry = resolveTelemetry(core.getInput("telemetry"), process.env);
-  if (telemetry.warning) {
-    core.warning(telemetry.warning);
-  }
-  if (telemetry.enabled) {
-    startTelemetry("fmt", readVersion());
-  }
+export async function run(): Promise<void> {
+  const installer = Installer.create(core.getInput("github-token"));
+  let qltyBinary: string | null;
 
   try {
-    await run();
+    qltyBinary = await installer.install();
   } catch (error) {
-    core.setFailed(
-      error instanceof FmtError
-        ? `Action failed with error: ${error.name}`
-        : `Action failed with error: ${errorText(error)}`,
+    if (error instanceof AttestationError) {
+      throw error;
+    }
+    if (error instanceof AttestationUnavailableError) {
+      throw new FmtError(error.message, "attestation_unavailable");
+    }
+    throw new FmtError(
+      `Error installing Qlty CLI: ${errorText(error)}`,
+      "install_failed",
     );
-    await reportError(error);
-    process.exit(1);
   }
-
-  await closeTelemetry();
-  process.exit(0);
-}
-
-async function run(): Promise<void> {
-  const githubToken = core.getInput("github-token");
-  const installer = Installer.create(githubToken);
-  const qltyBinary = await installer.install();
 
   if (!qltyBinary) {
     throw new FmtError("Failed to install Qlty CLI", "install_failed");
   }
 
-  let qltyOutput = "";
-  let exitCode: number;
-
+  // exec streams the CLI's output to the job log. With ignoreReturnCode, it
+  // resolves to the CLI's exit code, or null when a signal stopped it, and
+  // throws only when the CLI cannot start.
+  let exitCode: number | null;
   try {
-    // With ignoreReturnCode, exec resolves to the CLI's exit code instead of
-    // throwing, and throws only when the CLI cannot start.
-    exitCode = await exec("qlty", ["fmt", "--all"], {
-      ignoreReturnCode: true,
-      listeners: {
-        stdout: (data: Buffer) => {
-          qltyOutput += data.toString();
-        },
-        stderr: (data: Buffer) => {
-          qltyOutput += data.toString();
-        },
-      },
-    });
+    exitCode = await exec("qlty", ["fmt", "--all"], { ignoreReturnCode: true });
   } catch (error) {
     throw new FmtError(
       `Could not run the Qlty CLI: ${errorText(error)}`,
@@ -80,24 +53,14 @@ async function run(): Promise<void> {
     );
   }
 
-  if (exitCode !== 0) {
-    throw new FmtError(qltyOutput, "cli_failed", exitCode);
+  if (exitCode === null) {
+    throw new FmtError("qlty fmt was stopped by a signal", "cli_killed");
   }
-}
-
-function errorText(error: unknown): string {
-  return error instanceof Error
-    ? `${error.name}: ${error.message}`
-    : `${error}`;
-}
-
-function readVersion(): string | null {
-  try {
-    const packageJson = JSON.parse(
-      readFileSync(path.join(__dirname, "../package.json"), "utf-8"),
+  if (exitCode !== 0) {
+    throw new FmtError(
+      `qlty fmt exited with code ${exitCode}`,
+      "cli_failed",
+      exitCode,
     );
-    return typeof packageJson.version === "string" ? packageJson.version : null;
-  } catch {
-    return null;
   }
 }

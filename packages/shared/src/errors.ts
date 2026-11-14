@@ -8,6 +8,7 @@ export type FailureKind =
   | "attestation_unavailable"
   | "no_coverage_files"
   | "cli_failed"
+  | "cli_killed"
   | "cli_start_failed";
 
 /**
@@ -24,4 +25,10 @@ export class ReportableError extends Error {
     this.kind = kind;
     this.exitCode = exitCode;
   }
+}
+
+export function errorText(error: unknown): string {
+  return error instanceof Error
+    ? `${error.name}: ${error.message}`
+    : `${error}`;
 }
