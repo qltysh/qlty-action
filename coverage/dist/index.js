@@ -120043,24 +120043,11 @@ var GhAttestationVerifier = class {
           }
         }
       );
-    } catch (error5) {
-      const message = error5 instanceof Error ? error5.message : String(error5);
+    } catch (error4) {
+      const message = error4 instanceof Error ? error4.message : String(error4);
       return { success: false, error: message || "Verification failed" };
     }
-    if (exitCode === 0) {
-      return { success: true };
-    }
-    if (output.includes("HTTP 404")) {
-      return {
-        success: false,
-        error: `gh exited with code ${exitCode}. No attestation was found for this archive.`
-      };
-    }
-    const error4 = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
-    if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
-      return { success: false, unavailable: true, error: error4 };
-    }
-    return { success: false, error: error4 };
+    return ghVerifyResult(exitCode, output);
   }
   async unusableGhReason() {
     let output = "";
@@ -120088,6 +120075,22 @@ var GhAttestationVerifier = class {
     return null;
   }
 };
+function ghVerifyResult(exitCode, output) {
+  if (exitCode === 0) {
+    return { success: true };
+  }
+  if (output.includes("HTTP 404")) {
+    return {
+      success: false,
+      error: `gh exited with code ${exitCode}. No attestation was found for this archive.`
+    };
+  }
+  const error4 = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
+  if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
+    return { success: false, unavailable: true, error: error4 };
+  }
+  return { success: false, error: error4 };
+}
 function isOlder(version, minimum) {
   for (const [i2, min] of minimum.entries()) {
     const part = version[i2] ?? 0;
@@ -120247,6 +120250,7 @@ var StubbedOutput = class {
 
 // ../packages/shared/src/installer.ts
 var DOWNLOAD_EVENT = "download";
+var ATTESTATION_DOCS_URL = "https://github.com/qltysh/qlty-action#verifying-the-qlty-cli";
 var AttestationError = class extends Error {
   constructor(message) {
     super(message);
@@ -120310,17 +120314,19 @@ var Installer = class _Installer {
       return null;
     }
     const archivePath = await this._tc.downloadTool(download.url);
-    this._output.info("Verifying sigstore attestation...");
+    this._output.info(
+      "Attempting to verify the Qlty CLI's Sigstore attestation..."
+    );
     const attestationResult = await this._attestationVerifier.verify(
       archivePath,
       "qltysh"
     );
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
-        const warningDetails = attestationResult.error ? ` ${attestationResult.error}` : "";
+        const reason = attestationResult.error ? ` ${attestationResult.error}` : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped, so this run is unverified." + warningDetails + " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
-          { title: "Attestation Verification Skipped" }
+          "Installing the Qlty CLI without checking its Sigstore attestation. The unverified CLI runs with access to this job's tokens and secrets." + reason + ` Install GitHub CLI 2.67.0 or later to verify the Qlty CLI. See ${ATTESTATION_DOCS_URL}`,
+          { title: "Qlty CLI Not Verified" }
         );
       } else if (attestationResult.unavailable) {
         throw new AttestationUnavailableError(

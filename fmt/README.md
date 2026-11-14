@@ -2,6 +2,8 @@
 
 A GitHub Action for running automated formatting using the qlty tool.
 
+Before running the Qlty CLI, the action checks its attestation with the GitHub CLI (`gh`). Without `gh` 2.67.0 or later where the step runs, which in a `container:` job means inside the container, the action logs a warning and runs the CLI unverified. See [Verifying the Qlty CLI](../README.md#verifying-the-qlty-cli).
+
 ## Configuration
 
 ### Fmt Action Inputs

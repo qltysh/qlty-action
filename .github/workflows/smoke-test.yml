@@ -71,6 +71,9 @@ jobs:
       - name: Run Qlty CLI
         run: qlty --version
 
+  # Without gh the install skips the attestation check, logs a "Qlty CLI Not
+  # Verified" warning and succeeds. This job keeps that path working; it
+  # doesn't check the warning.
   test-install-in-container-without-gh:
     runs-on: ubuntu-latest
     container: debian:13-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad

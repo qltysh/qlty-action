@@ -1,10 +1,13 @@
 import path from "node:path";
 import {
+  GhAttestationVerifier,
   Installer,
+  StubbedGhRunner,
   StubbedOperatingSystem,
   StubbedToolCache,
   StubbedOutput,
   StubbedAttestationVerifier,
+  type AttestationVerifier,
 } from "../src/index.js";
 
 describe("Installer", () => {
@@ -135,7 +138,7 @@ describe("Installer", () => {
       expect(attestationVerifier.verifiedFiles).toHaveLength(1);
     });
 
-    test("warns that the run is unverified but installs when gh is missing", async () => {
+    test("warns that the Qlty CLI is unverified but installs it when gh is missing", async () => {
       const { output, downloads, installer } = createTrackedInstaller({
         os: new StubbedOperatingSystem("linux", "x64"),
         attestationVerifier: new StubbedAttestationVerifier("gh-missing"),
@@ -144,13 +147,30 @@ describe("Installer", () => {
       expect(result).toBe("qlty");
       expect(downloads.clear()).toHaveLength(1);
       expect(output.failures).toEqual([]);
+      expect(output.infos).toEqual([
+        "Attempting to verify the Qlty CLI's Sigstore attestation...",
+      ]);
       expect(output.warnings).toEqual([
         {
-          title: "Attestation Verification Skipped",
+          title: "Qlty CLI Not Verified",
           message:
-            "Sigstore attestation verification was skipped, so this run is unverified. GitHub CLI (gh) is not installed. Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
+            "Installing the Qlty CLI without checking its Sigstore attestation. The unverified CLI runs with access to this job's tokens and secrets. GitHub CLI (gh) is not installed. Install GitHub CLI 2.67.0 or later to verify the Qlty CLI. See https://github.com/qltysh/qlty-action#verifying-the-qlty-cli",
         },
       ]);
+    });
+
+    test("names the old gh version in the warning", async () => {
+      const { output, installer } = createTrackedInstaller({
+        attestationVerifier: new GhAttestationVerifier("token", {
+          runner: new StubbedGhRunner({
+            version: { output: "gh version 2.45.0 (2024-03-04)\n" },
+          }),
+        }),
+      });
+      await installer.install();
+      expect(output.warnings[0]?.message).toContain(
+        " GitHub CLI (gh) 2.45.0 is older than 2.67.0. Install GitHub CLI 2.67.0 or later",
+      );
     });
   });
 
@@ -164,7 +184,7 @@ describe("Installer", () => {
     toolCache?: StubbedToolCache;
     os?: StubbedOperatingSystem;
     output?: StubbedOutput;
-    attestationVerifier?: StubbedAttestationVerifier;
+    attestationVerifier?: AttestationVerifier;
     version?: string;
   } = {}) {
     const installer = new Installer(

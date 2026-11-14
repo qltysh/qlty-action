@@ -98,22 +98,7 @@ export class GhAttestationVerifier implements AttestationVerifier {
       return { success: false, error: message || "Verification failed" };
     }
 
-    if (exitCode === 0) {
-      return { success: true };
-    }
-
-    if (output.includes("HTTP 404")) {
-      return {
-        success: false,
-        error: `gh exited with code ${exitCode}. No attestation was found for this archive.`,
-      };
-    }
-
-    const error = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
-    if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
-      return { success: false, unavailable: true, error };
-    }
-    return { success: false, error };
+    return ghVerifyResult(exitCode, output);
   }
 
   private async unusableGhReason(): Promise<string | null> {
@@ -144,6 +129,26 @@ export class GhAttestationVerifier implements AttestationVerifier {
 
     return null;
   }
+}
+
+// Turns the exit code and output of `gh attestation verify` into a result.
+function ghVerifyResult(exitCode: number, output: string): AttestationResult {
+  if (exitCode === 0) {
+    return { success: true };
+  }
+
+  if (output.includes("HTTP 404")) {
+    return {
+      success: false,
+      error: `gh exited with code ${exitCode}. No attestation was found for this archive.`,
+    };
+  }
+
+  const error = `gh exited with code ${exitCode}. ${output.trim() || "Verification failed."}`;
+  if (UNAVAILABLE_OUTPUT.some((pattern) => pattern.test(output))) {
+    return { success: false, unavailable: true, error };
+  }
+  return { success: false, error };
 }
 
 function isOlder(version: number[], minimum: number[]): boolean {
