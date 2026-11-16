@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.7.0 (2026-11-14)
+
+### New
+
+- The coverage and fmt actions now accept a `telemetry` input (default `true`). Set it to `false`, or set `QLTY_TELEMETRY: off` in the job environment, to skip error reporting and turn off telemetry in the Qlty CLI (#225)
+
+### Improved
+
+- When an action reports an error, it now sends only the error class, a fixed failure kind, the Qlty CLI exit code, the action name and version, and the OS and Node.js version. Stack traces, CLI output, the repository name, run URL, commit SHA, runner hostname, timezone and traces are no longer sent, and successful runs send nothing (#225)
+- The warning shown when the Qlty CLI's attestation check is skipped now explains that the unverified CLI runs with access to the job's tokens and secrets, says why the check was skipped, and links to the docs (#226)
+- The fmt action's failure message now says why it failed, such as the CLI exit code or a download error (#225)
+
+### Fixed
+
+- The coverage action on an unsupported platform now fails the step when `skip-errors: false`, instead of passing after logging the error (#225)
+
 ## v2.6.0 (2026-11-13)
 
 ### Fixed

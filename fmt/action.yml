@@ -17,6 +17,15 @@ inputs:
     required: false
     default: "false"
 
+  telemetry:
+    description: >-
+      Send Qlty an error report when the step fails. A report holds the
+      error's type, the kind of failure and the Qlty CLI's exit code, never
+      the CLI's output. Set to false to send nothing; this also sets
+      QLTY_TELEMETRY=off for the Qlty CLI.
+    required: false
+    default: true
+
 runs:
   using: node24
   main: dist/index.js

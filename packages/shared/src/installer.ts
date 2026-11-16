@@ -19,6 +19,9 @@ import {
 
 const DOWNLOAD_EVENT = "download";
 
+const ATTESTATION_DOCS_URL =
+  "https://github.com/qltysh/qlty-action#verifying-the-qlty-cli";
+
 export class AttestationError extends Error {
   constructor(message: string) {
     super(message);
@@ -111,8 +114,9 @@ export class Installer {
 
     const archivePath = await this._tc.downloadTool(download.url);
 
-    // Verify attestation
-    this._output.info("Verifying sigstore attestation...");
+    this._output.info(
+      "Attempting to verify the Qlty CLI's Sigstore attestation...",
+    );
     const attestationResult = await this._attestationVerifier.verify(
       archivePath,
       "qltysh",
@@ -120,15 +124,17 @@ export class Installer {
 
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
-        // Skipped verification - warn but proceed
-        const warningDetails = attestationResult.error
+        // Without a usable gh the check can't run. Install anyway, and say so.
+        const reason = attestationResult.error
           ? ` ${attestationResult.error}`
           : "";
         this._output.warning(
-          "Sigstore attestation verification was skipped, so this run is unverified." +
-            warningDetails +
-            " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI.",
-          { title: "Attestation Verification Skipped" },
+          "Installing the Qlty CLI without checking its Sigstore attestation. " +
+            "The unverified CLI runs with access to this job's tokens and secrets." +
+            reason +
+            " Install GitHub CLI 2.67.0 or later to verify the Qlty CLI." +
+            ` See ${ATTESTATION_DOCS_URL}`,
+          { title: "Qlty CLI Not Verified" },
         );
       } else if (attestationResult.unavailable) {
         throw new AttestationUnavailableError(

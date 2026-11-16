@@ -40,6 +40,25 @@ The other actions use the Qlty CLI and do not require Qlty Cloud.
 
 ---
 
+## Verifying the Qlty CLI
+
+Before the coverage, fmt and install actions run the Qlty CLI, they check its Sigstore attestation with the [GitHub CLI](https://cli.github.com/) (`gh`):
+
+- If the check rejects the CLI, for example because no attestation matches the downloaded archive, the step fails and the CLI doesn't run.
+- If the check can't finish because GitHub or Sigstore is unavailable, the CLI doesn't run either. The fmt and install steps fail. The coverage step fails only when `skip-errors` is false; see [What `skip-errors` covers](coverage/README.md#what-skip-errors-covers).
+- If `gh` 2.67.0 or later isn't available where the step runs, the check can't run. The action logs a "Qlty CLI Not Verified" warning and runs the CLI anyway, whatever `skip-errors` is set to. The unverified CLI runs with access to the job's tokens and secrets.
+
+### Installing `gh`
+
+GitHub-hosted runners include `gh`. Self-hosted runners and `container:` jobs often don't:
+
+- On a self-hosted runner, install `gh` on the runner.
+- In a `container:` job, the step runs inside the container, so `gh` on the runner's host isn't used. Install `gh` in the container image or in an earlier step.
+
+See the GitHub CLI [installation instructions](https://github.com/cli/cli#installation). On Linux, use GitHub's package repository as described in [Installing gh on Linux](https://github.com/cli/cli/blob/trunk/docs/install_linux.md): some distributions' own `gh` packages are older than 2.67.0.
+
+---
+
 ## 🛟 Help or Feedback
 
 - [Get Started](https://qlty.sh/) with Qlty Cloud

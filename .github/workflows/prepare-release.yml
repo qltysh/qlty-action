@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: qlty-releases
     steps:
-      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # version 2.0.6
+      - uses: actions/create-github-app-token@v2.0.6
         id: app-token
         with:
           app-id: ${{ vars.QLTY_APP_ID }}
@@ -41,13 +41,13 @@ jobs:
         run: test "$(gh api /installation/repositories --jq .total_count)" = 1
 
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # version 4.2.2
+        uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4.4.0
         with:
           node-version-file: .node-version
 
@@ -131,7 +131,7 @@ jobs:
           done
 
       - name: Draft changelog entry
-        uses: anthropics/claude-code-action@4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8 # version 1.0.275
+        uses: anthropics/claude-code-action@v1.0.275
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         with:

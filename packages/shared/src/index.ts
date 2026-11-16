@@ -1,3 +1,9 @@
+// Errors reported to Qlty's error tracking
+export { errorText, ReportableError, type FailureKind } from "./errors.js";
+
+// The action's own version, read from its package.json
+export { default as Version } from "./version.js";
+
 // Main exports
 export {
   AttestationError,

@@ -122,7 +122,7 @@ describe("Installer", () => {
       expect(attestationVerifier.verifiedFiles[0]).toContain("downloadTool[");
     });
 
-    test("warns that the run is unverified but installs when gh is missing", async () => {
+    test("warns that the Qlty CLI is unverified but installs it when gh is missing", async () => {
       const { output, installer } = createTrackedInstaller({
         os: new StubbedOperatingSystem("linux", "x64"),
         attestationVerifier: new StubbedAttestationVerifier("gh-missing"),
@@ -131,10 +131,8 @@ describe("Installer", () => {
       expect(result).toBe("qlty");
       expect(output.failures).toEqual([]);
       expect(output.warnings).toHaveLength(1);
-      expect(output.warnings[0]?.title).toBe(
-        "Attestation Verification Skipped",
-      );
-      expect(output.warnings[0]?.message).toContain("this run is unverified");
+      // packages/shared/tests/installer.test.ts pins the exact message.
+      expect(output.warnings[0]?.title).toBe("Qlty CLI Not Verified");
     });
   });
 

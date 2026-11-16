@@ -40,6 +40,20 @@ describe("GhAttestationVerifier", () => {
     });
   });
 
+  test("skips when gh does not report its version", async () => {
+    const runner = new StubbedGhRunner({
+      version: { output: "gh dev\n" },
+      verify: { exitCode: 0 },
+    });
+    const result = await createVerifier(runner).verify("qlty.tar.xz", "qltysh");
+    expect(result).toEqual({
+      success: false,
+      skipped: true,
+      error: "GitHub CLI (gh) did not report its version.",
+    });
+    expect(runner.calls).toHaveLength(1);
+  });
+
   test.each(["2.66.0", "2.45.0"])(
     "skips without verifying when gh %s is older than 2.67.0",
     async (version) => {
