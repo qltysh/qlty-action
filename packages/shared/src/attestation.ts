@@ -8,7 +8,7 @@ export interface AttestationResult {
 }
 
 export interface AttestationVerifier {
-  verify(filePath: string, owner: string): Promise<AttestationResult>;
+  verify(filePath: string): Promise<AttestationResult>;
 }
 
 export interface CommandRunner {
@@ -18,6 +18,14 @@ export interface CommandRunner {
     options: actionsExec.ExecOptions,
   ): Promise<number>;
 }
+
+// Only the release build in qltysh/qlty attests the CLI archives, from main. Every release from 0.555.0 on was
+// attested by this workflow at this ref. gh matches --cert-identity against the signing certificate exactly, unlike
+// --signer-workflow, which matches it as a prefix.
+const RELEASE_REPO = "qltysh/qlty";
+const RELEASE_SIGNER =
+  "https://github.com/qltysh/qlty/.github/workflows/build.yml@refs/heads/main";
+const SLSA_PROVENANCE_V1 = "https://slsa.dev/provenance/v1";
 
 // gh 2.49.0 through 2.66.x can exit 0 when no attestation matches (CVE-2025-25204).
 const MINIMUM_GH_VERSION = [2, 67, 0];
@@ -53,7 +61,7 @@ export class GhAttestationVerifier implements AttestationVerifier {
     this.env = env;
   }
 
-  async verify(filePath: string, owner: string): Promise<AttestationResult> {
+  async verify(filePath: string): Promise<AttestationResult> {
     const unusable = await this.unusableGhReason();
     if (unusable) {
       return { success: false, skipped: true, error: unusable };
@@ -75,8 +83,12 @@ export class GhAttestationVerifier implements AttestationVerifier {
           "attestation",
           "verify",
           filePath,
-          "--owner",
-          owner,
+          "--repo",
+          RELEASE_REPO,
+          "--cert-identity",
+          RELEASE_SIGNER,
+          "--predicate-type",
+          SLSA_PROVENANCE_V1,
           "--hostname",
           "github.com",
         ],

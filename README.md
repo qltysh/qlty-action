@@ -42,7 +42,7 @@ The other actions use the Qlty CLI and do not require Qlty Cloud.
 
 ## Verifying the Qlty CLI
 
-Before the coverage, fmt and install actions run the Qlty CLI, they check its Sigstore attestation with the [GitHub CLI](https://cli.github.com/) (`gh`):
+Before the coverage, fmt and install actions run the Qlty CLI, they check its Sigstore attestation with the [GitHub CLI](https://cli.github.com/) (`gh`). The check accepts only a SLSA provenance attestation made by the Qlty CLI's release build, `.github/workflows/build.yml` in [qltysh/qlty](https://github.com/qltysh/qlty) running on `main`:
 
 - If the check rejects the CLI, for example because no attestation matches the downloaded archive, the step fails and the CLI doesn't run.
 - If the check can't finish because GitHub or Sigstore is unavailable, the CLI doesn't run either. The fmt and install steps fail. The coverage step fails only when `skip-errors` is false; see [What `skip-errors` covers](coverage/README.md#what-skip-errors-covers).
