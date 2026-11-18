@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.8.0 (2026-11-18)
+
+### Improved
+
+- The Qlty CLI's attestation check now accepts only attestations signed by the Qlty CLI's release build in qltysh/qlty (`build.yml` on `main`). Before, an attestation made by any workflow in any qltysh repository passed. Every Qlty CLI release from 0.555.0 on passes the new check (#229)
+
 ## v2.7.0 (2026-11-14)
 
 ### New
