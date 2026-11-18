@@ -117,10 +117,8 @@ export class Installer {
     this._output.info(
       "Attempting to verify the Qlty CLI's Sigstore attestation...",
     );
-    const attestationResult = await this._attestationVerifier.verify(
-      archivePath,
-      "qltysh",
-    );
+    const attestationResult =
+      await this._attestationVerifier.verify(archivePath);
 
     if (!attestationResult.success) {
       if (attestationResult.skipped) {

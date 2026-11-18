@@ -81907,6 +81907,9 @@ var import_node_events4 = __toESM(require("node:events"), 1);
 
 // ../packages/shared/src/attestation.ts
 var actionsExec = __toESM(require_exec(), 1);
+var RELEASE_REPO = "qltysh/qlty";
+var RELEASE_SIGNER = "https://github.com/qltysh/qlty/.github/workflows/build.yml@refs/heads/main";
+var SLSA_PROVENANCE_V1 = "https://slsa.dev/provenance/v1";
 var MINIMUM_GH_VERSION = [2, 67, 0];
 var UNAVAILABLE_OUTPUT = [
   /HTTP 5\d\d\b/,
@@ -81932,7 +81935,7 @@ var GhAttestationVerifier = class {
     this.runner = runner;
     this.env = env;
   }
-  async verify(filePath, owner) {
+  async verify(filePath) {
     const unusable = await this.unusableGhReason();
     if (unusable) {
       return { success: false, skipped: true, error: unusable };
@@ -81952,8 +81955,12 @@ var GhAttestationVerifier = class {
           "attestation",
           "verify",
           filePath,
-          "--owner",
-          owner,
+          "--repo",
+          RELEASE_REPO,
+          "--cert-identity",
+          RELEASE_SIGNER,
+          "--predicate-type",
+          SLSA_PROVENANCE_V1,
           "--hostname",
           "github.com"
         ],
@@ -82244,10 +82251,7 @@ var Installer = class _Installer {
     this._output.info(
       "Attempting to verify the Qlty CLI's Sigstore attestation..."
     );
-    const attestationResult = await this._attestationVerifier.verify(
-      archivePath,
-      "qltysh"
-    );
+    const attestationResult = await this._attestationVerifier.verify(archivePath);
     if (!attestationResult.success) {
       if (attestationResult.skipped) {
         const reason = attestationResult.error ? ` ${attestationResult.error}` : "";
