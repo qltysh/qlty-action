@@ -7,7 +7,7 @@ workflows:
         - 'actions/checkout@v4.2.2'
         - 'actions/create-github-app-token@v2.0.6'
         - 'actions/setup-node@v4.4.0'
-        - 'anthropics/claude-code-action@v1.0.275'
+        - 'anthropics/claude-code-action@v1.0.278'
     '.github/workflows/release.yml':
         - 'actions/checkout@v4.2.2'
         - 'slackapi/slack-github-action@v2.0.0'
@@ -42,9 +42,9 @@ dependencies:
         commit: 'sha1-49933ea5288caeca8642d1e84afbd3f7d6820020'
         owner_id: 44036562
         repo_id: 189476904
-    'anthropics/claude-code-action@v1.0.275':
-        ref: 'v1.0.275'
-        commit: 'sha1-4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8'
+    'anthropics/claude-code-action@v1.0.278':
+        ref: 'v1.0.278'
+        commit: 'sha1-cc98b3ae241b0fcfb6a42a2690751afffecb4452'
         owner_id: 76263028
         repo_id: 986421638
         uses:
