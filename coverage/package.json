@@ -39,6 +39,6 @@
     "@actions/github": "^9.1.1",
     "@actions/glob": "^0.7.0",
     "@qltysh-action/shared": "*",
-    "zod": "^3.24.3"
+    "zod": "^4.6.7"
   }
 }
